@@ -3,9 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@swissone/shared"],
-  // Use standalone output for Vercel deployment
-  // Error pages are handled at runtime, not during static generation
-  output: "standalone",
   // When rootDirectory is set to apps/web in vercel.json, Next.js runs from apps/web
   // So we don't need to set outputFileTracingRoot anymore
   // outputFileTracingRoot: require("path").join(__dirname, "../.."),

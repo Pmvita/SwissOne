@@ -29,7 +29,11 @@ The `auth.users` table is managed by Supabase Auth. We extend it with a `profile
 CREATE TABLE profiles (
   id UUID REFERENCES auth.users(id) PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
+  username TEXT UNIQUE,
+  first_name TEXT,
+  last_name TEXT,
   full_name TEXT,
+  phone TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -42,10 +46,19 @@ CREATE POLICY "Users can read own profile"
   ON profiles FOR SELECT
   USING (auth.uid() = id);
 
+-- Policy: Users can insert their own profile (for signup)
+CREATE POLICY "Users can insert own profile"
+  ON profiles FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
 -- Policy: Users can update their own profile
 CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE
   USING (auth.uid() = id);
+
+-- Indexes for efficient lookups
+CREATE INDEX profiles_username_idx ON profiles(username);
+CREATE INDEX profiles_email_idx ON profiles(email);
 ```
 
 ### Accounts Table
@@ -229,10 +242,33 @@ CREATE TRIGGER update_holdings_updated_at BEFORE UPDATE ON holdings
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
+## Migrations
+
+### Running Migrations
+
+If you have an existing database, run the migration files in order:
+
+1. Go to your Supabase project dashboard
+2. Navigate to SQL Editor
+3. Run the migration files from `docs/migrations/` in order:
+   - `001_update_profiles_table.sql` - Adds username, first_name, last_name, phone fields and INSERT policy
+
+### Migration: Update Profiles Table (001)
+
+This migration adds the following to the `profiles` table:
+- `username` (TEXT, UNIQUE) - For username-based login
+- `first_name` (TEXT) - User's first name
+- `last_name` (TEXT) - User's last name  
+- `phone` (TEXT) - User's phone number
+- Index on `username` for efficient login lookups
+- INSERT policy so users can create their profile during signup
+- Automatic profile creation trigger (backup)
+
 ## Setup Instructions
 
 1. Create a new Supabase project at https://supabase.com
 2. Run the SQL schema scripts above in the Supabase SQL Editor
-3. Copy your project URL and API keys from Settings > API
-4. Add them to your `.env` files (see Environment Variables section)
+3. If you have an existing database, run the migration files from `docs/migrations/`
+4. Copy your project URL and API keys from Settings > API
+5. Add them to your `.env` files (see Environment Variables section)
 

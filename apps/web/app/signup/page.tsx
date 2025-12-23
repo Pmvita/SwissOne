@@ -15,12 +15,11 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [phone, setPhone] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [step, setStep] = useState<"info" | "verify">("info");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
-  const handleSendCode = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -48,129 +47,80 @@ export default function SignUpPage() {
 
     try {
       const supabase = createClient();
-      // Use email OTP for signup verification
-      const { error } = await supabase.auth.signInWithOtp({
+      
+      // Format phone number (ensure it starts with +)
+      const formattedPhone = phone.startsWith("+") ? phone : `+${phone}`;
+      
+      // Use signUp with email confirmation
+      const { data, error } = await supabase.auth.signUp({
         email: email,
+        password: Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12), // Temporary password
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?type=signup`,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            username: username,
+            phone: formattedPhone,
+            full_name: `${firstName} ${lastName}`.trim(),
+          },
         },
       });
 
       if (error) {
-        console.error("Send code error:", error);
+        console.error("Signup error:", error);
         setError(error.message);
         setLoading(false);
         return;
       }
 
-      setStep("verify");
-      setLoading(false);
+      // Check if email confirmation is required
+      if (data.user && !data.user.email_confirmed_at) {
+        setEmailSent(true);
+        setLoading(false);
+        return;
+      }
+
+      // If already confirmed (shouldn't happen but handle it)
+      if (data.user && data.session) {
+        // Create profile immediately if session exists
+        await createProfile(data.user.id, data.user.email || email);
+        window.location.href = "/dashboard";
+      }
     } catch (err) {
-      console.error("Send code error:", err);
+      console.error("Signup error:", err);
       setError("An unexpected error occurred. Please try again.");
       setLoading(false);
     }
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-
-    if (!verificationCode) {
-      setError("Please enter the verification code");
-      setLoading(false);
-      return;
-    }
-
+  const createProfile = async (userId: string, userEmail: string) => {
     try {
       const supabase = createClient();
+      const formattedPhone = phone.startsWith("+") ? phone : `+${phone}`;
+      const fullName = `${firstName} ${lastName}`.trim();
       
-      // Verify email OTP
-      const { data, error } = await supabase.auth.verifyOtp({
-        email: email,
-        token: verificationCode,
-        type: "email",
-      });
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert({
+          id: userId,
+          email: userEmail,
+          username: username,
+          first_name: firstName,
+          last_name: lastName,
+          phone: formattedPhone,
+          full_name: fullName,
+        }, {
+          onConflict: "id"
+        });
 
-      if (error) {
-        console.error("Verify code error:", error);
-        setError(error.message);
-        setLoading(false);
-        return;
+      if (profileError) {
+        console.warn("Profile upsert warning:", profileError);
+      } else {
+        console.log("Profile created successfully");
       }
-
-      // Verify session is established
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        console.error("Session error:", sessionError);
-        setError("Failed to establish session. Please try again.");
-        setLoading(false);
-        return;
-      }
-
-      console.log("Signup successful, session established:", {
-        userId: data.user?.id,
-        phone: data.user?.phone,
-        hasSession: !!session,
-        sessionExpiresAt: session?.expires_at
-      });
-
-      // Create profile with first and last name, email, and username
-      if (data.user) {
-        try {
-          const fullName = `${firstName} ${lastName}`.trim();
-          const { error: profileError } = await supabase
-            .from("profiles")
-            .upsert({
-              id: data.user.id,
-              phone: formattedPhone,
-              email: email,
-              username: username,
-              first_name: firstName,
-              last_name: lastName,
-              full_name: fullName,
-            }, {
-              onConflict: "id"
-            });
-
-          if (profileError) {
-            console.warn("Profile upsert warning:", profileError);
-            // Don't block signup if profile creation fails
-          } else {
-            console.log("Profile created successfully");
-          }
-        } catch (profileErr) {
-          console.warn("Profile creation error (non-blocking):", profileErr);
-        }
-      }
-
-      // Successfully signed up - clear states
-      setError(null);
-      
-      // Wait a moment to ensure session cookies are set
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Verify session one more time before redirect
-      const { data: { session: finalSession } } = await supabase.auth.getSession();
-      if (!finalSession) {
-        console.error("Session lost before redirect");
-        setError("Session was lost. Please try again.");
-        setLoading(false);
-        return;
-      }
-
-      console.log("Redirecting to dashboard...");
-      setLoading(false);
-      
-      // Use window.location for reliable redirect that forces full page reload
-      // This ensures cookies are properly set and middleware can verify the session
-      window.location.href = "/dashboard";
-    } catch (err) {
-      console.error("Verify code error:", err);
-      setError("An unexpected error occurred. Please try again.");
-      setLoading(false);
+    } catch (profileErr) {
+      console.warn("Profile creation error:", profileErr);
     }
   };
 
@@ -198,15 +148,42 @@ export default function SignUpPage() {
               </h2>
             </div>
           </SlideIn>
-          <form className="mt-8 space-y-6" onSubmit={step === "info" ? handleSendCode : handleVerifyCode}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-800">{error}</p>
+          {emailSent ? (
+            <div className="mt-8 space-y-6">
+              <div className="rounded-md bg-green-50 p-4">
+                <div className="text-center">
+                  <h3 className="text-lg font-medium text-green-800 mb-2">
+                    Check your email
+                  </h3>
+                  <p className="text-sm text-green-700 mb-4">
+                    We sent a confirmation link to <strong>{email}</strong>
+                  </p>
+                  <p className="text-sm text-green-600">
+                    Click the link in the email to confirm your account and complete signup.
+                  </p>
+                </div>
+              </div>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmailSent(false);
+                    setError(null);
+                  }}
+                  className="text-sm text-primary-600 hover:text-primary-500"
+                >
+                  Use a different email address
+                </button>
+              </div>
             </div>
-          )}
-          <div className="space-y-4 rounded-md shadow-sm">
-            {step === "info" ? (
-              <>
+          ) : (
+            <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
+              {error && (
+                <div className="rounded-md bg-red-50 p-4">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
+              <div className="space-y-4 rounded-md shadow-sm">
                 <div>
                   <label htmlFor="firstName" className="sr-only">
                     First Name
@@ -287,59 +264,23 @@ export default function SignUpPage() {
                     placeholder="Phone Number (e.g., +1234567890)"
                   />
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="text-center text-sm text-gray-600 mb-4">
-                  We sent a verification code to {email}
-                </div>
-                <div>
-                  <label htmlFor="verificationCode" className="sr-only">
-                    Verification Code
-                  </label>
-                  <input
-                    id="verificationCode"
-                    name="verificationCode"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    required
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
-                    className="relative block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm text-center text-2xl tracking-widest"
-                    placeholder="000000"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep("info");
-                    setVerificationCode("");
-                    setError(null);
-                  }}
-                  className="text-sm text-primary-600 hover:text-primary-500 text-center w-full"
-                >
-                  Change email address
-                </button>
-              </>
-            )}
-          </div>
+              </div>
 
-          <SlideIn direction="up" delay={0.4}>
-            <div>
-              <AnimatedButton
-                type="submit"
-                disabled={loading}
-                variant="primary"
-                size="md"
-                className="w-full"
-              >
-                {loading 
-                  ? (step === "info" ? "Sending code..." : "Verifying...") 
-                  : (step === "info" ? "Send Verification Code" : "Verify Code")}
-              </AnimatedButton>
-            </div>
-          </SlideIn>
+              <SlideIn direction="up" delay={0.4}>
+                <div>
+                  <AnimatedButton
+                    type="submit"
+                    disabled={loading}
+                    variant="primary"
+                    size="md"
+                    className="w-full"
+                  >
+                    {loading ? "Creating account..." : "Sign up"}
+                  </AnimatedButton>
+                </div>
+              </SlideIn>
+            </form>
+          )}
 
           <div className="text-center text-sm">
             <span className="text-gray-600">Already have an account? </span>
