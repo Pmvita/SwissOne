@@ -7,6 +7,7 @@ import { FadeIn, SlideIn } from "@/components/ui/animated";
 import { AnimatedLinkButton } from "@/components/ui/animated/AnimatedLinkButton";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { Briefcase, Building2, TrendingUp } from "lucide-react";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
@@ -130,30 +131,38 @@ export default function Home() {
               {
                 title: "Wealth Management",
                 description: "Expert portfolio management and investment advisory services designed to grow and preserve your wealth.",
-                icon: "💼",
+                icon: Briefcase,
+                color: "text-primary-600",
               },
               {
                 title: "Private Banking",
                 description: "Exclusive banking services with dedicated relationship managers and personalized financial solutions.",
-                icon: "🏦",
+                icon: Building2,
+                color: "text-primary-600",
               },
               {
                 title: "Investment Advisory",
                 description: "Strategic investment guidance backed by comprehensive market analysis and risk assessment.",
-                icon: "📊",
+                icon: TrendingUp,
+                color: "text-primary-600",
               },
-            ].map((service, index) => (
-              <FadeIn key={service.title} delay={0.2 + index * 0.1}>
-                <motion.div
-                  whileHover={{ y: -5 }}
-                  className="bg-white border border-gray-200 rounded-2xl p-8 hover:shadow-xl transition-shadow"
-                >
-                  <div className="text-4xl mb-4">{service.icon}</div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{service.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{service.description}</p>
-                </motion.div>
-              </FadeIn>
-            ))}
+            ].map((service, index) => {
+              const IconComponent = service.icon;
+              return (
+                <FadeIn key={service.title} delay={0.2 + index * 0.1}>
+                  <motion.div
+                    whileHover={{ y: -5 }}
+                    className="bg-white border border-gray-200 rounded-2xl p-8 hover:shadow-xl transition-shadow"
+                  >
+                    <div className="mb-4">
+                      <IconComponent className={`w-10 h-10 ${service.color}`} strokeWidth={1.5} />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">{service.title}</h3>
+                    <p className="text-gray-600 leading-relaxed">{service.description}</p>
+                  </motion.div>
+                </FadeIn>
+              );
+            })}
           </div>
         </div>
       </section>
