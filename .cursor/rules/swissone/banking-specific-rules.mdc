@@ -1,0 +1,36 @@
+---
+description: Banking-specific patterns and compliance considerations
+globs: **/*.{ts,tsx}
+---
+
+# SwissOne - Banking-Specific Rules
+
+## Data Handling
+
+1. **Currency Formatting**: Always use `formatCurrency` from `@swissone/shared` for displaying monetary values. Default to CHF (Swiss Francs).
+
+2. **Date Formatting**: Use Swiss date format (DD.MM.YYYY) via `formatDate` from `@swissone/shared`.
+
+3. **Decimal Precision**: Financial amounts should always use 2 decimal places. Use DECIMAL(15, 2) in database schema.
+
+4. **Transaction Types**: Use the shared types from `@swissone/shared` - `TransactionType`, `AccountType`, etc.
+
+## Security Requirements
+
+1. **Authentication**: All routes except public landing/login/signup must be protected with authentication middleware.
+
+2. **Row Level Security**: All database tables must have RLS policies that ensure users can only access their own data.
+
+3. **Input Validation**: Validate all user inputs on both client and server side.
+
+4. **Sensitive Data**: Never log sensitive data (account numbers, balances, personal information) in production.
+
+5. **HTTPS Only**: Always enforce HTTPS in production.
+
+## Compliance Considerations
+
+1. **Data Privacy**: Follow GDPR and Swiss data protection laws.
+
+2. **Audit Trail**: Consider implementing audit logs for financial transactions (future enhancement).
+
+3. **KYC/AML**: Plan for Know Your Customer (KYC) and Anti-Money Laundering (AML) compliance features (future enhancement).

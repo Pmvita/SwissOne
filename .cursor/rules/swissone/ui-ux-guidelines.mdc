@@ -1,0 +1,53 @@
+---
+description: Swiss banking UI/UX guidelines
+globs: **/*.{tsx,ts,css}
+---
+
+# SwissOne - UI/UX Guidelines
+
+## Design Principles
+
+1. **Professional & Trustworthy**: Swiss banking applications should convey professionalism, security, and trust.
+
+2. **Clean & Minimal**: Avoid clutter. Focus on clarity and readability.
+
+3. **Consistent Color Palette**: Use the Swiss banking inspired color palette:
+   - Primary: Blues (#334e68, #486581, etc.)
+   - Accent: Professional blues (#0ea5e9, #0284c7, etc.)
+   - Neutral: Grays for text and backgrounds
+
+4. **Typography**: Use clean, readable fonts (Inter is the default). Maintain consistent font sizes and weights.
+
+5. **Spacing**: Use consistent spacing scale (from theme config). Generous whitespace improves readability.
+
+## Component Guidelines
+
+1. **Forms**: 
+   - Clear labels
+   - Error messages below inputs
+   - Disabled states for loading/submitting
+
+2. **Data Display**:
+   - Use tables for financial data when appropriate
+   - Format currency consistently (CHF with 2 decimals)
+   - Use Swiss date format (DD.MM.YYYY)
+
+3. **Navigation**:
+   - Clear navigation hierarchy
+   - Breadcrumbs for deep navigation
+   - Consistent header/nav bar across pages
+
+4. **Mobile First**:
+   - Design for mobile first, then adapt for desktop
+   - Touch-friendly targets (minimum 44x44px)
+   - Responsive layouts
+
+## Accessibility
+
+1. **Semantic HTML**: Use appropriate HTML elements (buttons, links, headings).
+
+2. **ARIA Labels**: Add ARIA labels where needed for screen readers.
+
+3. **Color Contrast**: Ensure sufficient contrast ratios (WCAG AA minimum).
+
+4. **Keyboard Navigation**: Ensure all interactive elements are keyboard accessible.

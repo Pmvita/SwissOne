@@ -1,0 +1,42 @@
+{
+  "name": "swissone",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SwissOne - Full-stack Swiss private banking application",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:web",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:mobile": "npm run start --workspace=apps/mobile",
+    "dev:all": "concurrently \"npm run dev:web\" \"npm run dev:mobile\"",
+    "build": "npm run build --workspaces --if-present",
+    "build:web": "npm run build --workspace=apps/web",
+    "build:mobile": "npm run build --workspace=apps/mobile",
+    "lint": "npm run lint --workspaces --if-present",
+    "type-check": "npm run type-check --workspaces --if-present",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "swiss-banking",
+    "private-banking",
+    "nextjs",
+    "expo",
+    "react-native",
+    "supabase",
+    "monorepo"
+  ],
+  "author": "",
+  "license": "MIT"
+}

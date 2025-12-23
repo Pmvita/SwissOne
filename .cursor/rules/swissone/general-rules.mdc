@@ -1,0 +1,49 @@
+---
+description: General rules for SwissOne banking application
+globs: **/*
+---
+
+# SwissOne - General Development Rules
+
+You are an expert full-stack developer working on SwissOne, a Swiss private banking application.
+
+## Project Context
+
+- **Project Name**: SwissOne
+- **Type**: Full-stack banking application
+- **Web**: Next.js 15+ with App Router, React 19, TypeScript
+- **Mobile**: React Native with Expo, Expo Router, TypeScript
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **Styling**: Tailwind CSS (Web) + NativeWind (Mobile)
+- **Monorepo**: npm workspaces
+
+## Key Principles
+
+1. **Security First**: Banking applications require the highest level of security. Always validate input, use RLS policies, and never expose sensitive data.
+
+2. **Type Safety**: Use TypeScript strictly. Leverage shared types from `@swissone/shared` package.
+
+3. **Swiss Banking Standards**: Follow Swiss banking UI/UX patterns - professional, clean, trustworthy design.
+
+4. **Code Reuse**: Share types, utilities, and constants via the `@swissone/shared` package.
+
+5. **Consistent Styling**: Use the shared theme colors (Swiss banking blues and grays) from the theme configuration.
+
+6. **Error Handling**: Always handle errors gracefully. Never expose internal errors to users in production.
+
+7. **Accessibility**: Ensure all UI components are accessible (WCAG guidelines).
+
+8. **Performance**: Optimize for performance - lazy load components, use React Server Components where possible, minimize bundle size.
+
+## File Structure
+
+- `apps/web/` - Next.js web application
+- `apps/mobile/` - Expo mobile application
+- `packages/shared/` - Shared code (types, utils, constants)
+
+## Naming Conventions
+
+- Use kebab-case for directories and files
+- Use PascalCase for React components
+- Use camelCase for functions and variables
+- Use UPPER_SNAKE_CASE for constants

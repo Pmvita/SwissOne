@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "SwissOne",
+    "slug": "swissone",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "swissone",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#102a43"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.swissone.app",
+      "buildNumber": "1"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.swissone.app",
+      "versionCode": 1
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": ""
+      },
+      "supabaseUrl": "https://nzpnjezhwmdsvrjhyrho.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56cG5qZXpod21kc3Zyamh5cmhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0NDQzMjIsImV4cCI6MjA4MjAyMDMyMn0.q0WRjoJ0ikMat74Pg9UVgvF46tPX8Z0qrMez_rV9BIE"
+    }
+  }
+}
