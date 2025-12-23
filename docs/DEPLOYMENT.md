@@ -18,7 +18,7 @@
    - Go to **Project Settings → General**
    - **Root Directory**: Leave **EMPTY** (use root directory `.`)
    - Framework Preset: Next.js (auto-detected via vercel.json)
-   - **Note**: The root `vercel.json` uses `npm run vercel-build` which runs `npm --prefix apps/web run build`. This bypasses workspace resolution issues by using npm's `--prefix` flag to execute the build command from the `apps/web` directory context.
+   - **Note**: The root `vercel.json` uses `npm --prefix apps/web run build` directly in the buildCommand. This bypasses workspace resolution issues by using npm's `--prefix` flag to execute the build command from the `apps/web` directory context.
 4. Configure environment variables in Vercel Dashboard:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
