@@ -15,7 +15,6 @@
     "build": "npm run build --workspaces --if-present",
     "build:web": "npm run build --workspace=apps/web",
     "build:mobile": "npm run build --workspace=apps/mobile",
-    "vercel-build": "npm run build --workspace=apps/web",
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present",
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules"

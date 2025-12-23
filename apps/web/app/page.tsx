@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { FadeIn, SlideIn } from "@/components/ui/animated";
@@ -13,7 +13,6 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function Home() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
 
   const handleLoadingComplete = () => {
@@ -22,25 +21,30 @@ export default function Home() {
 
   useEffect(() => {
     // Handle email confirmation callback
-    const code = searchParams.get("code");
-    if (code) {
-      const handleCallback = async () => {
-        const supabase = createClient();
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        
-        if (!error) {
-          router.push("/dashboard");
-          router.refresh();
-        } else {
-          router.push("/login?error=Could not confirm email");
-        }
-      };
-      handleCallback();
-      return;
+    // Use window.location.search to avoid Next.js 15 searchParams issues
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const code = searchParams.get("code");
+      
+      if (code) {
+        const handleCallback = async () => {
+          const supabase = createClient();
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (!error) {
+            router.push("/dashboard");
+            router.refresh();
+          } else {
+            router.push("/login?error=Could not confirm email");
+          }
+        };
+        handleCallback();
+        return;
+      }
     }
 
     handleLoadingComplete();
-  }, [searchParams, router]);
+  }, [router]);
 
   if (isLoading) {
     return <LoadingScreen onComplete={handleLoadingComplete} />;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AnimatedButton, FadeIn, SlideIn } from "@/components/ui/animated";
@@ -9,7 +9,6 @@ import { Logo } from "@/components/ui/Logo";
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -17,11 +16,15 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Check for error in URL params (e.g., from auth callback)
-    const errorParam = searchParams.get("error");
-    if (errorParam) {
-      setError(errorParam);
+    // Use window.location.search to avoid Next.js 15 searchParams issues
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const errorParam = searchParams.get("error");
+      if (errorParam) {
+        setError(errorParam);
+      }
     }
-  }, [searchParams]);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
