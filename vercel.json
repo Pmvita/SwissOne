@@ -1,6 +1,6 @@
 {
   "installCommand": "npm install",
-  "buildCommand": "npm run build --workspace=@swissone/web",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "apps/web/.next",
   "framework": "nextjs"
 }

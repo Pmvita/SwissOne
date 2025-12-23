@@ -18,7 +18,7 @@
    - Go to **Project Settings → General**
    - **Root Directory**: Leave **EMPTY** (use root directory `.`)
    - Framework Preset: Next.js (auto-detected via vercel.json)
-   - **Note**: The root `vercel.json` uses `npm run build --workspace=@swissone/web` in the buildCommand. This uses npm's workspace resolution by package name, which works reliably after `npm install` has set up the workspace structure.
+   - **Note**: The root `vercel.json` uses `npm run vercel-build` which runs `npm install --prefix apps/web && npm run build --workspace=@swissone/web`. This ensures workspace dependencies are installed before building, resolving the "react module not found" error.
 4. Configure environment variables in Vercel Dashboard:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`

@@ -43,6 +43,7 @@ export default function LoginPage() {
       });
 
       if (error) {
+        console.error("Login error:", error);
         setError(error.message);
         setLoading(false);
         return;
@@ -55,17 +56,67 @@ export default function LoginPage() {
         return;
       }
 
-      // Successfully signed in
-      // Wait a moment to ensure session is established
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Verify session is established
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error("Session error:", sessionError);
+        setError("Failed to establish session. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Login successful, session established:", {
+        userId: data.user?.id,
+        email: data.user?.email,
+        hasSession: !!session,
+        sessionExpiresAt: session?.expires_at
+      });
+
+      // Ensure profile exists (trigger should handle this, but double-check)
+      if (data.user) {
+        try {
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .upsert({
+              id: data.user.id,
+              email: data.user.email || email,
+              full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || null,
+            }, {
+              onConflict: "id"
+            });
+
+          if (profileError) {
+            console.warn("Profile upsert warning:", profileError);
+            // Don't block login if profile creation fails
+          } else {
+            console.log("Profile verified/created successfully");
+          }
+        } catch (profileErr) {
+          console.warn("Profile check error (non-blocking):", profileErr);
+        }
+      }
+
+      // Successfully signed in - clear states
+      setError(null);
+      
+      // Wait a moment to ensure session cookies are set
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Verify session one more time before redirect
+      const { data: { session: finalSession } } = await supabase.auth.getSession();
+      if (!finalSession) {
+        console.error("Session lost before redirect");
+        setError("Session was lost. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Redirecting to dashboard...");
+      setLoading(false);
       
       // Use window.location for reliable redirect that forces full page reload
       // This ensures cookies are properly set and middleware can verify the session
-      // Clear any error state before redirecting
-      setError(null);
-      setLoading(false);
-      
-      // Force a full page reload to ensure session is properly established
       window.location.href = "/dashboard";
     } catch (err) {
       console.error("Login error:", err);
