@@ -16,7 +16,7 @@ export default function SignUpPage() {
   const [username, setUsername] = useState("");
   const [phone, setPhone] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
-  const [step, setStep] = useState<"phone" | "verify">("phone");
+  const [step, setStep] = useState<"info" | "verify">("info");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -44,17 +44,15 @@ export default function SignUpPage() {
       return;
     }
 
-    // Format phone number (ensure it starts with +)
-    const formattedPhone = phone.startsWith("+") ? phone : `+${phone}`;
-
     setLoading(true);
 
     try {
       const supabase = createClient();
+      // Use email OTP for signup verification
       const { error } = await supabase.auth.signInWithOtp({
-        phone: formattedPhone,
+        email: email,
         options: {
-          channel: "sms",
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
@@ -87,12 +85,12 @@ export default function SignUpPage() {
 
     try {
       const supabase = createClient();
-      const formattedPhone = phone.startsWith("+") ? phone : `+${phone}`;
       
+      // Verify email OTP
       const { data, error } = await supabase.auth.verifyOtp({
-        phone: formattedPhone,
+        email: email,
         token: verificationCode,
-        type: "sms",
+        type: "email",
       });
 
       if (error) {
@@ -200,14 +198,14 @@ export default function SignUpPage() {
               </h2>
             </div>
           </SlideIn>
-          <form className="mt-8 space-y-6" onSubmit={step === "phone" ? handleSendCode : handleVerifyCode}>
+          <form className="mt-8 space-y-6" onSubmit={step === "info" ? handleSendCode : handleVerifyCode}>
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
           <div className="space-y-4 rounded-md shadow-sm">
-            {step === "phone" ? (
+            {step === "info" ? (
               <>
                 <div>
                   <label htmlFor="firstName" className="sr-only">
@@ -293,7 +291,7 @@ export default function SignUpPage() {
             ) : (
               <>
                 <div className="text-center text-sm text-gray-600 mb-4">
-                  We sent a verification code to {phone}
+                  We sent a verification code to {email}
                 </div>
                 <div>
                   <label htmlFor="verificationCode" className="sr-only">
@@ -315,13 +313,13 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    setStep("phone");
+                    setStep("info");
                     setVerificationCode("");
                     setError(null);
                   }}
                   className="text-sm text-primary-600 hover:text-primary-500 text-center w-full"
                 >
-                  Change phone number
+                  Change email address
                 </button>
               </>
             )}
@@ -337,8 +335,8 @@ export default function SignUpPage() {
                 className="w-full"
               >
                 {loading 
-                  ? (step === "phone" ? "Sending code..." : "Verifying...") 
-                  : (step === "phone" ? "Send Verification Code" : "Verify Code")}
+                  ? (step === "info" ? "Sending code..." : "Verifying...") 
+                  : (step === "info" ? "Send Verification Code" : "Verify Code")}
               </AnimatedButton>
             </div>
           </SlideIn>
