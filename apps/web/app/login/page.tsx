@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AnimatedButton, FadeIn, SlideIn } from "@/components/ui/animated";
 import { Logo } from "@/components/ui/Logo";
+import { ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,8 +21,11 @@ export default function LoginPage() {
     if (typeof window !== "undefined") {
       const searchParams = new URLSearchParams(window.location.search);
       const errorParam = searchParams.get("error");
+      const messageParam = searchParams.get("message");
       if (errorParam) {
         setError(errorParam);
+      } else if (messageParam) {
+        setError(messageParam);
       }
     }
   }, []);
@@ -52,11 +56,16 @@ export default function LoginPage() {
       }
 
       // Successfully signed in
-      // Wait a moment to ensure session is established, then redirect
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait a moment to ensure session is established
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Use window.location for reliable redirect that forces full page reload
       // This ensures cookies are properly set and middleware can verify the session
+      // Clear any error state before redirecting
+      setError(null);
+      setLoading(false);
+      
+      // Force a full page reload to ensure session is properly established
       window.location.href = "/dashboard";
     } catch (err) {
       console.error("Login error:", err);
@@ -80,7 +89,18 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
       <FadeIn>
-        <div className="w-full max-w-md space-y-8">
+        <div className="w-full max-w-md space-y-8 relative">
+          {/* Back Button */}
+          <div className="absolute -top-12 left-0">
+            <Link
+              href="/"
+              className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Home
+            </Link>
+          </div>
+
           <SlideIn direction="down">
             <div className="flex flex-col items-center">
               <FadeIn delay={0.1}>

@@ -49,17 +49,19 @@ async function getTransactions(userId: string, limit: number = 5) {
 }
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+    if (userError || !user) {
+      redirect("/login");
+    }
 
-  const accounts = await getAccounts(user.id);
-  const recentTransactions = await getTransactions(user.id, 5);
+    const accounts = await getAccounts(user.id);
+    const recentTransactions = await getTransactions(user.id, 5);
 
   // Calculate totals
   const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
@@ -401,4 +403,8 @@ export default async function DashboardPage() {
       </main>
     </div>
   );
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    redirect("/login");
+  }
 }

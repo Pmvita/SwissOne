@@ -9,7 +9,13 @@ import { useEffect } from "react";
  */
 export function ConsoleFilter() {
   useEffect(() => {
-    if (typeof window === "undefined" || process.env.NODE_ENV !== "development") {
+    // Only run on client side
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    // Only filter in development
+    if (process.env.NODE_ENV !== "development") {
       return;
     }
 
