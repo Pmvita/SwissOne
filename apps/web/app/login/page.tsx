@@ -52,13 +52,30 @@ export default function LoginPage() {
       }
 
       // Successfully signed in
-      router.push("/dashboard");
-      router.refresh();
+      // Wait a moment to ensure session is established, then redirect
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Use window.location for reliable redirect that forces full page reload
+      // This ensures cookies are properly set and middleware can verify the session
+      window.location.href = "/dashboard";
     } catch (err) {
+      console.error("Login error:", err);
       setError("An unexpected error occurred. Please try again.");
       setLoading(false);
     }
   };
+
+  // Safety timeout to reset loading state if something goes wrong
+  useEffect(() => {
+    if (loading) {
+      const timeout = setTimeout(() => {
+        setLoading(false);
+        setError("Login is taking longer than expected. Please try again.");
+      }, 10000); // 10 second timeout
+
+      return () => clearTimeout(timeout);
+    }
+  }, [loading]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">

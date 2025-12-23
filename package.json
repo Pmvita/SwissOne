@@ -14,6 +14,7 @@
     "dev:all": "concurrently \"npm run dev:web\" \"npm run dev:mobile\"",
     "build": "npm run build --workspaces --if-present",
     "build:web": "npm run build --workspace=apps/web",
+    "vercel-build": "npm --prefix apps/web run build",
     "build:mobile": "npm run build --workspace=apps/mobile",
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present",
