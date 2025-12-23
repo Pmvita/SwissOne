@@ -279,21 +279,20 @@ export default function SignUpPage() {
                   </AnimatedButton>
                 </div>
               </SlideIn>
+
+              <div className="text-center text-sm">
+                <span className="text-gray-600">Already have an account? </span>
+                <Link
+                  href="/login"
+                  className="font-medium text-primary-600 hover:text-primary-500"
+                >
+                  Sign in
+                </Link>
+              </div>
             </form>
           )}
-
-          <div className="text-center text-sm">
-            <span className="text-gray-600">Already have an account? </span>
-            <Link
-              href="/login"
-              className="font-medium text-primary-600 hover:text-primary-500"
-            >
-              Sign in
-            </Link>
-          </div>
-        </form>
-      </div>
-    </FadeIn>
+        </div>
+      </FadeIn>
     </div>
   );
 }

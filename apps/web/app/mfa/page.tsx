@@ -17,6 +17,7 @@ export default function MFAPage() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [rateLimitSeconds, setRateLimitSeconds] = useState<number | null>(null);
 
   useEffect(() => {
     // Get user info from sessionStorage
@@ -33,8 +34,28 @@ export default function MFAPage() {
     setPhone(storedPhone || "");
   }, [router]);
 
+  // Parse rate limit seconds from error message
+  const parseRateLimitSeconds = (message: string): number | null => {
+    const match = message.match(/after (\d+) seconds?/i);
+    return match ? parseInt(match[1], 10) : null;
+  };
+
+  // Countdown timer for rate limit
+  useEffect(() => {
+    if (rateLimitSeconds !== null && rateLimitSeconds > 0) {
+      const timer = setTimeout(() => {
+        setRateLimitSeconds((prev) => (prev !== null && prev > 0 ? prev - 1 : null));
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (rateLimitSeconds === 0) {
+      setRateLimitSeconds(null);
+      setError(null);
+    }
+  }, [rateLimitSeconds]);
+
   const handleSelectMethod = async (method: "phone" | "email") => {
     setError(null);
+    setRateLimitSeconds(null);
     setMfaMethod(method);
     setLoading(true);
 
@@ -58,8 +79,22 @@ export default function MFAPage() {
 
         if (error) {
           console.error("Send SMS code error:", error);
-          setError(error.message);
+          
+          // Handle phone provider not configured
+          if (error.message.includes("Unsupported phone provider") || error.message.includes("phone_provider_disabled")) {
+            setError("Phone authentication is not configured. Please use email verification instead.");
+          } else {
+            // Check for rate limit
+            const seconds = parseRateLimitSeconds(error.message);
+            if (seconds !== null) {
+              setRateLimitSeconds(seconds);
+              setError(`Please wait ${seconds} seconds before requesting another code.`);
+            } else {
+              setError(error.message);
+            }
+          }
           setLoading(false);
+          setMfaMethod(null);
           return;
         }
       } else {
@@ -73,8 +108,17 @@ export default function MFAPage() {
 
         if (error) {
           console.error("Send email code error:", error);
-          setError(error.message);
+          
+          // Check for rate limit
+          const seconds = parseRateLimitSeconds(error.message);
+          if (seconds !== null) {
+            setRateLimitSeconds(seconds);
+            setError(`Please wait ${seconds} seconds before requesting another code.`);
+          } else {
+            setError(error.message);
+          }
           setLoading(false);
+          setMfaMethod(null);
           return;
         }
       }
@@ -85,6 +129,7 @@ export default function MFAPage() {
       console.error("Send code error:", err);
       setError("An unexpected error occurred. Please try again.");
       setLoading(false);
+      setMfaMethod(null);
     }
   };
 
@@ -206,8 +251,23 @@ export default function MFAPage() {
           {step === "select" ? (
             <div className="mt-8 space-y-4">
               {error && (
-                <div className="rounded-md bg-red-50 p-4">
-                  <p className="text-sm text-red-800">{error}</p>
+                <div className={`rounded-md p-4 ${
+                  rateLimitSeconds !== null 
+                    ? "bg-yellow-50 border border-yellow-200" 
+                    : "bg-red-50 border border-red-200"
+                }`}>
+                  <p className={`text-sm ${
+                    rateLimitSeconds !== null 
+                      ? "text-yellow-800" 
+                      : "text-red-800"
+                  }`}>
+                    {error}
+                    {rateLimitSeconds !== null && rateLimitSeconds > 0 && (
+                      <span className="block mt-1 font-semibold">
+                        Retry in {rateLimitSeconds} second{rateLimitSeconds !== 1 ? "s" : ""}...
+                      </span>
+                    )}
+                  </p>
                 </div>
               )}
 
@@ -216,7 +276,7 @@ export default function MFAPage() {
                   <button
                     type="button"
                     onClick={() => handleSelectMethod("phone")}
-                    disabled={loading}
+                    disabled={loading || rateLimitSeconds !== null}
                     className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="flex items-center justify-between">
@@ -234,7 +294,7 @@ export default function MFAPage() {
                 <button
                   type="button"
                   onClick={() => handleSelectMethod("email")}
-                  disabled={loading}
+                  disabled={loading || rateLimitSeconds !== null}
                   className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="flex items-center justify-between">
