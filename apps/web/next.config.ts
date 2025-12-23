@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
   generateBuildId: async () => {
     return "build-" + Date.now();
   },
+  // Ensure Next.js can resolve modules from workspace root
+  experimental: {
+    serverComponentsExternalPackages: [],
+  },
 };
 
 export default nextConfig;

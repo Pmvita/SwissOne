@@ -31,18 +31,38 @@ export default function SignUpPage() {
 
     setLoading(true);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
+      // Check if email confirmation is required
+      if (data.user && !data.user.email_confirmed_at) {
+        setError(null);
+        setLoading(false);
+        // Show success message
+        alert("Please check your email to confirm your account before signing in.");
+        router.push("/login");
+        return;
+      }
+
+      // If already confirmed (shouldn't happen but handle it)
       router.push("/dashboard");
       router.refresh();
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+      setLoading(false);
     }
   };
 

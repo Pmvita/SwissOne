@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { AnimatedButton, FadeIn, SlideIn } from "@/components/ui/animated";
@@ -9,28 +9,51 @@ import { Logo } from "@/components/ui/Logo";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Check for error in URL params (e.g., from auth callback)
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      setError(errorParam);
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
+      // Check if user is confirmed
+      if (data.user && !data.user.email_confirmed_at) {
+        setError("Please confirm your email address before signing in. Check your inbox for the confirmation link.");
+        setLoading(false);
+        return;
+      }
+
+      // Successfully signed in
       router.push("/dashboard");
       router.refresh();
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+      setLoading(false);
     }
   };
 

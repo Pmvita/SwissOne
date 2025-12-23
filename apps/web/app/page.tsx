@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { FadeIn, SlideIn } from "@/components/ui/animated";
@@ -8,13 +9,38 @@ import { AnimatedLinkButton } from "@/components/ui/animated/AnimatedLinkButton"
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Briefcase, Building2, TrendingUp } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Home() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
 
   const handleLoadingComplete = () => {
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    // Handle email confirmation callback
+    const code = searchParams.get("code");
+    if (code) {
+      const handleCallback = async () => {
+        const supabase = createClient();
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        
+        if (!error) {
+          router.push("/dashboard");
+          router.refresh();
+        } else {
+          router.push("/login?error=Could not confirm email");
+        }
+      };
+      handleCallback();
+      return;
+    }
+
+    handleLoadingComplete();
+  }, [searchParams, router]);
 
   if (isLoading) {
     return <LoadingScreen onComplete={handleLoadingComplete} />;

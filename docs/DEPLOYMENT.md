@@ -7,6 +7,14 @@
 1. Push your code to GitHub/GitLab/Bitbucket
 2. Import project in Vercel
 3. **Important Configuration:**
+   
+   **Option A: Root Directory in Vercel Dashboard (Recommended for Monorepos)**
+   - Go to **Project Settings → General**
+   - **Root Directory**: Set to `apps/web`
+   - Framework Preset: Next.js (auto-detected)
+   - Remove or simplify `vercel.json` (Vercel will detect Next.js automatically)
+   
+   **Option B: Root Directory Empty (Current Setup)**
    - Go to **Project Settings → General**
    - **Root Directory**: Leave **EMPTY** (use root directory `.`)
    - Framework Preset: Next.js (auto-detected via vercel.json)
