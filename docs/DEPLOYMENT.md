@@ -8,8 +8,9 @@
 2. Import project in Vercel
 3. **Important Configuration:**
    - Go to **Project Settings → General**
-   - Set **Root Directory** to: `apps/web`
-   - Framework Preset: Next.js (should auto-detect)
+   - **Root Directory**: Leave **EMPTY** (use root directory `.`)
+   - Framework Preset: Next.js (auto-detected via vercel.json)
+   - **Note**: The root `vercel.json` handles building from `apps/web` using workspace commands
 4. Configure environment variables in Vercel Dashboard:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
