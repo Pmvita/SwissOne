@@ -6,12 +6,17 @@
 
 1. Push your code to GitHub/GitLab/Bitbucket
 2. Import project in Vercel
-3. Configure environment variables:
+3. **Important Configuration:**
+   - Go to **Project Settings → General**
+   - Set **Root Directory** to: `apps/web`
+   - Framework Preset: Next.js (should auto-detect)
+4. Configure environment variables in Vercel Dashboard:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-4. Set root directory to `apps/web`
+   - `SUPABASE_SERVICE_ROLE_KEY` (optional, for server-side operations)
 5. Deploy
+
+**Note:** The `vercel.json` file in the root and `apps/web/vercel.json` are configured for the monorepo structure.
 
 Vercel will automatically:
 - Detect Next.js framework
