@@ -17,18 +17,42 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    setLoading(false);
+      if (error) {
+        console.error("Login error:", error);
+        Alert.alert("Login Failed", error.message || "Invalid email or password. Please try again.");
+        setLoading(false);
+        return;
+      }
 
-    if (error) {
-      Alert.alert("Error", error.message);
-    } else {
+      // Verify session is established
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error("Session error:", sessionError);
+        Alert.alert("Error", "Failed to establish session. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Login successful:", {
+        userId: data.user?.id,
+        email: data.user?.email,
+        hasSession: !!session,
+      });
+
+      setLoading(false);
       router.replace("/(tabs)/dashboard");
+    } catch (err) {
+      console.error("Login exception:", err);
+      Alert.alert("Error", "An unexpected error occurred. Please try again.");
+      setLoading(false);
     }
   };
 

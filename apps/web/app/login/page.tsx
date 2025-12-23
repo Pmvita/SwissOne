@@ -50,10 +50,15 @@ export default function LoginPage() {
       }
 
       // Check if user is confirmed
+      // Note: You can disable email confirmation requirement in Supabase Dashboard:
+      // Authentication → Settings → "Enable email confirmations" (toggle off)
       if (data.user && !data.user.email_confirmed_at) {
-        setError("Please confirm your email address before signing in. Check your inbox for the confirmation link.");
-        setLoading(false);
-        return;
+        console.warn("Email not confirmed, but proceeding with login");
+        // For development: Allow login even if email not confirmed
+        // For production: Uncomment below to require email confirmation
+        // setError("Please confirm your email address before signing in. Check your inbox for the confirmation link.");
+        // setLoading(false);
+        // return;
       }
 
       // Verify session is established
