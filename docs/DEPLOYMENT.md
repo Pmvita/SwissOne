@@ -8,17 +8,19 @@
 2. Import project in Vercel
 3. **Important Configuration:**
    
-   **Option A: Root Directory in Vercel Dashboard (Recommended for Monorepos)**
+   **Option A: Root Directory in vercel.json (Recommended - Current Setup)**
+   - The `vercel.json` file sets `rootDirectory: "apps/web"`
+   - This tells Vercel to treat `apps/web` as the root directory
+   - Vercel will run `npm install` and `npm run build` from `apps/web`
+   - Dependencies are installed directly in `apps/web/node_modules`
+   - Next.js can find react and other dependencies without workspace resolution issues
+   - **This is the recommended approach for Vercel monorepos**
+   
+   **Option B: Root Directory in Vercel Dashboard (Alternative)**
    - Go to **Project Settings → General**
    - **Root Directory**: Set to `apps/web`
    - Framework Preset: Next.js (auto-detected)
-   - Remove or simplify `vercel.json` (Vercel will detect Next.js automatically)
-   
-   **Option B: Root Directory Empty (Current Setup)**
-   - Go to **Project Settings → General**
-   - **Root Directory**: Leave **EMPTY** (use root directory `.`)
-   - Framework Preset: Next.js (auto-detected via vercel.json)
-   - **Note**: The root `vercel.json` uses `npm run vercel-build` which runs `npm install --prefix apps/web && npm run build --workspace=@swissone/web`. This ensures workspace dependencies are installed before building, resolving the "react module not found" error.
+   - This achieves the same result as Option A
 4. Configure environment variables in Vercel Dashboard:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`

@@ -6,8 +6,9 @@ const nextConfig: NextConfig = {
   // Use standalone output for Vercel deployment
   // Error pages are handled at runtime, not during static generation
   output: "standalone",
-  // Set output file tracing root to monorepo root for proper workspace resolution
-  outputFileTracingRoot: require("path").join(__dirname, "../.."),
+  // When rootDirectory is set to apps/web in vercel.json, Next.js runs from apps/web
+  // So we don't need to set outputFileTracingRoot anymore
+  // outputFileTracingRoot: require("path").join(__dirname, "../.."),
   // Workaround for React 19 + Next.js 15 error page static generation issue
   // This tells Next.js to skip static optimization for error routes
   generateBuildId: async () => {
