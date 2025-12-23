@@ -2,7 +2,7 @@ import React from "react";
 
 interface LogoProps {
   className?: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl";
 }
 
 const sizeMap = {
@@ -10,6 +10,7 @@ const sizeMap = {
   md: { width: 180, height: 180 },
   lg: { width: 240, height: 240 },
   xl: { width: 320, height: 320 },
+  "2xl": { width: 300, height: 300 },
 };
 
 export function Logo({ className = "", size = "md" }: LogoProps) {

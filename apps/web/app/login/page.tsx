@@ -10,7 +10,7 @@ import { ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -37,8 +37,24 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient();
+      
+      // First, look up the user's email from their username
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("email, phone")
+        .eq("username", username)
+        .single();
+
+      if (profileError || !profileData) {
+        console.error("Profile lookup error:", profileError);
+        setError("Invalid username or password");
+        setLoading(false);
+        return;
+      }
+
+      // Sign in with email and password to verify credentials
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: profileData.email,
         password,
       });
 
@@ -49,80 +65,24 @@ export default function LoginPage() {
         return;
       }
 
-      // Check if user is confirmed
-      // Note: You can disable email confirmation requirement in Supabase Dashboard:
-      // Authentication → Settings → "Enable email confirmations" (toggle off)
-      if (data.user && !data.user.email_confirmed_at) {
-        console.warn("Email not confirmed, but proceeding with login");
-        // For development: Allow login even if email not confirmed
-        // For production: Uncomment below to require email confirmation
-        // setError("Please confirm your email address before signing in. Check your inbox for the confirmation link.");
-        // setLoading(false);
-        // return;
-      }
-
-      // Verify session is established
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        console.error("Session error:", sessionError);
-        setError("Failed to establish session. Please try again.");
-        setLoading(false);
-        return;
-      }
-
-      console.log("Login successful, session established:", {
-        userId: data.user?.id,
-        email: data.user?.email,
-        hasSession: !!session,
-        sessionExpiresAt: session?.expires_at
-      });
-
-      // Ensure profile exists (trigger should handle this, but double-check)
+      // Store user info for MFA before signing out
       if (data.user) {
-        try {
-          const { error: profileError } = await supabase
-            .from("profiles")
-            .upsert({
-              id: data.user.id,
-              email: data.user.email || email,
-              full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || null,
-            }, {
-              onConflict: "id"
-            });
-
-          if (profileError) {
-            console.warn("Profile upsert warning:", profileError);
-            // Don't block login if profile creation fails
-          } else {
-            console.log("Profile verified/created successfully");
-          }
-        } catch (profileErr) {
-          console.warn("Profile check error (non-blocking):", profileErr);
-        }
-      }
-
-      // Successfully signed in - clear states
-      setError(null);
-      
-      // Wait a moment to ensure session cookies are set
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Verify session one more time before redirect
-      const { data: { session: finalSession } } = await supabase.auth.getSession();
-      if (!finalSession) {
-        console.error("Session lost before redirect");
-        setError("Session was lost. Please try again.");
+        // Store email and phone in sessionStorage for MFA page
+        sessionStorage.setItem("mfa_email", profileData.email);
+        sessionStorage.setItem("mfa_phone", profileData.phone || "");
+        sessionStorage.setItem("mfa_user_id", data.user.id);
+        
+        // Sign out to require MFA verification
+        await supabase.auth.signOut();
+        
+        // Redirect to MFA page
         setLoading(false);
+        router.push("/mfa");
         return;
       }
 
-      console.log("Redirecting to dashboard...");
+      setError("Login failed. Please try again.");
       setLoading(false);
-      
-      // Use window.location for reliable redirect that forces full page reload
-      // This ensures cookies are properly set and middleware can verify the session
-      window.location.href = "/dashboard";
     } catch (err) {
       console.error("Login error:", err);
       setError("An unexpected error occurred. Please try again.");
@@ -160,7 +120,7 @@ export default function LoginPage() {
           <SlideIn direction="down">
             <div className="flex flex-col items-center">
               <FadeIn delay={0.1}>
-                <Logo size="md" className="mb-6" />
+                <Logo size="2xl" className="mb-6" />
               </FadeIn>
               <h2 className="mt-2 text-center text-3xl font-bold tracking-tight text-gray-900">
                 Sign in to SwissOne
@@ -175,19 +135,19 @@ export default function LoginPage() {
           )}
           <div className="space-y-4 rounded-md shadow-sm">
             <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
+              <label htmlFor="username" className="sr-only">
+                Username
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="relative block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
-                placeholder="Email address"
+                placeholder="Username"
               />
             </div>
             <div>
