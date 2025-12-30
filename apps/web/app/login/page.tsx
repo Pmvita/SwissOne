@@ -16,6 +16,11 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Debug: Log when component mounts
+  useEffect(() => {
+    console.log("LoginPage component mounted");
+  }, []);
+
   useEffect(() => {
     // Check for error in URL params (e.g., from auth callback)
     // Use window.location.search to avoid Next.js 15 searchParams issues
@@ -33,11 +38,14 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    console.log("handleLogin called", { username, password: "***" });
     setError(null);
     setLoading(true);
 
     try {
       const supabase = createClient();
+      console.log("Supabase client created");
       
       // First, look up the user's email and phone from their username
       // Using a database function to bypass RLS for login purposes
@@ -75,9 +83,16 @@ export default function LoginPage() {
       }
 
       // Sign in with email and password
+      console.log("Attempting sign in with email:", userCredentials.email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email: userCredentials.email,
         password: password,
+      });
+
+      console.log("Sign in response:", { 
+        hasUser: !!data?.user, 
+        hasSession: !!data?.session,
+        error: error?.message 
       });
 
       if (error) {
@@ -96,24 +111,26 @@ export default function LoginPage() {
       }
 
       // Verify session exists - createBrowserClient automatically handles cookies
-      // If no session in initial response, wait briefly and check again
-      if (!data.session) {
-        // Wait a moment for session to be established
-        await new Promise(resolve => setTimeout(resolve, 200));
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !sessionData.session) {
-          console.error("Session error:", sessionError);
-          setError("Failed to establish session. Please try again.");
-          setLoading(false);
-          return;
-        }
+      // Check session immediately after sign in
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      console.log("Session check:", { 
+        hasSession: !!sessionData?.session,
+        sessionError: sessionError?.message 
+      });
+
+      if (sessionError || !sessionData.session) {
+        console.error("Session verification error:", sessionError);
+        setError("Failed to establish session. Please try again.");
+        setLoading(false);
+        return;
       }
 
-      // Login successful - redirect to dashboard with full page reload
-      // This ensures cookies are properly read by middleware
-      console.log("Login successful, redirecting to dashboard...");
+      // Login successful - use window.location.href for full page reload
+      // This ensures cookies are properly read by middleware and session is established
+      console.log("Login successful, redirecting to dashboard");
       window.location.href = "/dashboard";
+      return; // Ensure we don't continue execution
     } catch (err) {
       console.error("Login error:", err);
       setError("An unexpected error occurred. Please try again.");
@@ -181,7 +198,17 @@ export default function LoginPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                 {/* Left Column - Sign-in Form */}
                 <div className="space-y-6">
-                  <form onSubmit={handleLogin} className="space-y-6">
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log("Form onSubmit triggered (fallback)");
+                      handleLogin(e);
+                      return false;
+                    }}
+                    className="space-y-6"
+                    noValidate
+                  >
                     {error && (
                       <div className="rounded-md bg-red-50 border border-red-200 p-4">
                         <p className="text-sm text-red-800">{error}</p>
@@ -275,7 +302,7 @@ export default function LoginPage() {
                           {loading ? "Signing in..." : "SIGN IN"}
                         </AnimatedButton>
                       </div>
-                    </SlideIn>
+                        </SlideIn>
                   </form>
                 </div>
 
