@@ -1,14 +1,7 @@
-"use client";
-
 import Link from "next/link";
 
-// Force dynamic rendering - prevent static generation (React 19 + Next.js 15 workaround)
-export const dynamic = "force-dynamic";
-export const dynamicParams = true;
-export const revalidate = 0;
-export const fetchCache = "force-no-store";
-export const runtime = "nodejs";
-
+// Server component to avoid React 19 useContext issues during static generation
+// Next.js will handle this as a server component and skip problematic static generation
 export default function NotFound() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
