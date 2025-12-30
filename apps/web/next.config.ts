@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@swissone/shared"],
-  // When rootDirectory is set to apps/web in vercel.json, Next.js runs from apps/web
-  // So we don't need to set outputFileTracingRoot anymore
-  // outputFileTracingRoot: require("path").join(__dirname, "../.."),
+  // For monorepo: ensure Next.js can trace files from root
+  outputFileTracingRoot: path.join(__dirname, "../.."),
   // Workaround for React 19 + Next.js 15 error page static generation issue
   // This tells Next.js to skip static optimization for error routes
   generateBuildId: async () => {
