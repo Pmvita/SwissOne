@@ -6,10 +6,9 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@swissone/shared"],
   // For monorepo: ensure Next.js can trace files from root
   outputFileTracingRoot: path.join(__dirname, "../.."),
-  // Workaround for React 19 + Next.js 15 error page static generation issue
-  // This tells Next.js to skip static optimization for error routes
-  generateBuildId: async () => {
-    return "build-" + Date.now();
+  // Skip static optimization for error pages to avoid React 19 context issues
+  experimental: {
+    optimizePackageImports: ["@swissone/shared"],
   },
   // Suppress Next.js 15 params/searchParams warnings from React DevTools
   // These are false positives from DevTools trying to serialize component props

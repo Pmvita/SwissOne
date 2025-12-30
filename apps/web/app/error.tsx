@@ -3,6 +3,9 @@
 import { useEffect } from "react";
 import Link from "next/link";
 
+// Force dynamic rendering to avoid React 19 + Next.js 15 static generation issues
+export const dynamic = "force-dynamic";
+
 export default function Error({
   error,
   reset,
