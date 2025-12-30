@@ -1,7 +1,13 @@
+"use client";
+
 import Link from "next/link";
 
-// Force dynamic rendering to avoid React 19 + Next.js 15 static generation issues
+// Force dynamic rendering - prevent static generation (React 19 + Next.js 15 workaround)
 export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+export const runtime = "nodejs";
 
 export default function NotFound() {
   return (

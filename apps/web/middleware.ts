@@ -62,6 +62,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
+    // Block access to MFA route (feature removed, see TODO)
+    if (request.nextUrl.pathname === "/mfa") {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+
     return supabaseResponse;
   } catch (error) {
     // If middleware fails, allow the request to continue
