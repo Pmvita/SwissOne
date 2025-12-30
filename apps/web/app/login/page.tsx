@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { AnimatedButton, FadeIn, SlideIn } from "@/components/ui/animated";
+import { FadeIn } from "@/components/ui/animated";
 import { Logo } from "@/components/ui/Logo";
 import { ArrowLeft, Eye, EyeOff, Lock, ExternalLink } from "lucide-react";
 
@@ -18,7 +18,7 @@ export default function LoginPage() {
 
   // Debug: Log when component mounts
   useEffect(() => {
-    console.log("LoginPage component mounted");
+    console.log("=== LoginPage component mounted ===");
   }, []);
 
   useEffect(() => {
@@ -36,10 +36,11 @@ export default function LoginPage() {
     }
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("handleLogin called", { username, password: "***" });
+    
+    console.log("=== HANDLELOGIN FUNCTION CALLED ===", { username, passwordLength: password.length });
     setError(null);
     setLoading(true);
 
@@ -200,14 +201,12 @@ export default function LoginPage() {
                 <div className="space-y-6">
                   <form 
                     onSubmit={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log("Form onSubmit triggered (fallback)");
+                      console.log("=== FORM onSubmit TRIGGERED ===");
                       handleLogin(e);
-                      return false;
                     }}
                     className="space-y-6"
                     noValidate
+                    id="login-form"
                   >
                     {error && (
                       <div className="rounded-md bg-red-50 border border-red-200 p-4">
@@ -290,19 +289,14 @@ export default function LoginPage() {
                     </div>
 
                     {/* Sign In Button */}
-                    <SlideIn direction="up" delay={0.2}>
-                      <div>
-                        <AnimatedButton
-                          type="submit"
-                          disabled={loading}
-                          variant="primary"
-                          size="lg"
-                          className="w-full"
-                        >
-                          {loading ? "Signing in..." : "SIGN IN"}
-                        </AnimatedButton>
-                      </div>
-                        </SlideIn>
+                    <button
+                      id="login-button"
+                      type="submit"
+                      disabled={loading}
+                      className="w-full px-6 py-3 text-lg font-semibold rounded-lg bg-primary-700 text-white hover:bg-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {loading ? "Signing in..." : "SIGN IN"}
+                    </button>
                   </form>
                 </div>
 
