@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Analytics } from "@vercel/analytics/react";
+import { AnalyticsWrapper } from "@/components/AnalyticsWrapper";
 import { ConsoleFilter } from "@/components/ConsoleFilter";
 import "./globals.css";
 
@@ -21,7 +21,7 @@ export default function RootLayout({
       <body className={inter.variable}>
         <ConsoleFilter />
         {children}
-        <Analytics />
+        <AnalyticsWrapper />
       </body>
     </html>
   );

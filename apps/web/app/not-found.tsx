@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+// Force dynamic rendering to prevent static generation issues
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // Server component to avoid React 19 useContext issues during static generation
 // Next.js will handle this as a server component and skip problematic static generation
 export default function NotFound() {
