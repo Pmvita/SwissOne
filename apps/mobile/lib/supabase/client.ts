@@ -1,6 +1,5 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
-import Constants from "expo-constants";
 
 // Note: expo-secure-store needs to be installed: npx expo install expo-secure-store
 
@@ -16,10 +15,17 @@ const ExpoSecureStoreAdapter = {
   },
 };
 
-const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl ||
-  process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey ||
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
+// Get Supabase credentials from environment variables only
+// Never hardcode API keys in app.json or source code
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    "Missing Supabase environment variables. " +
+    "Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in your .env file."
+  );
+}
 
 export function createClient() {
   return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
