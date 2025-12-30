@@ -34,6 +34,7 @@ CREATE TABLE profiles (
   last_name TEXT,
   full_name TEXT,
   phone TEXT,
+  role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'user')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -59,6 +60,7 @@ CREATE POLICY "Users can update own profile"
 -- Indexes for efficient lookups
 CREATE INDEX profiles_username_idx ON profiles(username);
 CREATE INDEX profiles_email_idx ON profiles(email);
+CREATE INDEX profiles_role_idx ON profiles(role);
 ```
 
 ### Accounts Table
@@ -252,6 +254,8 @@ If you have an existing database, run the migration files in order:
 2. Navigate to SQL Editor
 3. Run the migration files from `docs/migrations/` in order:
    - `001_update_profiles_table.sql` - Adds username, first_name, last_name, phone fields and INSERT policy
+   - `002_add_username_lookup_function.sql` - Adds function for username lookup during login
+   - `003_add_role_to_profiles.sql` - Adds role column for user authorization (admin/user)
 
 ### Migration: Update Profiles Table (001)
 
@@ -262,7 +266,32 @@ This migration adds the following to the `profiles` table:
 - `phone` (TEXT) - User's phone number
 - Index on `username` for efficient login lookups
 - INSERT policy so users can create their profile during signup
-- Automatic profile creation trigger (backup)
+
+### Migration: Add Username Lookup Function (002)
+
+This migration adds a database function that allows unauthenticated users to look up email and phone by username for login purposes:
+
+- `get_user_credentials_by_username(username_lookup TEXT)` - Returns email and phone for a given username
+- Uses `SECURITY DEFINER` to bypass RLS while keeping the query secure
+- Only returns non-sensitive data (email and phone) needed for authentication
+- Grants execute permission to `anon` and `authenticated` roles
+
+**Why this is needed:** The profiles table has RLS enabled, which prevents unauthenticated users from querying profiles. During login, users need to look up their email by username before they can authenticate. This function provides a secure way to do that lookup.
+
+### Migration: Add Role to Profiles (003)
+
+This migration adds role-based authorization to the `profiles` table:
+
+- `role` (TEXT, NOT NULL, DEFAULT 'user') - User role: 'admin' (full system access) or 'user' (standard access)
+- CHECK constraint to ensure only valid roles ('admin', 'user')
+- Index on `role` for efficient role-based queries
+- Updates existing dev user (petermvita@hotmail.com) to 'admin' role and sets username to 'pmvita'
+
+**Role Definitions:**
+- **admin**: Full system access, can manage all users and data
+- **user**: Standard banking access, limited to own data
+
+**Note:** The role field defaults to 'user' for new registrations. Only administrators can change user roles.
 
 ## Setup Instructions
 

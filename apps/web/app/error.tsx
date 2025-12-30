@@ -32,7 +32,7 @@ export default function Error({
             Try again
           </button>
           <Link
-            href="/"
+            href="/landing"
             className="px-6 py-3 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors"
           >
             Go home

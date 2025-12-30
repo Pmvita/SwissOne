@@ -131,7 +131,7 @@ export default function SignUpPage() {
           {/* Back Button */}
           <div className="absolute -top-12 left-0">
             <Link
-              href="/"
+              href="/landing"
               className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

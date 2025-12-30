@@ -120,3 +120,10 @@ You should see:
 - Make sure signup completed successfully
 - Check that username index exists for performance
 
+## Next Steps
+
+After setting up the database schema, you may want to:
+- Set up a dev user account (see [DATABASE_USER_SETUP.md](./DATABASE_USER_SETUP.md))
+- Configure email templates (see [SUPABASE_EMAIL_TEMPLATE_SETUP.md](./SUPABASE_EMAIL_TEMPLATE_SETUP.md))
+- Review full database documentation (see [SUPABASE.md](./SUPABASE.md))
+

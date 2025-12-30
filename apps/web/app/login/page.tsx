@@ -38,15 +38,23 @@ export default function LoginPage() {
     try {
       const supabase = createClient();
       
-      // First, look up the user's email from their username
+      // First, look up the user's email and phone from their username
+      // Using a database function to bypass RLS for login purposes
       const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("email, phone")
-        .eq("username", username)
-        .single();
+        .rpc("get_user_credentials_by_username", {
+          username_lookup: username,
+        });
 
-      if (profileError || !profileData) {
+      if (profileError || !profileData || profileData.length === 0) {
         console.error("Profile lookup error:", profileError);
+        setError("Invalid username or password");
+        setLoading(false);
+        return;
+      }
+
+      // Extract email and phone from the function result
+      const userCredentials = profileData[0];
+      if (!userCredentials || !userCredentials.email) {
         setError("Invalid username or password");
         setLoading(false);
         return;
@@ -54,7 +62,7 @@ export default function LoginPage() {
 
       // Sign in with email and password to verify credentials
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: profileData.email,
+        email: userCredentials.email,
         password,
       });
 
@@ -68,8 +76,8 @@ export default function LoginPage() {
       // Store user info for MFA before signing out
       if (data.user) {
         // Store email and phone in sessionStorage for MFA page
-        sessionStorage.setItem("mfa_email", profileData.email);
-        sessionStorage.setItem("mfa_phone", profileData.phone || "");
+        sessionStorage.setItem("mfa_email", userCredentials.email);
+        sessionStorage.setItem("mfa_phone", userCredentials.phone || "");
         sessionStorage.setItem("mfa_user_id", data.user.id);
         
         // Sign out to require MFA verification
@@ -109,7 +117,7 @@ export default function LoginPage() {
           {/* Back Button */}
           <div className="absolute -top-12 left-0">
             <Link
-              href="/"
+              href="/landing"
               className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

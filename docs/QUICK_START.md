@@ -56,7 +56,7 @@ npm install
    EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
    ```
 
-**Note:** See [ENV_SETUP.md](../ENV_SETUP.md) for detailed instructions and security notes.
+**Note:** See [ENV_SETUP.md](./ENV_SETUP.md) for detailed instructions and security notes.
 
 ### 4. Set Up Database
 

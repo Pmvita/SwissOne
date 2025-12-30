@@ -101,3 +101,6 @@ Thumbs.db
 # Supabase
 .supabase/
 
+# Credentials (contains sensitive login information)
+docs/Credentials.md
+

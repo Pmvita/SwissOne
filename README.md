@@ -54,7 +54,7 @@ cp .env.example apps/mobile/.env
 # Edit apps/mobile/.env with your Supabase credentials
 ```
 
-See [ENV_SETUP.md](./ENV_SETUP.md) for detailed instructions.
+See [Environment Setup](./docs/ENV_SETUP.md) for detailed instructions.
 
 4. Start development:
 ```bash
@@ -81,12 +81,13 @@ npm run dev:all
 
 See the [docs/](./docs/) directory for detailed documentation:
 - [Quick Start Guide](./docs/QUICK_START.md) - Get started quickly
-- [Environment Setup](./ENV_SETUP.md) - Environment variables configuration
+- [Environment Setup](./docs/ENV_SETUP.md) - Environment variables configuration
 - [Architecture](./docs/ARCHITECTURE.md) - System architecture overview
 - [Development Guide](./docs/DEVELOPMENT.md) - Development workflow and best practices
 - [Supabase Setup](./docs/SUPABASE.md) - Database schema and setup
 - [Deployment Guide](./docs/DEPLOYMENT.md) - Deployment instructions
 - [Animations Guide](./docs/ANIMATIONS.md) - Custom animated components
+- [Credentials](./docs/Credentials.md) - Test user login credentials (⚠️ Not in version control)
 
 ## License
 

@@ -48,7 +48,7 @@ Each app requires its own environment variables file:
    EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
    ```
 
-See [ENV_SETUP.md](../ENV_SETUP.md) for detailed instructions and getting your Supabase credentials.
+See [ENV_SETUP.md](./ENV_SETUP.md) for detailed instructions and getting your Supabase credentials.
 
 ### 4. Start Development
 

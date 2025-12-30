@@ -147,6 +147,58 @@ export default function MFAPage() {
     try {
       const supabase = createClient();
 
+      // DEVELOPMENT BYPASS: Skip OTP verification in development mode
+      // ⚠️ WARNING: This bypass only works in development. Never deploy this to production.
+      const isDevelopment = process.env.NODE_ENV === "development" || 
+                           (typeof window !== "undefined" && window.location.hostname === "localhost");
+
+      if (isDevelopment) {
+        console.warn("🚧 DEVELOPMENT MODE: MFA verification bypassed. Any code will be accepted.");
+        
+        // Get user ID from sessionStorage (stored during login)
+        const userId = sessionStorage.getItem("mfa_user_id");
+        
+        if (!userId || !email) {
+          setError("Development bypass requires stored user credentials. Please login again.");
+          setLoading(false);
+          return;
+        }
+
+        // Call the development bypass API route
+        try {
+          const response = await fetch("/api/auth/dev-bypass", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, userId }),
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+              // Clear sessionStorage
+              sessionStorage.removeItem("mfa_email");
+              sessionStorage.removeItem("mfa_phone");
+              sessionStorage.removeItem("mfa_user_id");
+
+              // Redirect to dashboard (full page reload to refresh session)
+              window.location.href = "/dashboard";
+              return;
+            }
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error("Dev bypass failed:", errorData);
+            setError("Development bypass failed. Please use a real verification code.");
+            setLoading(false);
+            return;
+          }
+        } catch (devBypassError) {
+          console.error("Dev bypass error:", devBypassError);
+          setError("Development bypass error. Please use a real verification code.");
+          setLoading(false);
+          return;
+        }
+      }
+
       if (mfaMethod === "phone") {
         const formattedPhone = phone.startsWith("+") ? phone : `+${phone}`;
         const { data, error } = await supabase.auth.verifyOtp({
@@ -329,13 +381,13 @@ export default function MFAPage() {
                   id="verificationCode"
                   name="verificationCode"
                   type="text"
-                  inputMode="numeric"
-                  maxLength={6}
+                  inputMode="text"
+                  maxLength={10}
                   required
                   value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
-                  className="relative block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm text-center text-2xl tracking-widest"
-                  placeholder="000000"
+                  onChange={(e) => setVerificationCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+                  className="relative block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm text-center text-2xl tracking-widest font-mono"
+                  placeholder="Enter code"
                 />
               </div>
 
