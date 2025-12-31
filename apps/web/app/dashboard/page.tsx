@@ -53,26 +53,12 @@ export default async function DashboardPage() {
   // Try standard getUser first
   const {
     data: { user: fetchedUser },
-    error: userError,
   } = await supabase.auth.getUser();
-  
-  // #region agent log
-  console.log("[DASHBOARD] After getUser:", {
-    hasUser: !!fetchedUser,
-    userId: fetchedUser?.id,
-    hasError: !!userError,
-    errorMessage: userError?.message
-  });
-  // #endregion
   
   let user = fetchedUser;
   
   // Fallback: If getUser failed, extract user from cookie directly (same as middleware)
   if (!user) {
-    // #region agent log
-    console.log("[DASHBOARD] getUser failed, trying cookie fallback");
-    // #endregion
-    
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
     const authCookie = cookieStore.get('sb-amjjhdsbvpnjdgdlvoka-auth-token');
@@ -81,10 +67,6 @@ export default async function DashboardPage() {
       try {
         const sessionData = JSON.parse(authCookie.value);
         if (sessionData.user) {
-          // #region agent log
-          console.log("[DASHBOARD] Extracting user from cookie");
-          // #endregion
-          
           // Verify token is still valid
           try {
             const verifyResponse = await fetch(
@@ -100,43 +82,20 @@ export default async function DashboardPage() {
             if (verifyResponse.ok) {
               const verifiedUser = await verifyResponse.json();
               user = verifiedUser;
-              // #region agent log
-              console.log("[DASHBOARD] Token verified, using verified user");
-              // #endregion
             } else {
               // Token invalid, use user from cookie anyway for this request
               user = sessionData.user;
-              // #region agent log
-              console.log("[DASHBOARD] Token verification failed, using user from cookie");
-              // #endregion
             }
           } catch {
             // Verification failed, use user from cookie
             user = sessionData.user;
-            // #region agent log
-            console.log("[DASHBOARD] Token verification error, using user from cookie");
-            // #endregion
           }
         }
-      } catch (e) {
-        // #region agent log
-        console.log("[DASHBOARD] Error parsing cookie:", e);
-        // #endregion
+      } catch {
+        // Ignore parse errors
       }
-    } else {
-      // #region agent log
-      console.log("[DASHBOARD] No valid auth cookie found");
-      // #endregion
     }
   }
-
-  // #region agent log
-  console.log("[DASHBOARD] Final user check:", {
-    hasUser: !!user,
-    userId: user?.id,
-    willRedirect: !user
-  });
-  // #endregion
 
   if (!user) {
     redirect("/login");

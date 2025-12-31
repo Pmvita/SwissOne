@@ -33,13 +33,9 @@ export default function LoginPage() {
         }),
       });
 
-      console.log("[LOGIN PAGE] Response status:", response.status);
-      console.log("[LOGIN PAGE] Response ok:", response.ok);
-
       // Handle successful response
       if (response.ok) {
         const data = await response.json();
-        console.log("[LOGIN PAGE] Login successful:", data);
         
         // Cookies are set via Set-Cookie headers in the response
         // Small delay to ensure cookies are processed by browser
