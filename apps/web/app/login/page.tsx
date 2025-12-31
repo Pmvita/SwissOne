@@ -20,42 +20,47 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
 
-    try {
+      try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        redirect: "follow", // Let browser handle redirects automatically
         body: JSON.stringify({
           username: username.trim(),
           password: password,
         }),
       });
 
-      // Handle redirect response (307/308) - server redirected with cookies
-      if (response.status === 307 || response.status === 308 || response.redirected) {
-        // Server redirected us - cookies are set in the response
-        // Use window.location to ensure full page reload with cookies
+      console.log("[LOGIN PAGE] Response status:", response.status);
+      console.log("[LOGIN PAGE] Response ok:", response.ok);
+
+      // Handle successful response
+      if (response.ok) {
+        const data = await response.json();
+        console.log("[LOGIN PAGE] Login successful:", data);
+        
+        // Cookies are set via Set-Cookie headers in the response
         // Small delay to ensure cookies are processed by browser
         setTimeout(() => {
-          window.location.href = response.url || "/dashboard";
+          window.location.href = data.redirect || "/dashboard";
         }, 100);
         return;
       }
 
       // Handle error response
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({ error: "Invalid username or password" }));
-        setError(data.error || "Invalid username or password");
-        setLoading(false);
-        return;
+      console.error("[LOGIN PAGE] Error response:", response.status);
+      let errorMessage = "Invalid username or password";
+      try {
+        const data = await response.json();
+        errorMessage = data.error || errorMessage;
+        console.error("[LOGIN PAGE] Error data:", data);
+      } catch (e) {
+        console.error("[LOGIN PAGE] Failed to parse error response:", e);
       }
-
-      // If we get here, login was successful but no redirect happened
-      // Force a full page reload to ensure cookies are read
-      window.location.href = "/dashboard";
+      setError(errorMessage);
+      setLoading(false);
     } catch (err) {
       console.error("Login error:", err);
       setError("An error occurred. Please try again.");

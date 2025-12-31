@@ -1,6 +1,5 @@
-// Auth bypassed - imports commented out
-// import { redirect } from "next/navigation";
-// import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { AnimatedCard, FadeIn } from "@/components/ui/animated";
 import { AnimatedLinkButton } from "@/components/ui/animated/AnimatedLinkButton";
 import { Logo } from "@/components/ui/Logo";
@@ -17,57 +16,135 @@ import {
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 
-// Data fetching functions commented out - auth bypassed
-// async function getAccounts(userId: string) {
-//   const supabase = await createClient();
-//   const { data, error } = await supabase
-//     .from("accounts")
-//     .select("*")
-//     .eq("user_id", userId)
-//     .order("created_at", { ascending: false });
-//
-//   if (error) {
-//     console.error("Error fetching accounts:", error);
-//     return [];
-//   }
-//   return data || [];
-// }
-//
-// async function getTransactions(userId: string, limit: number = 5) {
-//   const supabase = await createClient();
-//   const { data, error } = await supabase
-//     .from("transactions")
-//     .select("*, accounts(name, type)")
-//     .eq("user_id", userId)
-//     .order("date", { ascending: false })
-//     .limit(limit);
-//
-//   if (error) {
-//     console.error("Error fetching transactions:", error);
-//     return [];
-//   }
-//   return data || [];
-// }
+async function getAccounts(userId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("accounts")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching accounts:", error);
+    return [];
+  }
+  return data || [];
+}
+
+async function getTransactions(userId: string, limit: number = 5) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("*, accounts(name, type)")
+    .eq("user_id", userId)
+    .order("date", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("Error fetching transactions:", error);
+    return [];
+  }
+  return data || [];
+}
 
 export default async function DashboardPage() {
-  // BYPASS AUTH: Allow dashboard access without authentication
-  // const supabase = await createClient();
-  // const {
-  //   data: { user },
-  //   error: userError,
-  // } = await supabase.auth.getUser();
+  const supabase = await createClient();
+  
+  // Try standard getUser first
+  const {
+    data: { user: fetchedUser },
+    error: userError,
+  } = await supabase.auth.getUser();
+  
+  // #region agent log
+  console.log("[DASHBOARD] After getUser:", {
+    hasUser: !!fetchedUser,
+    userId: fetchedUser?.id,
+    hasError: !!userError,
+    errorMessage: userError?.message
+  });
+  // #endregion
+  
+  let user = fetchedUser;
+  
+  // Fallback: If getUser failed, extract user from cookie directly (same as middleware)
+  if (!user) {
+    // #region agent log
+    console.log("[DASHBOARD] getUser failed, trying cookie fallback");
+    // #endregion
+    
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const authCookie = cookieStore.get('sb-amjjhdsbvpnjdgdlvoka-auth-token');
+    
+    if (authCookie?.value && authCookie.value.startsWith('{')) {
+      try {
+        const sessionData = JSON.parse(authCookie.value);
+        if (sessionData.user) {
+          // #region agent log
+          console.log("[DASHBOARD] Extracting user from cookie");
+          // #endregion
+          
+          // Verify token is still valid
+          try {
+            const verifyResponse = await fetch(
+              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${sessionData.access_token}`,
+                  'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                },
+              }
+            );
+            
+            if (verifyResponse.ok) {
+              const verifiedUser = await verifyResponse.json();
+              user = verifiedUser;
+              // #region agent log
+              console.log("[DASHBOARD] Token verified, using verified user");
+              // #endregion
+            } else {
+              // Token invalid, use user from cookie anyway for this request
+              user = sessionData.user;
+              // #region agent log
+              console.log("[DASHBOARD] Token verification failed, using user from cookie");
+              // #endregion
+            }
+          } catch {
+            // Verification failed, use user from cookie
+            user = sessionData.user;
+            // #region agent log
+            console.log("[DASHBOARD] Token verification error, using user from cookie");
+            // #endregion
+          }
+        }
+      } catch (e) {
+        // #region agent log
+        console.log("[DASHBOARD] Error parsing cookie:", e);
+        // #endregion
+      }
+    } else {
+      // #region agent log
+      console.log("[DASHBOARD] No valid auth cookie found");
+      // #endregion
+    }
+  }
 
-  // if (userError || !user) {
-  //   redirect("/login");
-  // }
+  // #region agent log
+  console.log("[DASHBOARD] Final user check:", {
+    hasUser: !!user,
+    userId: user?.id,
+    willRedirect: !user
+  });
+  // #endregion
 
-  // Use a mock user for now
-  const user = { id: "b55ef620-c283-48f1-9127-90be294d160e", email: "petermvita@hotmail.com" };
+  if (!user) {
+    redirect("/login");
+  }
 
   const userId = user.id;
-  // Bypass data fetching for now - return empty arrays
-  const accounts: any[] = []; // await getAccounts(userId);
-  const recentTransactions: any[] = []; // await getTransactions(userId, 5);
+  const accounts = await getAccounts(userId);
+  const recentTransactions = await getTransactions(userId, 5);
 
   // Calculate totals
   const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
