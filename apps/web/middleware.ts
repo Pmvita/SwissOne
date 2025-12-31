@@ -2,92 +2,71 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  try {
-    let supabaseResponse = NextResponse.next({
-      request,
-    });
+  // Create response object FIRST
+  const response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
 
-    // Check if Supabase environment variables are set
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error("Supabase environment variables are not set");
-      return supabaseResponse;
-    }
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet: { name: string; value: string; options?: any }[]) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              request.cookies.set(name, value)
-            );
-            supabaseResponse = NextResponse.next({
-              request,
-            });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              supabaseResponse.cookies.set(name, value, options)
-            );
-          },
+  // Create Supabase client with cookie handling
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
         },
-      }
-    );
-
-    let user = null;
-    try {
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
-      user = authUser;
-    } catch (error) {
-      // If there's an error getting the user, continue without redirecting
-      // This allows the page to handle authentication errors gracefully
-      console.error("Error getting user in middleware:", error);
+        setAll(cookiesToSet) {
+          // Set cookies on both request and response
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value, {
+              ...options,
+              path: options?.path || "/",
+              sameSite: (options?.sameSite as "lax" | "strict" | "none") || "lax",
+              secure: options?.secure ?? (process.env.NODE_ENV === "production"),
+            });
+          });
+        },
+      },
     }
+  );
 
-    // Protect dashboard routes
-    if (request.nextUrl.pathname.startsWith("/dashboard") && !user) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
+  const pathname = request.nextUrl.pathname;
 
-    // Redirect authenticated users away from auth pages
-    if (
-      (request.nextUrl.pathname === "/login" ||
-        request.nextUrl.pathname === "/signup") &&
-      user
-    ) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-
-    // Block access to MFA route (feature removed, see TODO)
-    if (request.nextUrl.pathname === "/mfa") {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-
-    return supabaseResponse;
-  } catch (error) {
-    // If middleware fails, allow the request to continue
-    // This prevents 500 errors from breaking the app
-    console.error("Middleware error:", error);
-    return NextResponse.next({
-      request,
-    });
+  // BYPASS AUTH: Allow dashboard access without authentication check
+  // This bypasses the redirect back to login
+  if (pathname.startsWith("/dashboard")) {
+    // Allow access to dashboard without auth check
+    return response;
   }
+
+  // Refresh session to ensure cookies are up to date
+  // This will update cookies if they're expired or need refreshing
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+  // Get user - prefer session user, fallback to getUser
+  let user = session?.user;
+  if (!user) {
+    const {
+      data: { user: fetchedUser },
+      error: userError,
+    } = await supabase.auth.getUser();
+    user = fetchedUser;
+  }
+
+  // Redirect authenticated users away from login/signup
+  if ((pathname === "/login" || pathname === "/signup") && user) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  return response;
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
-

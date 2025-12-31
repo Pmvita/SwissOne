@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+// Auth bypassed - imports commented out
+// import { redirect } from "next/navigation";
+// import { createClient } from "@/lib/supabase/server";
 import { AnimatedCard, FadeIn } from "@/components/ui/animated";
 import { AnimatedLinkButton } from "@/components/ui/animated/AnimatedLinkButton";
 import { Logo } from "@/components/ui/Logo";
@@ -12,56 +13,61 @@ import {
   ArrowDownRight,
   Building2,
   Plus,
-  Eye,
-  EyeOff
+  Eye
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 
-async function getAccounts(userId: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("accounts")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Error fetching accounts:", error);
-    return [];
-  }
-  return data || [];
-}
-
-async function getTransactions(userId: string, limit: number = 5) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("*, accounts(name, type)")
-    .eq("user_id", userId)
-    .order("date", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    console.error("Error fetching transactions:", error);
-    return [];
-  }
-  return data || [];
-}
+// Data fetching functions commented out - auth bypassed
+// async function getAccounts(userId: string) {
+//   const supabase = await createClient();
+//   const { data, error } = await supabase
+//     .from("accounts")
+//     .select("*")
+//     .eq("user_id", userId)
+//     .order("created_at", { ascending: false });
+//
+//   if (error) {
+//     console.error("Error fetching accounts:", error);
+//     return [];
+//   }
+//   return data || [];
+// }
+//
+// async function getTransactions(userId: string, limit: number = 5) {
+//   const supabase = await createClient();
+//   const { data, error } = await supabase
+//     .from("transactions")
+//     .select("*, accounts(name, type)")
+//     .eq("user_id", userId)
+//     .order("date", { ascending: false })
+//     .limit(limit);
+//
+//   if (error) {
+//     console.error("Error fetching transactions:", error);
+//     return [];
+//   }
+//   return data || [];
+// }
 
 export default async function DashboardPage() {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+  // BYPASS AUTH: Allow dashboard access without authentication
+  // const supabase = await createClient();
+  // const {
+  //   data: { user },
+  //   error: userError,
+  // } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-      redirect("/login");
-    }
+  // if (userError || !user) {
+  //   redirect("/login");
+  // }
 
-    const accounts = await getAccounts(user.id);
-    const recentTransactions = await getTransactions(user.id, 5);
+  // Use a mock user for now
+  const user = { id: "b55ef620-c283-48f1-9127-90be294d160e", email: "petermvita@hotmail.com" };
+
+  const userId = user.id;
+  // Bypass data fetching for now - return empty arrays
+  const accounts: any[] = []; // await getAccounts(userId);
+  const recentTransactions: any[] = []; // await getTransactions(userId, 5);
 
   // Calculate totals
   const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
@@ -403,8 +409,4 @@ export default async function DashboardPage() {
       </main>
     </div>
   );
-  } catch (error) {
-    console.error("Dashboard error:", error);
-    redirect("/login");
-  }
 }

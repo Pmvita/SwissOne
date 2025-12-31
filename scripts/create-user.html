@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Dev User</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; }
+        button { padding: 12px 24px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 4px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Create SwissOne Dev User</h1>
+    <p>Click the button below to create the dev user:</p>
+    <button id="createBtn" onclick="createUser()">Create User</button>
+    <div id="result"></div>
+
+    <script>
+        const PROJECT_URL = 'https://amjjhdsbvpnjdgdlvoka.supabase.co';
+        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtampoZHNidnBuamRnZGx2b2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxMjMwMTEsImV4cCI6MjA4MjY5OTAxMX0.KOvBHQ7VLVnxC_1oz9_UVP3bM5fkOUpFKQa_Cn1x7Xw';
+        const DEV_EMAIL = 'petermvita@hotmail.com';
+        const DEV_USERNAME = 'pmvita';
+        const DEV_PASSWORD = 'admin123';
+
+        async function createUser() {
+            const btn = document.getElementById('createBtn');
+            const result = document.getElementById('result');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            result.innerHTML = '<div class="info">⏳ Creating user...</div>';
+
+            try {
+                // Step 1: Sign up
+                const signUpRes = await fetch(`${PROJECT_URL}/auth/v1/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': ANON_KEY,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: DEV_EMAIL,
+                        password: DEV_PASSWORD,
+                        data: {
+                            username: DEV_USERNAME,
+                            first_name: 'Peter',
+                            last_name: 'Mvita',
+                        }
+                    })
+                });
+
+                const signUpData = await signUpRes.json();
+
+                if (signUpRes.ok && signUpData.user) {
+                    result.innerHTML = '<div class="success">✅ User created! Waiting for profile...</div>';
+                    
+                    // Wait for profile trigger
+                    await new Promise(r => setTimeout(r, 2000));
+
+                    // Step 2: Sign in
+                    const signInRes = await fetch(`${PROJECT_URL}/auth/v1/token?grant_type=password`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': ANON_KEY,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: DEV_EMAIL,
+                            password: DEV_PASSWORD,
+                        })
+                    });
+
+                    const signInData = await signInRes.json();
+
+                    if (signInRes.ok && signInData.access_token) {
+                        // Step 3: Update profile
+                        const updateRes = await fetch(
+                            `${PROJECT_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(DEV_EMAIL)}`,
+                            {
+                                method: 'PATCH',
+                                headers: {
+                                    'apikey': ANON_KEY,
+                                    'Authorization': `Bearer ${signInData.access_token}`,
+                                    'Content-Type': 'application/json',
+                                    'Prefer': 'return=representation'
+                                },
+                                body: JSON.stringify({
+                                    username: DEV_USERNAME,
+                                    role: 'admin',
+                                    first_name: 'Peter',
+                                    last_name: 'Mvita',
+                                    full_name: 'Peter Mvita'
+                                })
+                            }
+                        );
+
+                        if (updateRes.ok) {
+                            result.innerHTML = `
+                                <div class="success">
+                                    <h2>✅ Setup Complete!</h2>
+                                    <p><strong>User created and profile updated successfully!</strong></p>
+                                    <p><strong>Email:</strong> ${DEV_EMAIL}</p>
+                                    <p><strong>Username:</strong> ${DEV_USERNAME}</p>
+                                    <p><strong>Password:</strong> ${DEV_PASSWORD}</p>
+                                    <p><strong>Role:</strong> admin</p>
+                                    <p>🎉 You can now login at <a href="http://localhost:3000/login">http://localhost:3000/login</a></p>
+                                </div>
+                            `;
+                        } else {
+                            const updateErr = await updateRes.json();
+                            result.innerHTML = `
+                                <div class="error">
+                                    <p>⚠️ User created but profile update failed</p>
+                                    <p>Run this SQL in Supabase Dashboard:</p>
+                                    <pre>UPDATE profiles SET username = '${DEV_USERNAME}', role = 'admin' WHERE email = '${DEV_EMAIL}';</pre>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        result.innerHTML = `
+                            <div class="error">
+                                <p>⚠️ User created but sign in failed</p>
+                                <p>Run this SQL in Supabase Dashboard:</p>
+                                <pre>UPDATE profiles SET username = '${DEV_USERNAME}', role = 'admin' WHERE email = '${DEV_EMAIL}';</pre>
+                            </div>
+                        `;
+                    }
+                } else if (signUpData.message && signUpData.message.toLowerCase().includes('already')) {
+                    result.innerHTML = `
+                        <div class="info">
+                            <p>ℹ️ User already exists</p>
+                            <p>Run this SQL to update profile:</p>
+                            <pre>UPDATE profiles SET username = '${DEV_USERNAME}', role = 'admin', first_name = 'Peter', last_name = 'Mvita', full_name = 'Peter Mvita' WHERE email = '${DEV_EMAIL}';</pre>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="error">
+                            <p>❌ Signup failed: ${signUpData.message || JSON.stringify(signUpData)}</p>
+                            <p>Please create user manually via Supabase Dashboard</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Create User';
+        }
+    </script>
+</body>
+</html>
+
