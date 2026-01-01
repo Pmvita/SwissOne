@@ -27,7 +27,7 @@ async function getTransactions(supabase: SupabaseClient, accountId: string, limi
     .from("transactions")
     .select("*")
     .eq("account_id", accountId)
-    .order("transaction_date", { ascending: false })
+    .order("date", { ascending: false })
     .limit(limit);
 
   if (error) {
@@ -299,7 +299,7 @@ export default async function AccountDetailPage({ params }: AccountDetailPagePro
                       {transactions.map((transaction) => (
                         <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
                           <td className="py-3 px-4 text-sm text-gray-900">
-                            {new Date(transaction.transaction_date).toLocaleDateString()}
+                            {new Date(transaction.date).toLocaleDateString()}
                           </td>
                           <td className="py-3 px-4 text-sm text-gray-900">{transaction.description || "N/A"}</td>
                           <td className="py-3 px-4 text-sm text-gray-600 capitalize">{transaction.type || "N/A"}</td>
