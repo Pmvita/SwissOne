@@ -13,6 +13,9 @@ dotenv.config({ path: resolve(process.cwd(), '.env.local') });
 const USER_ID = 'b55ef620-c283-48f1-9127-90be294d160e';
 const USER_EMAIL = 'petermvita@hotmail.com';
 
+// Total Net Worth: $1,500,000,000 USD
+const TOTAL_NET_WORTH = 1_500_000_000;
+
 interface SeedAccount {
   name: string;
   type: 'checking' | 'savings' | 'investment' | 'credit' | 'loan';
@@ -24,6 +27,7 @@ interface SeedAccount {
 
 interface SeedPortfolio {
   name: string;
+  account_name: string; // Which account this portfolio belongs to
   currency: 'USD' | 'CHF' | 'EUR' | 'GBP';
   holdings: Array<{
     symbol: string;
@@ -38,237 +42,130 @@ interface SeedPortfolio {
   }>;
 }
 
+// Wealth Allocation Model - Total: $1,500,000,000 USD
 const ACCOUNTS: SeedAccount[] = [
-  // Family Office Account (Swiss Private Banking)
+  // 1. Safety & Financial Foundation Account (40% = $600M)
   {
-    name: 'Mvita Reserve Holdings LLC - Family Office Account',
-    type: 'investment',
+    name: 'Safety & Financial Foundation Account',
+    type: 'savings',
     currency: 'USD',
-    balance: 60000000,
-    account_number: 'CH-001-FO',
+    balance: 600_000_000,
+    account_number: 'CH-001-SAFETY',
     iban: 'CH9300762011623852957',
   },
-  // Offshore Account (Swiss Private Banking - 9% ROI)
+  
+  // 2. Long Term Investing Account (30% = $450M)
   {
-    name: 'Mvita Reserve Holdings LLC - Offshore Account',
+    name: 'Long Term Investing Account',
     type: 'investment',
     currency: 'USD',
-    balance: 57125000,
-    account_number: 'CH-002-OFF',
+    balance: 450_000_000,
+    account_number: 'CH-002-LT-INVEST',
     iban: 'CH9300762011623852958',
   },
-  // Mvita Capital Investments - Swiss Private Banking
+  
+  // 3. Lifestyle Allocation Checking Account 1 (10% = $150M)
   {
-    name: 'Mvita Capital Investments - Swiss Private Banking (Primary)',
-    type: 'investment',
-    currency: 'USD',
-    balance: 500000000,
-    account_number: 'CH-003-MCI-1',
-    iban: 'CH9300762011623852959',
-  },
-  {
-    name: 'Mvita Capital Investments - Swiss Private Banking (Secondary)',
-    type: 'investment',
-    currency: 'USD',
-    balance: 100000000,
-    account_number: 'CH-003-MCI-2',
-    iban: 'CH9300762011623852960',
-  },
-  // Mvita Venture Capital - Swiss Private Banking
-  {
-    name: 'Mvita Venture Capital - Swiss Private Banking',
-    type: 'investment',
-    currency: 'USD',
-    balance: 500000000,
-    account_number: 'CH-004-MVC',
-    iban: 'CH9300762011623852961',
-  },
-  // Mvita Syndicate - BMO Private Wealth
-  {
-    name: 'Mvita Syndicate - BMO Private Wealth',
-    type: 'investment',
-    currency: 'USD',
-    balance: 100000000,
-    account_number: 'CA-BMO-001',
-    iban: 'CA0210000123456789012',
-  },
-  // Mvita Syndicate - RBC Private Wealth
-  {
-    name: 'Mvita Syndicate - RBC Private Wealth',
-    type: 'investment',
-    currency: 'USD',
-    balance: 50000000,
-    account_number: 'CA-RBC-001',
-    iban: 'CA0210000123456789013',
-  },
-  // Mvita Capital - Emirates NBD Private Banking
-  {
-    name: 'Mvita Capital - Emirates NBD Private Banking',
-    type: 'investment',
-    currency: 'USD',
-    balance: 5000000,
-    account_number: 'AE-ENBD-001',
-    iban: 'AE070331234567890123456',
-  },
-  // Mvita Capital - First Abu Dhabi Private Banking
-  {
-    name: 'Mvita Capital - First Abu Dhabi Private Banking',
-    type: 'investment',
-    currency: 'USD',
-    balance: 5000000,
-    account_number: 'AE-FAB-001',
-    iban: 'AE070331234567890123457',
-  },
-  // Mvita Capital - WIO Business Banking
-  {
-    name: 'Mvita Capital - WIO Business Banking',
+    name: 'Lifestyle Allocation Checking Account',
     type: 'checking',
     currency: 'USD',
-    balance: 1000000,
-    account_number: 'AE-WIO-001',
-    iban: 'AE070331234567890123458',
+    balance: 150_000_000,
+    account_number: 'CH-003-LIFESTYLE',
+    iban: 'CH9300762011623852959',
   },
-  // Mvita Inc - Liechtenstein Private Banking (Primary)
+  
+  // 4. Professional Advice & Structure Checking Account 2 (5% = $75M)
   {
-    name: 'Mvita Inc - Liechtenstein Private Banking (Primary)',
-    type: 'investment',
+    name: 'Professional Advice & Structure Checking Account',
+    type: 'checking',
     currency: 'USD',
-    balance: 100000000,
-    account_number: 'LI-001-MI-1',
-    iban: 'LI21088100002324013AA',
+    balance: 75_000_000,
+    account_number: 'CH-004-PROF-ADV',
+    iban: 'CH9300762011623852960',
   },
-  // Mvita Inc - Liechtenstein Private Banking (Secondary)
+  
+  // 5. Cash Reserve Checking Account 3 (5% = $75M)
   {
-    name: 'Mvita Inc - Liechtenstein Private Banking (Secondary)',
-    type: 'investment',
+    name: 'Cash Reserve Checking Account',
+    type: 'checking',
     currency: 'USD',
-    balance: 100000000,
-    account_number: 'LI-001-MI-2',
-    iban: 'LI21088100002324014AA',
+    balance: 75_000_000,
+    account_number: 'CH-005-CASH-RES',
+    iban: 'CH9300762011623852961',
+  },
+  
+  // 6. Charity Account (Checking Account 4) - Funded from 10% of annual returns
+  {
+    name: 'Charity & Giving Account',
+    type: 'checking',
+    currency: 'USD',
+    balance: 0, // Starts at $0, funded annually from returns
+    account_number: 'CH-006-CHARITY',
+    iban: 'CH9300762011623852962',
   },
 ];
 
+// Portfolios mapped to accounts with appropriate asset mixes
 const PORTFOLIOS: SeedPortfolio[] = [
+  // Safety & Financial Foundation Portfolio (40% = $600M)
+  // Asset mix: High interest savings, Government bonds, Money market funds
   {
-    name: 'Venture Capital & Private Equity Portfolio',
+    name: 'Safety & Financial Foundation Portfolio',
+    account_name: 'Safety & Financial Foundation Account',
     currency: 'USD',
     holdings: [
+      // Government Bonds - 60% of Safety Account ($360M)
       {
-        symbol: 'SECURENET',
-        market_symbol: 'PRIVATE',
-        name: 'SecureNet - 60% Equity',
-        quantity: 1,
-        purchase_price: 1200000000,
-        current_price: 1200000000,
+        symbol: 'US10Y',
+        market_symbol: '^TNX',
+        name: 'US 10-Year Treasury Bond',
+        quantity: 3_600_000, // $360M at $100 par value
+        purchase_price: 100.00,
+        current_price: 100.00,
         currency: 'USD',
-        asset_type: 'equity',
+        asset_type: 'bond',
         refresh_cadence: 'daily',
       },
       {
-        symbol: 'SYNDICATE-X',
-        market_symbol: 'PRIVATE',
-        name: 'Syndicate X - 60% Equity',
-        quantity: 1,
-        purchase_price: 1800000000,
-        current_price: 1800000000,
+        symbol: 'US30Y',
+        market_symbol: '^TYX',
+        name: 'US 30-Year Treasury Bond',
+        quantity: 1_200_000, // $120M at $100 par value
+        purchase_price: 100.00,
+        current_price: 100.00,
         currency: 'USD',
-        asset_type: 'equity',
+        asset_type: 'bond',
         refresh_cadence: 'daily',
       },
+      // Money Market Funds - 40% of Safety Account ($240M)
       {
-        symbol: 'MAPLE-AI',
+        symbol: 'MMF-PRIME',
         market_symbol: 'PRIVATE',
-        name: 'MapleAI - 60% Equity',
-        quantity: 1,
-        purchase_price: 2000000000,
-        current_price: 2000000000,
+        name: 'Prime Money Market Fund',
+        quantity: 240_000_000,
+        purchase_price: 1.00,
+        current_price: 1.00,
         currency: 'USD',
-        asset_type: 'equity',
-        refresh_cadence: 'daily',
-      },
-      {
-        symbol: 'ORBITECH',
-        market_symbol: 'PRIVATE',
-        name: 'OrbitTech - 60% Equity',
-        quantity: 1,
-        purchase_price: 5100000000,
-        current_price: 5100000000,
-        currency: 'USD',
-        asset_type: 'equity',
+        asset_type: 'money_market',
         refresh_cadence: 'daily',
       },
     ],
   },
+  
+  // Long Term Investing Portfolio (30% = $450M)
+  // Asset mix: Global equity ETFs, Dividend paying stocks
+  // This is the base for "living off returns" (4% withdrawal rate = $18M/year)
   {
-    name: 'Private Equity Holdings Portfolio',
+    name: 'Long Term Investing Portfolio',
+    account_name: 'Long Term Investing Account',
     currency: 'USD',
     holdings: [
-      {
-        symbol: 'GOLDEN-MAPLE',
-        market_symbol: 'PRIVATE',
-        name: 'Golden Maple Circuit - 60% Equity',
-        quantity: 1,
-        purchase_price: 720000000,
-        current_price: 720000000,
-        currency: 'USD',
-        asset_type: 'equity',
-        refresh_cadence: 'daily',
-      },
-      {
-        symbol: 'AGAPE-RECORDS',
-        market_symbol: 'PRIVATE',
-        name: 'Agape Records - 80% Equity',
-        quantity: 1,
-        purchase_price: 320000000,
-        current_price: 320000000,
-        currency: 'USD',
-        asset_type: 'equity',
-        refresh_cadence: 'daily',
-      },
-      {
-        symbol: 'MAISON-AGAPE',
-        market_symbol: 'PRIVATE',
-        name: 'Maison Agape - 80% Equity',
-        quantity: 1,
-        purchase_price: 68000000,
-        current_price: 68000000,
-        currency: 'USD',
-        asset_type: 'equity',
-        refresh_cadence: 'daily',
-      },
-      {
-        symbol: 'KINSHASA-SKY',
-        market_symbol: 'PRIVATE',
-        name: 'Kinshasa Sky Residences - 100% Equity',
-        quantity: 1,
-        purchase_price: 1000000000,
-        current_price: 1000000000,
-        currency: 'USD',
-        asset_type: 'equity',
-        refresh_cadence: 'daily',
-      },
-      {
-        symbol: 'KIEAT-UNIV',
-        market_symbol: 'PRIVATE',
-        name: 'KIEAT University - 100% Equity',
-        quantity: 1,
-        purchase_price: 500000000,
-        current_price: 500000000,
-        currency: 'USD',
-        asset_type: 'equity',
-        refresh_cadence: 'daily',
-      },
-    ],
-  },
-  {
-    name: 'Public Markets Portfolio',
-    currency: 'USD',
-    holdings: [
+      // Global Equity ETFs - 60% of Long Term Account ($270M)
       {
         symbol: 'SPY',
         market_symbol: 'SPY',
         name: 'SPDR S&P 500 ETF Trust',
-        quantity: 100000,
+        quantity: 500_000, // ~$225M at $450/share
         purchase_price: 450.00,
         current_price: 450.00,
         currency: 'USD',
@@ -276,21 +173,22 @@ const PORTFOLIOS: SeedPortfolio[] = [
         refresh_cadence: 'realtime',
       },
       {
-        symbol: 'QQQ',
-        market_symbol: 'QQQ',
-        name: 'Invesco QQQ Trust',
-        quantity: 50000,
-        purchase_price: 380.00,
-        current_price: 380.00,
+        symbol: 'VT',
+        market_symbol: 'VT',
+        name: 'Vanguard Total World Stock ETF',
+        quantity: 100_000, // ~$45M at $450/share
+        purchase_price: 450.00,
+        current_price: 450.00,
         currency: 'USD',
         asset_type: 'etf',
         refresh_cadence: 'realtime',
       },
+      // Dividend Paying Stocks - 40% of Long Term Account ($180M)
       {
         symbol: 'AAPL',
         market_symbol: 'AAPL',
-        name: 'Apple Inc.',
-        quantity: 10000,
+        name: 'Apple Inc. (Dividend Stock)',
+        quantity: 1_000_000, // ~$175M at $175/share
         purchase_price: 175.00,
         current_price: 175.00,
         currency: 'USD',
@@ -300,8 +198,8 @@ const PORTFOLIOS: SeedPortfolio[] = [
       {
         symbol: 'MSFT',
         market_symbol: 'MSFT',
-        name: 'Microsoft Corporation',
-        quantity: 10000,
+        name: 'Microsoft Corporation (Dividend Stock)',
+        quantity: 100_000, // ~$38M at $380/share
         purchase_price: 380.00,
         current_price: 380.00,
         currency: 'USD',
@@ -309,42 +207,25 @@ const PORTFOLIOS: SeedPortfolio[] = [
         refresh_cadence: 'realtime',
       },
       {
-        symbol: 'US10Y',
-        market_symbol: '^TNX',
-        name: 'US 10-Year Treasury Bond',
-        quantity: 10000000,
-        purchase_price: 100.00,
-        current_price: 100.00,
+        symbol: 'JNJ',
+        market_symbol: 'JNJ',
+        name: 'Johnson & Johnson (Dividend Stock)',
+        quantity: 150_000, // ~$24M at $160/share
+        purchase_price: 160.00,
+        current_price: 160.00,
         currency: 'USD',
-        asset_type: 'bond',
-        refresh_cadence: 'daily',
-      },
-    ],
-  },
-  {
-    name: 'Crypto Reserves',
-    currency: 'USD',
-    holdings: [
-      {
-        symbol: 'BTC',
-        market_symbol: 'BTC-USD',
-        name: 'Bitcoin',
-        quantity: 1000,
-        purchase_price: 45000.00,
-        current_price: 45000.00,
-        currency: 'USD',
-        asset_type: 'cash',
+        asset_type: 'equity',
         refresh_cadence: 'realtime',
       },
       {
-        symbol: 'ETH',
-        market_symbol: 'ETH-USD',
-        name: 'Ethereum',
-        quantity: 10000,
-        purchase_price: 3000.00,
-        current_price: 3000.00,
+        symbol: 'PG',
+        market_symbol: 'PG',
+        name: 'Procter & Gamble (Dividend Stock)',
+        quantity: 150_000, // ~$23M at $155/share
+        purchase_price: 155.00,
+        current_price: 155.00,
         currency: 'USD',
-        asset_type: 'cash',
+        asset_type: 'equity',
         refresh_cadence: 'realtime',
       },
     ],
@@ -380,6 +261,7 @@ async function seedAccount() {
   });
 
   console.log('🌱 Starting account seeding for:', USER_EMAIL);
+  console.log(`💰 Total Net Worth: $${(TOTAL_NET_WORTH / 1_000_000).toFixed(0)}M USD`);
 
   try {
     // Verify user exists
@@ -452,6 +334,17 @@ async function seedAccount() {
     }
 
     console.log(`✅ Created ${createdAccounts?.length || 0} accounts`);
+    
+    // Log account allocation
+    console.log('\n📊 Account Allocation Summary:');
+    for (const acc of ACCOUNTS) {
+      const percentage = ((acc.balance / TOTAL_NET_WORTH) * 100).toFixed(1);
+      console.log(`   ${acc.name}: $${(acc.balance / 1_000_000).toFixed(0)}M (${percentage}%)`);
+    }
+
+    // Verify total
+    const totalBalance = ACCOUNTS.reduce((sum, acc) => sum + acc.balance, 0);
+    console.log(`\n   Total: $${(totalBalance / 1_000_000).toFixed(0)}M USD`);
 
     // Create portfolios and holdings
     console.log('\n📊 Creating portfolios and holdings...');
@@ -460,6 +353,14 @@ async function seedAccount() {
     let holdingsCreated = 0;
 
     for (const portfolioData of PORTFOLIOS) {
+      // Find the account for this portfolio
+      const account = createdAccounts?.find((acc) => acc.name === portfolioData.account_name);
+      
+      if (!account) {
+        console.error(`❌ Account not found for portfolio ${portfolioData.name}: ${portfolioData.account_name}`);
+        continue;
+      }
+
       // Create portfolio
       const { data: portfolio, error: portfolioError } = await supabase
         .from('portfolios')
@@ -478,12 +379,11 @@ async function seedAccount() {
       }
 
       portfoliosCreated++;
-      createdPortfolios.push(portfolio);
+      createdPortfolios.push({ ...portfolio, account_id: account.id });
 
       // Create holdings for this portfolio
       const holdingsToInsert = portfolioData.holdings.map((holding) => ({
         portfolio_id: portfolio.id,
-        user_id: USER_ID,
         symbol: holding.symbol,
         market_symbol: holding.market_symbol || holding.symbol,
         name: holding.name,
@@ -511,89 +411,59 @@ async function seedAccount() {
     // Create sample transactions
     console.log('\n💳 Creating sample transactions...');
     const transactions = [];
-    const familyOfficeAccount = createdAccounts?.find((acc) =>
-      acc.name.includes('Family Office Account')
+    
+    const lifestyleAccount = createdAccounts?.find((acc) =>
+      acc.name.includes('Lifestyle Allocation')
     );
-    const offshoreAccount = createdAccounts?.find((acc) =>
-      acc.name.includes('Offshore Account')
+    const charityAccount = createdAccounts?.find((acc) =>
+      acc.name.includes('Charity')
+    );
+    const longTermAccount = createdAccounts?.find((acc) =>
+      acc.name.includes('Long Term Investing')
     );
 
-    if (familyOfficeAccount) {
-      // Annual dividends received
+    // Sample transactions for Lifestyle Account
+    if (lifestyleAccount) {
+      // Annual personal income: $18M (4% of $450M Long Term Investing Account)
+      // After charity (10% of returns = $1.8M), remaining $16.2M goes to Lifestyle Account
+      // Monthly income: $1.5M
       transactions.push(
         {
-          account_id: familyOfficeAccount.id,
+          account_id: lifestyleAccount.id,
           user_id: USER_ID,
           type: 'credit',
-          amount: 30000000,
+          amount: 1_500_000,
           currency: 'USD',
-          description: 'SecureNet - Annual Dividend',
-          category: 'dividend',
-          date: new Date('2024-01-15').toISOString(),
+          description: 'Monthly Income Distribution (Living Off Returns)',
+          category: 'income',
+          date: new Date('2024-01-01').toISOString(),
         },
         {
-          account_id: familyOfficeAccount.id,
-          user_id: USER_ID,
-          type: 'credit',
-          amount: 42000000,
-          currency: 'USD',
-          description: 'Syndicate X - Annual Dividend',
-          category: 'dividend',
-          date: new Date('2024-01-15').toISOString(),
-        },
-        {
-          account_id: familyOfficeAccount.id,
-          user_id: USER_ID,
-          type: 'credit',
-          amount: 40000000,
-          currency: 'USD',
-          description: 'MapleAI - Annual Dividend',
-          category: 'dividend',
-          date: new Date('2024-01-15').toISOString(),
-        },
-        {
-          account_id: familyOfficeAccount.id,
-          user_id: USER_ID,
-          type: 'credit',
-          amount: 85000000,
-          currency: 'USD',
-          description: 'OrbitTech - Annual Dividend',
-          category: 'dividend',
-          date: new Date('2024-01-15').toISOString(),
-        },
-        {
-          account_id: familyOfficeAccount.id,
+          account_id: lifestyleAccount.id,
           user_id: USER_ID,
           type: 'debit',
-          amount: 10805000,
+          amount: 500_000,
           currency: 'USD',
-          description: 'Family Office - Staff Salaries',
+          description: 'Monthly Personal Expenses',
           category: 'expense',
-          date: new Date('2024-01-31').toISOString(),
-        },
-        {
-          account_id: familyOfficeAccount.id,
-          user_id: USER_ID,
-          type: 'debit',
-          amount: 10000000,
-          currency: 'USD',
-          description: 'Charity & Tithes',
-          category: 'charity',
-          date: new Date('2024-01-31').toISOString(),
+          date: new Date('2024-01-15').toISOString(),
         }
       );
     }
 
-    if (offshoreAccount) {
+    // Sample charity transaction (10% of annual returns from Long Term Investing)
+    // Annual returns on $450M @ 5-7% = $22.5M - $31.5M
+    // Charity: 10% of $25M (avg) = $2.5M
+    if (charityAccount && longTermAccount) {
       transactions.push({
-        account_id: offshoreAccount.id,
+        account_id: charityAccount.id,
         user_id: USER_ID,
         type: 'credit',
-        amount: 57125000,
+        amount: 2_500_000,
         currency: 'USD',
-        description: 'Annual Income Allocation from VC&PE',
+        description: 'Annual Charity Distribution (10% of Long Term Investing Returns)',
         category: 'income',
-        date: new Date('2024-01-01').toISOString(),
+        date: new Date('2024-01-31').toISOString(),
       });
     }
 
@@ -603,15 +473,25 @@ async function seedAccount() {
       if (transactionsError) {
         console.error('❌ Error creating transactions:', transactionsError.message);
       } else {
-        console.log(`✅ Created ${transactions.length} transactions`);
+        console.log(`✅ Created ${transactions.length} sample transactions`);
       }
     }
 
-    // Calculate total balance
-    const totalBalance = ACCOUNTS.reduce((sum, acc) => sum + acc.balance, 0);
-    console.log(`\n💰 Total Account Balance: $${(totalBalance / 1_000_000).toFixed(2)}M USD`);
-
     console.log('\n✅ Seeding completed successfully!');
+    console.log('\n📋 Wealth Allocation Model Summary:');
+    console.log('   1. Safety & Financial Foundation: $600M (40%)');
+    console.log('   2. Long Term Investing: $450M (30%)');
+    console.log('   3. Lifestyle Allocation: $150M (10%)');
+    console.log('   4. Professional Advice & Structure: $75M (5%)');
+    console.log('   5. Cash Reserve: $75M (5%)');
+    console.log('   6. Charity Account: Funded annually from 10% of returns');
+    console.log('\n💰 Living Off Returns Logic:');
+    console.log('   - Invested Base: $450M (Long Term Investing Account)');
+    console.log('   - Annual Withdrawal Rate: 4%');
+    console.log('   - Annual Personal Income: $18M');
+    console.log('   - Monthly Income: $1.5M');
+    console.log('   - Charity: 10% of annual returns (approx $2.5M/year)');
+    console.log('   - Remaining Income: $15.5M/year to Lifestyle Account');
   } catch (error: any) {
     console.error('❌ Unexpected error:', error.message);
     console.error(error);
@@ -629,4 +509,3 @@ seedAccount()
     console.error('❌ Fatal error:', error);
     process.exit(1);
   });
-

@@ -7,16 +7,20 @@ import Link from "next/link";
 import { 
   Wallet, 
   TrendingUp, 
-  CreditCard, 
-  ArrowUpRight, 
-  ArrowDownRight,
-  Building2,
-  Plus,
   Eye,
-  Shield
+  Shield,
+  User,
+  Mail,
+  Phone,
+  BarChart3,
+  List,
+  RefreshCw,
+  ArrowUpRight
 } from "lucide-react";
-import { formatCurrency, formatDate } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { PortfolioOverview } from "./portfolio-overview";
+import { PortfolioBreakdown } from "./portfolio-breakdown";
 
 async function getAccounts(supabase: SupabaseClient, userId: string) {
   const { data, error } = await supabase
@@ -45,6 +49,70 @@ async function getTransactions(supabase: SupabaseClient, userId: string, limit: 
     return [];
   }
   return data || [];
+}
+
+async function getPortfolios(supabase: SupabaseClient, userId: string) {
+  const { data, error } = await supabase
+    .from("portfolios")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching portfolios:", error);
+    return [];
+  }
+  return data || [];
+}
+
+async function getHoldingsWithPrices(supabase: SupabaseClient, userId: string) {
+  try {
+    // First, get all portfolio IDs for the user
+    const { data: userPortfolios, error: portfoliosError } = await supabase
+      .from("portfolios")
+      .select("id")
+      .eq("user_id", userId);
+
+    if (portfoliosError) {
+      console.error("Error fetching portfolios for holdings:", portfoliosError);
+      return [];
+    }
+
+    if (!userPortfolios || userPortfolios.length === 0) {
+      return [];
+    }
+
+    const portfolioIds = userPortfolios.map(p => p.id);
+
+    // Then get all holdings for those portfolios
+    // Note: asset_type and market_symbol columns don't exist in holdings table yet
+    // The portfolio breakdown component handles missing asset_type with a fallback
+    const { data: holdings, error } = await supabase
+      .from("holdings")
+      .select(`
+        id,
+        portfolio_id,
+        symbol,
+        name,
+        quantity,
+        purchase_price,
+        current_price,
+        currency,
+        portfolios(id, name, user_id)
+      `)
+      .in("portfolio_id", portfolioIds);
+
+    if (error) {
+      console.error("Error fetching holdings:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
+      return [];
+    }
+
+    return holdings || [];
+  } catch (err) {
+    console.error("Unexpected error in getHoldingsWithPrices:", err);
+    return [];
+  }
 }
 
 export default async function DashboardPage() {
@@ -143,354 +211,278 @@ export default async function DashboardPage() {
   // Use authenticated client for queries so RLS works correctly
   const accounts = await getAccounts(authenticatedSupabase, userId);
   const recentTransactions = await getTransactions(authenticatedSupabase, userId, 5);
+  const portfolios = await getPortfolios(authenticatedSupabase, userId);
+  const holdings = await getHoldingsWithPrices(authenticatedSupabase, userId);
 
-  // Calculate totals
+  // Calculate totals - AUM is the sum of account balances (~$1.5B USD)
   const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
+  const totalAUM = totalBalance; // Total AUM = sum of account balances
   const accountCount = accounts.length;
   const transactionCount = recentTransactions.length;
 
-  // Get account type icon
-  const getAccountIcon = (type: string) => {
-    switch (type) {
-      case "checking":
-        return Wallet;
-      case "savings":
-        return Building2;
-      case "investment":
-        return TrendingUp;
-      case "credit":
-        return CreditCard;
-      default:
-        return Wallet;
-    }
-  };
-
-  // Get account type color
-  const getAccountColor = (type: string) => {
-    switch (type) {
-      case "checking":
-        return "bg-primary-500";
-      case "savings":
-        return "bg-accent-500";
-      case "investment":
-        return "bg-green-500";
-      case "credit":
-        return "bg-orange-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
+  // Calculate portfolio holdings breakdown for display (these are investments within the accounts)
+  let totalPortfolioValue = 0;
+  const assetClassBreakdown: Record<string, number> = {};
+  
+  for (const holding of holdings) {
+    const value = Number(holding.quantity || 0) * Number(holding.current_price || 0);
+    totalPortfolioValue += value;
+    
+    // Group by asset type (defaults to 'equity' since asset_type column doesn't exist yet)
+    const assetType = (holding as any).asset_type || 'equity';
+    assetClassBreakdown[assetType] = (assetClassBreakdown[assetType] || 0) + value;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
+      {/* Header - matches BMO style */}
+      <header className="bg-primary-700 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 justify-between items-center">
             <div className="flex items-center gap-3">
-              <Logo size="sm" className="flex-shrink-0" />
-              <h1 className="text-xl font-bold text-primary-900">SwissOne</h1>
+              <Logo size="sm" className="flex-shrink-0 text-white" />
+              <h1 className="text-xl font-bold">SwissOne Private Wealth</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700 hidden sm:inline">{user.email}</span>
-              {/* Show Security Dashboard link for admin/staff */}
+              <span className="text-sm hidden sm:inline">Welcome, {profile?.username || user.email?.split('@')[0] || 'User'}</span>
               {isAdminOrStaff && (
                 <Link
                   href="/security"
-                  className="px-3 py-1.5 text-sm font-semibold border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                  className="px-3 py-1.5 text-sm font-semibold border-2 border-white/30 text-white rounded-lg hover:bg-white/10 transition-colors"
                 >
+                  <Shield className="h-4 w-4 inline mr-1" />
                   Security
                 </Link>
               )}
               <form action="/auth/signout" method="post">
                 <button
                   type="submit"
-                  className="px-3 py-1.5 text-sm font-semibold border-2 border-primary-700 text-primary-700 rounded-lg hover:bg-primary-50 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                  className="px-3 py-1.5 text-sm font-semibold border-2 border-white/30 text-white rounded-lg hover:bg-white/10 transition-colors flex items-center gap-2"
                 >
-                  Sign out
+                  <User className="h-4 w-4" />
+                  Log Out
                 </button>
               </form>
             </div>
           </div>
         </div>
+      </header>
+
+      {/* Navigation Bar - Desktop */}
+      <nav className="hidden md:block bg-primary-100 border-b border-primary-200">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex space-x-8">
+            <Link href="/accounts" className="px-3 py-4 text-sm font-medium text-primary-900 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
+              Accounts
+            </Link>
+            <Link href="/dashboard" className="px-3 py-4 text-sm font-medium text-primary-900 border-b-2 border-primary-700">
+              Investments
+            </Link>
+            <Link href="/transactions" className="px-3 py-4 text-sm font-medium text-primary-900 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
+              Transfers
+            </Link>
+            <Link href="/documents" className="px-3 py-4 text-sm font-medium text-primary-900 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
+              Documents
+            </Link>
+            <Link href="/support" className="px-3 py-4 text-sm font-medium text-primary-900 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
+              Support
+            </Link>
+          </div>
+        </div>
       </nav>
 
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <FadeIn delay={0.1}>
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Banking Dashboard</h2>
-            <p className="mt-2 text-gray-600">Welcome back, manage your accounts and transactions</p>
+      {/* Mobile Navigation Bar */}
+      <nav className="md:hidden bg-primary-100 border-b border-primary-200">
+        <div className="mx-auto px-4">
+          <div className="flex space-x-4 overflow-x-auto">
+            <Link href="/accounts" className="px-3 py-4 text-sm font-medium text-primary-900 whitespace-nowrap">
+              Accounts
+            </Link>
+            <Link href="/dashboard" className="px-3 py-4 text-sm font-medium text-primary-900 border-b-2 border-primary-700 whitespace-nowrap">
+              Investments
+            </Link>
+            <Link href="/transactions" className="px-3 py-4 text-sm font-medium text-primary-900 whitespace-nowrap">
+              Transfers
+            </Link>
+            <Link href="/more" className="px-3 py-4 text-sm font-medium text-primary-900 whitespace-nowrap">
+              More
+            </Link>
           </div>
-        </FadeIn>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <AnimatedCard delay={0.2} className="overflow-hidden">
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Total Balance</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(totalBalance, "CHF")}
-                  </p>
-                </div>
-                <div className="h-12 w-12 bg-primary-100 rounded-full flex items-center justify-center">
-                  <Wallet className="h-6 w-6 text-primary-700" />
-                </div>
-              </div>
-            </div>
-          </AnimatedCard>
-
-          <AnimatedCard delay={0.3} className="overflow-hidden">
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Active Accounts</p>
-                  <p className="text-2xl font-bold text-gray-900">{accountCount}</p>
-                </div>
-                <div className="h-12 w-12 bg-accent-100 rounded-full flex items-center justify-center">
-                  <Building2 className="h-6 w-6 text-accent-700" />
-                </div>
-              </div>
-            </div>
-          </AnimatedCard>
-
-          <AnimatedCard delay={0.4} className="overflow-hidden">
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Recent Transactions</p>
-                  <p className="text-2xl font-bold text-gray-900">{transactionCount}</p>
-                </div>
-                <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-green-700" />
-                </div>
-              </div>
-            </div>
-          </AnimatedCard>
-
-          <AnimatedCard delay={0.5} className="overflow-hidden">
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Portfolio Value</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(0, "CHF")}
-                  </p>
-                </div>
-                <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-purple-700" />
-                </div>
-              </div>
-            </div>
-          </AnimatedCard>
         </div>
+      </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Accounts Section */}
-          <div className="lg:col-span-2">
-            <FadeIn delay={0.6}>
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900">Your Accounts</h3>
-                <AnimatedLinkButton 
-                  href="/accounts" 
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <Eye className="h-4 w-4" />
-                  View All
-                </AnimatedLinkButton>
-              </div>
-            </FadeIn>
-
-            {accounts.length === 0 ? (
-              <AnimatedCard delay={0.7}>
-                <div className="p-12 text-center">
-                  <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Wallet className="h-8 w-8 text-gray-400" />
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8">
+          {/* Left Sidebar - Advisor Information (Hidden on mobile, shown on desktop) */}
+          <aside className="hidden lg:block lg:col-span-1">
+            <FadeIn delay={0.1}>
+              <AnimatedCard className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Private Wealth Advisor</h3>
+                <div className="flex flex-col items-center mb-4">
+                  <div className="h-20 w-20 bg-primary-100 rounded-full flex items-center justify-center mb-3">
+                    <User className="h-10 w-10 text-primary-700" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">No accounts yet</h4>
-                  <p className="text-gray-500 mb-6">Get started by creating your first banking account</p>
-                  <AnimatedLinkButton href="/accounts" variant="primary" size="md" className="inline-flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Create Account
+                  <p className="font-medium text-gray-900">Advisor Name</p>
+                  <p className="text-sm text-gray-600 mt-1">Senior Wealth Advisor</p>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <Phone className="h-4 w-4" />
+                    <span>+41 XX XXX XX XX</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <Mail className="h-4 w-4" />
+                    <span>advisor@swissone.ch</span>
+                  </div>
+                </div>
+                <div className="mt-4 space-y-2">
+                  <AnimatedLinkButton 
+                    href="/contact" 
+                    variant="outline" 
+                    size="sm"
+                    className="w-full"
+                  >
+                    Contact My Advisor
+                  </AnimatedLinkButton>
+                  <AnimatedLinkButton 
+                    href="/messages" 
+                    variant="outline" 
+                    size="sm"
+                    className="w-full"
+                  >
+                    Message Center
                   </AnimatedLinkButton>
                 </div>
               </AnimatedCard>
-            ) : (
-              <div className="space-y-4">
-                {accounts.slice(0, 3).map((account, index) => {
-                  const Icon = getAccountIcon(account.type);
-                  const colorClass = getAccountColor(account.type);
-                  return (
-                    <AnimatedCard key={account.id} delay={0.7 + index * 0.1} className="hover:shadow-md transition-shadow">
-                      <Link href="/accounts" className="block">
-                        <div className="p-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-4">
-                              <div className={`h-12 w-12 ${colorClass} rounded-lg flex items-center justify-center`}>
-                                <Icon className="h-6 w-6 text-white" />
-                              </div>
-                              <div>
-                                <h4 className="text-lg font-semibold text-gray-900">{account.name}</h4>
-                                <p className="text-sm text-gray-500 capitalize">{account.type}</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-2xl font-bold text-gray-900">
-                                {formatCurrency(Number(account.balance || 0), account.currency || "CHF")}
-                              </p>
-                              {account.account_number && (
-                                <p className="text-xs text-gray-400 mt-1">****{account.account_number.slice(-4)}</p>
-                              )}
-                            </div>
-                          </div>
-                          {account.iban && (
-                            <div className="pt-4 border-t border-gray-100">
-                              <p className="text-xs text-gray-500">IBAN: {account.iban}</p>
-                            </div>
-                          )}
-                        </div>
-                      </Link>
-                    </AnimatedCard>
-                  );
-                })}
-                {accounts.length > 3 && (
-                  <AnimatedCard delay={1.0}>
-                    <Link href="/accounts" className="block p-6 text-center">
-                      <p className="text-primary-700 font-medium">
-                        View {accounts.length - 3} more account{accounts.length - 3 !== 1 ? "s" : ""}
-                      </p>
-                    </Link>
-                  </AnimatedCard>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Recent Transactions */}
-          <div className="lg:col-span-1">
-            <FadeIn delay={0.6}>
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900">Recent Transactions</h3>
-                <AnimatedLinkButton 
-                  href="/transactions" 
-                  variant="outline" 
-                  size="sm"
-                  className="text-xs"
-                >
-                  View All
-                </AnimatedLinkButton>
-              </div>
             </FadeIn>
+          </aside>
 
-            {recentTransactions.length === 0 ? (
-              <AnimatedCard delay={0.7}>
-                <div className="p-8 text-center">
-                  <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <ArrowUpRight className="h-6 w-6 text-gray-400" />
-                  </div>
-                  <p className="text-sm text-gray-500">No transactions yet</p>
-                </div>
-              </AnimatedCard>
-            ) : (
-              <AnimatedCard delay={0.7}>
-                <div className="divide-y divide-gray-100">
-                  {recentTransactions.map((transaction, index) => {
-                    const isCredit = transaction.type === "credit";
-                    const amount = Number(transaction.amount || 0);
-                    return (
-                      <div key={transaction.id} className="p-4 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                              isCredit ? "bg-green-100" : "bg-red-100"
-                            }`}>
-                              {isCredit ? (
-                                <ArrowDownRight className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <ArrowUpRight className="h-4 w-4 text-red-600" />
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">
-                                {transaction.description || "Transaction"}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {transaction.accounts?.name || "Account"}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className={`text-sm font-semibold ${
-                              isCredit ? "text-green-600" : "text-red-600"
-                            }`}>
-                              {isCredit ? "+" : "-"}{formatCurrency(Math.abs(amount), transaction.currency || "CHF")}
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              {formatDate(transaction.date)}
-                            </p>
-                          </div>
-                        </div>
+          {/* Main Content - Portfolio Overview */}
+          <div className="lg:col-span-3">
+            {/* Mobile Advisor Section */}
+            <div className="lg:hidden mb-6">
+              <FadeIn delay={0.1}>
+                <AnimatedCard className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <User className="h-8 w-8 text-primary-700" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-gray-900">Your Private Wealth Advisor</h3>
+                      <p className="text-sm text-gray-600 mt-0.5">Advisor Name</p>
+                      <div className="flex items-center gap-3 mt-2">
+                        <a href="tel:+41XXXXXXXXX" className="text-xs text-primary-700 hover:text-primary-900 flex items-center gap-1">
+                          <Phone className="h-3 w-3" />
+                          +41 XX XXX XX XX
+                        </a>
                       </div>
-                    );
-                  })}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <AnimatedLinkButton 
+                        href="/contact" 
+                        variant="outline" 
+                        size="sm"
+                        className="text-xs px-2 py-1"
+                      >
+                        Contact
+                      </AnimatedLinkButton>
+                      <AnimatedLinkButton 
+                        href="/messages" 
+                        variant="outline" 
+                        size="sm"
+                        className="text-xs px-2 py-1"
+                      >
+                        Messages
+                      </AnimatedLinkButton>
+                    </div>
+                  </div>
+                </AnimatedCard>
+              </FadeIn>
+            </div>
+            <FadeIn delay={0.2}>
+              <div className="mb-6">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Portfolio Overview</h2>
+                
+                {/* Total AUM - Mobile */}
+                <div className="lg:hidden mb-4">
+                  <AnimatedCard className="p-4 bg-primary-50">
+                    <p className="text-sm text-gray-600 mb-1">Total AUM</p>
+                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalAUM, "USD")}</p>
+                  </AnimatedCard>
                 </div>
-              </AnimatedCard>
-            )}
-          </div>
-        </div>
+              </div>
 
-        {/* Quick Actions */}
-        <FadeIn delay={0.8}>
-          <div className="mt-8">
-            <AnimatedCard>
-              <div className="px-6 py-5">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <AnimatedLinkButton 
-                    href="/accounts" 
-                    variant="outline" 
-                    size="md" 
-                    className="w-full justify-center flex-col h-auto py-4 gap-2"
-                  >
-                    <Wallet className="h-5 w-5" />
-                    <span>Accounts</span>
-                  </AnimatedLinkButton>
-                  <AnimatedLinkButton 
-                    href="/transactions" 
-                    variant="outline" 
-                    size="md" 
-                    className="w-full justify-center flex-col h-auto py-4 gap-2"
-                  >
-                    <ArrowUpRight className="h-5 w-5" />
-                    <span>Transactions</span>
-                  </AnimatedLinkButton>
-                  <AnimatedLinkButton 
-                    href="/portfolio" 
-                    variant="outline" 
-                    size="md" 
-                    className="w-full justify-center flex-col h-auto py-4 gap-2"
-                  >
-                    <TrendingUp className="h-5 w-5" />
-                    <span>Portfolio</span>
-                  </AnimatedLinkButton>
-                  <button
-                    type="button"
-                    className="flex flex-col items-center justify-center px-4 py-4 border-2 border-gray-300 rounded-lg text-sm font-medium text-gray-400 bg-white cursor-not-allowed gap-2"
-                    disabled
-                  >
-                    <CreditCard className="h-5 w-5" />
-                    <span>Transfer</span>
+              {/* Action Buttons - Above Portfolio Overview */}
+              <div className="flex flex-wrap gap-2 md:gap-3 mb-6">
+                <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+                  Transfer Funds
+                </button>
+                <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+                  Rebalance Portfolio
+                </button>
+                <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+                  Add Investment
+                </button>
+                <div className="hidden md:flex gap-2 ml-auto">
+                  <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                    <RefreshCw className="h-4 w-4" />
+                  </button>
+                  <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                    <BarChart3 className="h-4 w-4" />
+                  </button>
+                  <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors border-primary-700 bg-primary-50">
+                    <List className="h-4 w-4 text-primary-700" />
                   </button>
                 </div>
               </div>
-            </AnimatedCard>
+
+              {/* Portfolio Overview Component */}
+              <PortfolioOverview
+                totalValue={totalAUM}
+                assetClassBreakdown={assetClassBreakdown}
+                holdings={holdings}
+                portfolios={portfolios}
+              />
+            </FadeIn>
+
+            {/* Portfolio Breakdown */}
+            <FadeIn delay={0.4}>
+              <div className="mt-8">
+                <PortfolioBreakdown
+                  holdings={holdings}
+                  portfolios={portfolios}
+                  totalAUM={totalAUM}
+                />
+              </div>
+            </FadeIn>
           </div>
-        </FadeIn>
+        </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+        <div className="grid grid-cols-4 h-16">
+          <Link href="/accounts" className="flex flex-col items-center justify-center text-xs text-gray-600 hover:text-primary-700 transition-colors">
+            <Wallet className="h-5 w-5 mb-1" />
+            <span>Accounts</span>
+          </Link>
+          <Link href="/transactions" className="flex flex-col items-center justify-center text-xs text-gray-600 hover:text-primary-700 transition-colors">
+            <ArrowUpRight className="h-5 w-5 mb-1" />
+            <span>Transfers</span>
+          </Link>
+          <Link href="/dashboard" className="flex flex-col items-center justify-center text-xs text-primary-700">
+            <TrendingUp className="h-5 w-5 mb-1" />
+            <span>Investments</span>
+          </Link>
+          <Link href="/more" className="flex flex-col items-center justify-center text-xs text-gray-600 hover:text-primary-700 transition-colors">
+            <Eye className="h-5 w-5 mb-1" />
+            <span>More</span>
+          </Link>
+        </div>
+      </nav>
+
+      {/* Spacer for mobile bottom nav */}
+      <div className="md:hidden h-16"></div>
     </div>
   );
 }
