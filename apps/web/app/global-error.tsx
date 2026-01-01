@@ -12,18 +12,34 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Use inline styles to avoid CSS class serialization issues during static generation
   return (
     <html>
       <body>
-        <div className="flex min-h-screen items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Something went wrong</h1>
-            <p className="text-xl text-gray-600 mb-8">
+        <div style={{ 
+          display: 'flex', 
+          minHeight: '100vh', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          backgroundColor: '#f9fafb' 
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1rem', color: '#111827' }}>
+              Something went wrong
+            </h1>
+            <p style={{ fontSize: '1.25rem', color: '#4b5563', marginBottom: '2rem' }}>
               An unexpected error occurred. Please try again.
             </p>
             <button
               onClick={reset}
-              className="px-6 py-3 bg-primary-700 text-white rounded-lg hover:bg-primary-800 transition-colors"
+              style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: '#1e40af',
+                color: 'white',
+                borderRadius: '0.5rem',
+                border: 'none',
+                cursor: 'pointer'
+              }}
             >
               Try again
             </button>
