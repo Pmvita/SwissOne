@@ -2,8 +2,8 @@
 // Internal Pricing Service - Single point of access for all market data
 // This is the ONLY service that should be used by the application
 
-import { ProviderManager } from './services/pricing/provider-manager';
-import { MarketPrice } from './services/pricing/base-provider';
+import { ProviderManager } from './pricing/provider-manager';
+import { MarketPrice } from './pricing/base-provider';
 
 export interface PriceRequest {
   symbol: string;
