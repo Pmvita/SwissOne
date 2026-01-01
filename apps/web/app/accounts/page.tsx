@@ -3,7 +3,7 @@ import { createClient, createAuthenticatedClient } from "@/lib/supabase/server";
 import { AnimatedCard, FadeIn } from "@/components/ui/animated";
 import { Logo } from "@/components/ui/Logo";
 import Link from "next/link";
-import { Wallet, Building2, TrendingUp, CreditCard, User, Shield, ArrowLeft, ShoppingBag, Briefcase, PiggyBank, CheckCircle2, ArrowRight, ArrowUp } from "lucide-react";
+import { Wallet, Building2, TrendingUp, CreditCard, User, Shield, ArrowLeft, ShoppingBag, Briefcase, PiggyBank, CheckCircle2, ArrowRight, ArrowUp, Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 import { SupabaseClient } from "@supabase/supabase-js";
 
@@ -310,18 +310,21 @@ export default async function AccountsPage() {
           <FadeIn delay={0.1}>
             <AnimatedCard className="p-6 h-full">
               <div className="flex items-center gap-4 h-full">
-                {/* Profile Picture Placeholder */}
-                <div className="h-16 w-16 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="h-8 w-8 text-primary-700" />
+                {/* Profile Picture Placeholder with Verification Badge */}
+                <div className="relative flex-shrink-0">
+                  <div className="h-[100px] w-[100px] bg-primary-100 rounded-full flex items-center justify-center">
+                    <User className="h-12 w-12 text-primary-700" />
+                  </div>
+                  {/* Verification Badge */}
+                  <div className="absolute bottom-0 right-0 h-6 w-6 bg-green-600 rounded-full flex items-center justify-center border-2 border-white">
+                    <CheckCircle2 className="h-4 w-4 text-white" />
+                  </div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h2 className="text-xl font-bold text-gray-900 truncate">{displayName}</h2>
                   <div className="flex items-center gap-3 mt-1">
                     <span className="text-sm font-medium text-gray-600">{profile?.role || 'Client'}</span>
-                    <div className="flex items-center gap-1 text-green-600">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span className="text-sm font-medium">Verified Account</span>
-                    </div>
+                    <span className="text-sm font-medium text-gray-600">Verified Account</span>
                   </div>
                 </div>
               </div>
@@ -365,68 +368,101 @@ export default async function AccountsPage() {
               const IconComponent = category.icon;
               const dailyGainPercent = (category.dailyGain / category.value) * 100;
               
+              // Format description - split by comma and add plus signs between items
+              const descriptionParts = category.description
+                .split(',')
+                .map(part => part.trim().replace(/\s*[+•]\s*/g, ' ').trim())
+                .filter(part => part.length > 0);
+              
               return (
                 <FadeIn key={category.id} delay={0.4 + index * 0.1}>
                   {category.accountId ? (
                     <Link href={`/accounts/${category.accountId}`}>
-                      <AnimatedCard className="p-6 hover:shadow-lg transition-all cursor-pointer group">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 flex-1 min-w-0">
-                            {/* Icon */}
-                            <div className="bg-green-600 p-3 rounded-lg flex-shrink-0">
-                              <IconComponent className="h-6 w-6 text-white" />
-                            </div>
-                            
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h3 className="text-lg font-bold text-gray-900">
-                                  {category.name} ({category.percentage.toFixed(0)}%)
-                                </h3>
-                              </div>
-                              <p className="text-2xl font-bold text-gray-900 mb-2">
-                                {formatCurrency(category.value, "USD")}
-                              </p>
-                              <div className="flex items-center gap-2 text-green-600 mb-1">
-                                <ArrowUp className="h-4 w-4" />
-                                <span className="text-base font-semibold">
-                                  + {formatCurrency(category.dailyGain, "USD")}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-600">{category.description}</p>
-                            </div>
+                      <AnimatedCard className="p-4 hover:shadow-lg transition-all cursor-pointer group">
+                        <div className="flex items-start gap-4">
+                          {/* Icon - Larger, darker green */}
+                          <div className="bg-green-700 p-3 rounded-lg flex-shrink-0">
+                            <IconComponent className="h-6 w-6 text-white" />
                           </div>
                           
-                          {/* Right Arrow */}
-                          <div className="flex-shrink-0 ml-4">
-                            <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-primary-700 transition-colors" />
+                          {/* Main Content Area */}
+                          <div className="flex-1 min-w-0">
+                            {/* Title row with value and arrow on the right */}
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-base font-bold text-gray-900">
+                                  {category.name}
+                                </h3>
+                                <span className="text-base font-medium text-gray-500">
+                                  ({category.percentage.toFixed(0)}%)
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-base font-bold text-gray-900">
+                                  {formatCurrency(category.value, "USD")}
+                                </span>
+                                <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-primary-700 transition-colors" />
+                              </div>
+                            </div>
+                            
+                            {/* Description with plus signs */}
+                            <div className="flex items-center gap-1.5 mb-2 flex-wrap text-sm text-gray-600">
+                              {descriptionParts.map((part, idx) => (
+                                <span key={idx} className="flex items-center gap-1.5">
+                                  {idx > 0 && <Plus className="h-3 w-3 text-green-600 flex-shrink-0" />}
+                                  <span>{part}</span>
+                                </span>
+                              ))}
+                            </div>
+                            
+                            {/* Daily gain badge - compact, below value area */}
+                            <div className="flex justify-end">
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 rounded-md">
+                                <ArrowUp className="h-3 w-3 text-green-600" />
+                                <span className="text-sm font-semibold text-green-600">
+                                  +{formatCurrency(category.dailyGain, "USD")}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </AnimatedCard>
                     </Link>
                   ) : (
-                    <AnimatedCard className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4 flex-1 min-w-0">
-                          <div className="bg-green-600 p-3 rounded-lg flex-shrink-0">
-                            <IconComponent className="h-6 w-6 text-white" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="text-lg font-bold text-gray-900">
-                                {category.name} ({category.percentage.toFixed(0)}%)
+                    <AnimatedCard className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-green-700 p-3 rounded-lg flex-shrink-0">
+                          <IconComponent className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-base font-bold text-gray-900">
+                                {category.name}
                               </h3>
-                            </div>
-                            <p className="text-2xl font-bold text-gray-900 mb-2">
-                              {formatCurrency(category.value, "USD")}
-                            </p>
-                            <div className="flex items-center gap-2 text-green-600 mb-1">
-                              <ArrowUp className="h-4 w-4" />
-                              <span className="text-base font-semibold">
-                                + {formatCurrency(category.dailyGain, "USD")}
+                              <span className="text-base font-medium text-gray-500">
+                                ({category.percentage.toFixed(0)}%)
                               </span>
                             </div>
-                            <p className="text-sm text-gray-600">{category.description}</p>
+                            <span className="text-base font-bold text-gray-900">
+                              {formatCurrency(category.value, "USD")}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 mb-2 flex-wrap text-sm text-gray-600">
+                            {descriptionParts.map((part, idx) => (
+                              <span key={idx} className="flex items-center gap-1.5">
+                                {idx > 0 && <Plus className="h-3 w-3 text-green-600 flex-shrink-0" />}
+                                <span>{part}</span>
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex justify-end">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 rounded-md">
+                              <ArrowUp className="h-3 w-3 text-green-600" />
+                              <span className="text-sm font-semibold text-green-600">
+                                +{formatCurrency(category.dailyGain, "USD")}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>

@@ -1,16 +1,19 @@
+"use client";
+
 import Link from "next/link";
-
-// Force this to be a dynamic route that never gets statically generated
-export const dynamic = "force-dynamic";
-export const dynamicParams = true;
-export const revalidate = 0;
-
-// This function tells Next.js not to generate this page statically
-export async function generateStaticParams() {
-  return [];
-}
+import { useEffect, useState } from "react";
 
 export default function NotFound() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="text-center">
