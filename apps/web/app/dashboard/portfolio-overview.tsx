@@ -2,7 +2,7 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { AnimatedCard } from "@/components/ui/animated";
-import { formatCurrency } from "@/lib/utils/format";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/utils/format";
 
 interface PortfolioOverviewProps {
   totalValue: number;
@@ -75,9 +75,9 @@ export function PortfolioOverview({ totalValue, assetClassBreakdown, holdings, p
             <p className="text-sm text-gray-600">Portfolio distribution by asset class</p>
           </div>
           
-          <div className="flex flex-col xl:flex-row items-center gap-6 md:gap-8">
+          <div className="flex flex-col items-center gap-6 md:gap-8">
             {/* Pie Chart */}
-            <div className="w-full xl:w-1/2 flex-shrink-0 flex justify-center">
+            <div className="w-full flex-shrink-0 flex flex-col items-center gap-4">
               <div className="w-full max-w-[280px]">
                 <ResponsiveContainer width="100%" aspect={1}>
                   <PieChart>
@@ -86,7 +86,6 @@ export function PortfolioOverview({ totalValue, assetClassBreakdown, holdings, p
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ percentage }) => `${percentage}%`}
                       outerRadius={95}
                       innerRadius={35}
                       fill="#8884d8"
@@ -111,10 +110,23 @@ export function PortfolioOverview({ totalValue, assetClassBreakdown, holdings, p
                   </PieChart>
                 </ResponsiveContainer>
               </div>
+              {/* Percentage Summary below chart */}
+              <div className="flex flex-wrap justify-center gap-4">
+                {pieData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded flex-shrink-0"
+                      style={{ backgroundColor: COLORS[item.name as keyof typeof COLORS] || COLORS.Other }}
+                    />
+                    <span className="text-sm font-semibold text-gray-900">{item.percentage}%</span>
+                    <span className="text-sm text-gray-600">{item.name}</span>
+                  </div>
+                ))}
+              </div>
             </div>
             
             {/* Legend with enhanced styling */}
-            <div className="w-full xl:w-1/2 space-y-3">
+            <div className="w-full space-y-3">
               {pieData.map((item) => {
                 const color = COLORS[item.name as keyof typeof COLORS] || COLORS.Other;
                 return (
@@ -132,9 +144,9 @@ export function PortfolioOverview({ totalValue, assetClassBreakdown, holdings, p
                         <p className="text-xs text-gray-600 mt-0.5">{item.percentage}% of portfolio</p>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-sm md:text-base font-bold text-gray-900 break-words">
-                        {formatCurrency(item.value, "USD")}
+                    <div className="text-right flex-shrink-0 min-w-[100px]">
+                      <p className="text-xs md:text-sm font-bold text-gray-900">
+                        {formatCurrencyCompact(item.value, "USD")}
                       </p>
                     </div>
                   </div>
@@ -143,9 +155,9 @@ export function PortfolioOverview({ totalValue, assetClassBreakdown, holdings, p
               
               {/* Total Summary */}
               <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex items-center justify-between gap-3">
                   <span className="text-sm font-semibold text-gray-700">Total Portfolio Value</span>
-                  <span className="text-base md:text-lg font-bold text-gray-900 break-words">{formatCurrency(totalValue, "USD")}</span>
+                  <span className="text-sm md:text-base font-bold text-gray-900">{formatCurrencyCompact(totalValue, "USD")}</span>
                 </div>
               </div>
             </div>
