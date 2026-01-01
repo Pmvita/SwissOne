@@ -11,8 +11,6 @@ export const metadata: Metadata = {
   description: "Swiss private banking application",
 };
 
-export const dynamic = "force-dynamic";
-
 export default function RootLayout({
   children,
 }: Readonly<{
