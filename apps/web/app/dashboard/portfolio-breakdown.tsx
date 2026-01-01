@@ -252,27 +252,6 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
                   </div>
                 );
               })}
-              
-              {holdingsList.length > 3 && !showAllHoldings[groupName] && (
-                <div className="pt-2">
-                  <button 
-                    onClick={() => toggleShowAllHoldings(groupName)}
-                    className="text-sm font-medium text-primary-700 hover:text-primary-900"
-                  >
-                    View {holdingsList.length - 3} more holding{holdingsList.length - 3 !== 1 ? "s" : ""}
-                  </button>
-                </div>
-              )}
-              {holdingsList.length > 3 && showAllHoldings[groupName] && (
-                <div className="pt-2">
-                  <button 
-                    onClick={() => toggleShowAllHoldings(groupName)}
-                    className="text-sm font-medium text-primary-700 hover:text-primary-900"
-                  >
-                    Show less
-                  </button>
-                </div>
-              )}
             </div>
             
             <div className="mt-4 md:mt-6 pt-4 border-t border-gray-200">
