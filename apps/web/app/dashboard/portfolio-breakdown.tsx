@@ -64,6 +64,8 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
     groupNames.map(name => [name, false]) // Start collapsed on mobile
   );
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(initialExpandedState);
+  const [showAllHoldings, setShowAllHoldings] = useState<Record<string, boolean>>({});
+  const [expandedHoldings, setExpandedHoldings] = useState<Record<string, boolean>>({});
   
   // Calculate total holdings value for normalization
   let totalHoldingsValue = 0;
@@ -101,6 +103,20 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
     setExpandedSections(prev => ({
       ...prev,
       [groupName]: !prev[groupName]
+    }));
+  };
+
+  const toggleShowAllHoldings = (groupName: string) => {
+    setShowAllHoldings(prev => ({
+      ...prev,
+      [groupName]: !prev[groupName]
+    }));
+  };
+
+  const toggleHoldingDetails = (holdingId: string) => {
+    setExpandedHoldings(prev => ({
+      ...prev,
+      [holdingId]: !prev[holdingId]
     }));
   };
 
@@ -159,7 +175,7 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
             </div>
             
             <div className={`space-y-3 md:space-y-4 ${!isExpanded ? 'hidden lg:block' : ''}`}>
-              {holdingsList.slice(0, 3).map((holding, index) => {
+              {(showAllHoldings[groupName] ? holdingsList : holdingsList.slice(0, 3)).map((holding, index) => {
                 // Calculate raw holding value
                 const rawValue = Number(holding.quantity || 0) * Number(holding.current_price || 0);
                 
@@ -168,37 +184,106 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
                 const normalizedValue = rawValue * normalizationFactor;
                 
                 const yieldPercent = getEstimatedYield(holding.asset_type || "equity");
+                const holdingId = holding.id || `${holding.symbol}-${index}`;
+                const isExpanded = expandedHoldings[holdingId] || false;
+                const purchaseValue = Number(holding.quantity || 0) * Number(holding.purchase_price || 0);
+                const gainLoss = rawValue - purchaseValue;
+                const gainLossPercent = purchaseValue > 0 ? ((gainLoss / purchaseValue) * 100) : 0;
                 
                 return (
-                  <div key={holding.id || index} className="flex flex-col md:flex-row md:items-center md:justify-between p-3 md:p-4 bg-gray-50 rounded-lg gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm md:text-base text-gray-900 truncate">{holding.name || holding.symbol}</p>
-                      <p className="text-xs md:text-sm text-gray-600 mt-0.5">Est. {yieldPercent.toFixed(2)}% Yield</p>
-                    </div>
-                    <div className="flex items-center justify-between md:justify-end gap-3 md:gap-4">
-                      <div className="text-right">
-                        <p className="font-semibold text-sm md:text-base text-gray-900">{formatCurrency(normalizedValue, holding.currency || "USD")}</p>
+                  <div key={holdingId}>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between p-3 md:p-4 bg-gray-50 rounded-lg gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm md:text-base text-gray-900 truncate">{holding.name || holding.symbol}</p>
+                        <p className="text-xs md:text-sm text-gray-600 mt-0.5">Est. {yieldPercent.toFixed(2)}% Yield</p>
                       </div>
-                      <button className="px-3 py-1.5 text-xs md:text-sm font-medium text-primary-700 hover:text-primary-900 border border-primary-300 rounded-lg hover:bg-primary-50 transition-colors whitespace-nowrap">
-                        Details
-                      </button>
+                      <div className="flex items-center justify-between md:justify-end gap-3 md:gap-4">
+                        <div className="text-right">
+                          <p className="font-semibold text-sm md:text-base text-gray-900">{formatCurrency(normalizedValue, holding.currency || "USD")}</p>
+                        </div>
+                        <button 
+                          onClick={() => toggleHoldingDetails(holdingId)}
+                          className="px-3 py-1.5 text-xs md:text-sm font-medium text-primary-700 hover:text-primary-900 border border-primary-300 rounded-lg hover:bg-primary-50 transition-colors whitespace-nowrap"
+                        >
+                          {isExpanded ? "Hide Details" : "Details"}
+                        </button>
+                      </div>
                     </div>
+                    {isExpanded && (
+                      <div className="mt-2 p-4 bg-white border border-gray-200 rounded-lg space-y-2">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-600">Symbol</p>
+                            <p className="font-medium text-gray-900">{holding.symbol || "N/A"}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Quantity</p>
+                            <p className="font-medium text-gray-900">{Number(holding.quantity || 0).toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Current Price</p>
+                            <p className="font-medium text-gray-900">{formatCurrency(Number(holding.current_price || 0), holding.currency || "USD")}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Purchase Price</p>
+                            <p className="font-medium text-gray-900">{formatCurrency(Number(holding.purchase_price || 0), holding.currency || "USD")}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Current Value (Raw)</p>
+                            <p className="font-medium text-gray-900">{formatCurrency(rawValue, holding.currency || "USD")}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Purchase Value</p>
+                            <p className="font-medium text-gray-900">{formatCurrency(purchaseValue, holding.currency || "USD")}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Gain/Loss</p>
+                            <p className={`font-medium ${gainLoss >= 0 ? "text-green-600" : "text-red-600"}`}>
+                              {gainLoss >= 0 ? "+" : ""}{formatCurrency(gainLoss, holding.currency || "USD")} ({gainLossPercent >= 0 ? "+" : ""}{gainLossPercent.toFixed(2)}%)
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Estimated Yield</p>
+                            <p className="font-medium text-gray-900">{yieldPercent.toFixed(2)}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
               
-              {holdingsList.length > 3 && (
+              {holdingsList.length > 3 && !showAllHoldings[groupName] && (
                 <div className="pt-2">
-                  <button className="text-sm font-medium text-primary-700 hover:text-primary-900">
+                  <button 
+                    onClick={() => toggleShowAllHoldings(groupName)}
+                    className="text-sm font-medium text-primary-700 hover:text-primary-900"
+                  >
                     View {holdingsList.length - 3} more holding{holdingsList.length - 3 !== 1 ? "s" : ""}
+                  </button>
+                </div>
+              )}
+              {holdingsList.length > 3 && showAllHoldings[groupName] && (
+                <div className="pt-2">
+                  <button 
+                    onClick={() => toggleShowAllHoldings(groupName)}
+                    className="text-sm font-medium text-primary-700 hover:text-primary-900"
+                  >
+                    Show less
                   </button>
                 </div>
               )}
             </div>
             
             <div className="mt-4 md:mt-6 pt-4 border-t border-gray-200">
-              <button className="w-full px-4 py-2 text-sm font-medium text-primary-700 hover:text-primary-900 border border-primary-300 rounded-lg hover:bg-primary-50 transition-colors">
-                View {groupName === "Equities & ETFs" ? "Holdings & Performance" : "Growth & Performance"}
+              <button 
+                onClick={() => toggleShowAllHoldings(groupName)}
+                className="w-full px-4 py-2 text-sm font-medium text-primary-700 hover:text-primary-900 border border-primary-300 rounded-lg hover:bg-primary-50 transition-colors"
+              >
+                {showAllHoldings[groupName] 
+                  ? "Show Less Holdings"
+                  : `View ${groupName === "Equities & ETFs" ? "Holdings & Performance" : "Growth & Performance"}`
+                }
               </button>
             </div>
           </AnimatedCard>

@@ -12,15 +12,13 @@ import {
   User,
   Mail,
   Phone,
-  BarChart3,
-  List,
-  RefreshCw,
   ArrowUpRight
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { PortfolioOverview } from "./portfolio-overview";
 import { PortfolioBreakdown } from "./portfolio-breakdown";
+import { ViewToggleButtons } from "./view-toggle-buttons";
 
 async function getAccounts(supabase: SupabaseClient, userId: string) {
   const { data, error } = await supabase
@@ -423,17 +421,7 @@ export default async function DashboardPage() {
                 <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
                   Add Investment
                 </button>
-                <div className="hidden md:flex gap-2 ml-auto">
-                  <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                    <RefreshCw className="h-4 w-4" />
-                  </button>
-                  <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                    <BarChart3 className="h-4 w-4" />
-                  </button>
-                  <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors border-primary-700 bg-primary-50">
-                    <List className="h-4 w-4 text-primary-700" />
-                  </button>
-                </div>
+                <ViewToggleButtons />
               </div>
 
               {/* Portfolio Overview Component */}
