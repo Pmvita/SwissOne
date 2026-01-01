@@ -27,6 +27,3 @@ export default function RootLayout({
   );
 }
 
-// Prevent static generation of layout during build
-export const dynamic = "force-dynamic";
-

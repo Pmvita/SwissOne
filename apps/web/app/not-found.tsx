@@ -1,6 +1,9 @@
-"use client";
-
 import Link from "next/link";
+
+// This page will be rendered dynamically, not statically
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
 
 export default function NotFound() {
   return (

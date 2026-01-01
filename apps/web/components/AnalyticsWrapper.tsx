@@ -11,14 +11,11 @@ export function AnalyticsWrapper() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Only mount on client side, never during static generation
-    if (typeof window !== "undefined") {
-      setMounted(true);
-    }
+    setMounted(true);
   }, []);
 
   // Don't render during static generation or SSR
-  if (!mounted || typeof window === "undefined") {
+  if (!mounted) {
     return null;
   }
 
