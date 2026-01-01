@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+// Prevent static generation of 404 page
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 export default function NotFound() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
