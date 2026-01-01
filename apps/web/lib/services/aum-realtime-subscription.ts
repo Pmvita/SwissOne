@@ -79,8 +79,8 @@ export class AUMRealtimeSubscription {
               portfolioWeights: aum.portfolioWeights,
               dailyChange: aum.dailyChange,
               dailyChangePercent: aum.dailyChangePercent,
-              annualReturn: aum.annualReturn,
-              yearToDateReturn: aum.yearToDateReturn,
+              annualReturn: aum.annualReturn ?? 0,
+              yearToDateReturn: aum.yearToDateReturn ?? 0,
               lastUpdated: aum.lastUpdated,
               holdingsCount: aum.holdingsCount,
             };
@@ -125,8 +125,8 @@ export class AUMRealtimeSubscription {
         portfolioWeights: aum.portfolioWeights,
         dailyChange: aum.dailyChange,
         dailyChangePercent: aum.dailyChangePercent,
-        annualReturn: aum.annualReturn,
-        yearToDateReturn: aum.yearToDateReturn,
+        annualReturn: aum.annualReturn ?? 0,
+        yearToDateReturn: aum.yearToDateReturn ?? 0,
         lastUpdated: aum.lastUpdated,
         holdingsCount: aum.holdingsCount,
       };
