@@ -1,32 +1,13 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 // Force dynamic rendering to prevent static generation
+// Note: Client components cannot export route segment config, so we need to keep this as a server component
+// but ensure it doesn't get statically generated
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 export const revalidate = 0;
 
 export default function NotFound() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Prevent rendering during static generation
-  if (!mounted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
-          <p className="text-xl text-gray-600 mb-8">Page not found</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="text-center">
