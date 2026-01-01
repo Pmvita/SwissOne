@@ -16,10 +16,6 @@ const nextConfig: NextConfig = {
     maxInactiveAge: 60 * 1000,
     pagesBufferLength: 2,
   },
-  // Skip generating 404 page during build to avoid static generation issues
-  generateBuildId: async () => {
-    return "build-" + Date.now();
-  },
   // Temporarily disable webpack caching to reduce disk usage (disk is full)
   webpack: (config, { dev, isServer }) => {
     if (dev) {

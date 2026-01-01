@@ -12,7 +12,9 @@ import {
   User,
   Mail,
   Phone,
-  ArrowUpRight
+  ArrowUpRight,
+  Sparkles,
+  Globe
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 import { SupabaseClient } from "@supabase/supabase-js";
@@ -349,6 +351,35 @@ export default async function DashboardPage() {
                     className="w-full"
                   >
                     Message Center
+                  </AnimatedLinkButton>
+                </div>
+              </AnimatedCard>
+            </FadeIn>
+
+            {/* Advertisement Section */}
+            <FadeIn delay={0.3}>
+              <AnimatedCard className="p-5 bg-gradient-to-br from-primary-50 to-primary-100 border-primary-200">
+                <div className="flex flex-col items-center text-center">
+                  <div className="h-12 w-12 bg-primary-700 rounded-full flex items-center justify-center mb-4">
+                    <Sparkles className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    Exclusive Investment Opportunities
+                  </h3>
+                  <p className="text-sm text-gray-700 mb-4">
+                    Access curated alternative investments and private market opportunities exclusively available to SwissOne clients.
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-gray-600 mb-4">
+                    <Globe className="h-4 w-4 text-primary-700" />
+                    <span>Global Diversification</span>
+                  </div>
+                  <AnimatedLinkButton 
+                    href="/opportunities" 
+                    variant="default" 
+                    size="sm"
+                    className="w-full bg-primary-700 hover:bg-primary-800 text-white"
+                  >
+                    Explore Opportunities
                   </AnimatedLinkButton>
                 </div>
               </AnimatedCard>
