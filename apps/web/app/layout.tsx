@@ -27,3 +27,6 @@ export default function RootLayout({
   );
 }
 
+// Allow static generation for most pages, but not for error pages
+export const dynamic = "auto";
+
