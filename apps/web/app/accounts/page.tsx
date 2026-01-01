@@ -53,23 +53,80 @@ function getAccountColor(type: string) {
 
 export default async function AccountsPage() {
   const supabase = await createClient();
+  
+  // Try standard getUser first
   const {
-    data: { user },
+    data: { user: fetchedUser },
   } = await supabase.auth.getUser();
+  
+  let user = fetchedUser;
+  let accessToken: string | null = null;
+  let refreshToken: string | null = null;
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/accounts/page.tsx:54',message:'AccountsPage getUser result',data:{hasUser:!!user,userId:user?.id,willRedirect:!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
+  
+  // Fallback: If getUser failed, extract user and tokens from cookie
+  if (!user) {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const authCookie = cookieStore.get('sb-amjjhdsbvpnjdgdlvoka-auth-token');
+    
+    if (authCookie?.value && authCookie.value.startsWith('{')) {
+      try {
+        const sessionData = JSON.parse(authCookie.value);
+        if (sessionData.user && sessionData.access_token) {
+          accessToken = sessionData.access_token;
+          refreshToken = sessionData.refresh_token || null;
+          user = sessionData.user;
+          
+          // Verify token is still valid
+          try {
+            const verifyResponse = await fetch(
+              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${sessionData.access_token}`,
+                  'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                },
+              }
+            );
+            
+            if (verifyResponse.ok) {
+              const verifiedUser = await verifyResponse.json();
+              user = verifiedUser;
+            }
+          } catch {
+            // Verification failed, use user from cookie
+          }
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    }
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/accounts/page.tsx:87',message:'AccountsPage cookie fallback',data:{hasUser:!!user,userId:user?.id,hasAccessToken:!!accessToken},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+  } else {
+    // If getUser succeeded, get the session to extract tokens
+    const { data: session } = await supabase.auth.getSession();
+    accessToken = session?.session?.access_token || null;
+    refreshToken = session?.session?.refresh_token || null;
+  }
 
   if (!user) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/accounts/page.tsx:99',message:'AccountsPage redirecting to login',data:{reason:'no user after fallback'},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     redirect("/login");
   }
 
   const userId = user.id;
-
-  // Get session tokens for authenticated client
-  const { data: session } = await supabase.auth.getSession();
-  const accessToken = session?.session?.access_token || null;
-  const refreshToken = session?.session?.refresh_token || null;
-
-  // Create authenticated client for RLS
-  const authenticatedSupabase = accessToken
+  
+  // Create authenticated client if we have access token (for RLS)
+  const authenticatedSupabase = accessToken 
     ? await createAuthenticatedClient(accessToken, refreshToken || undefined)
     : supabase;
 

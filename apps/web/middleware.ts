@@ -36,6 +36,10 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
   const authCookie = request.cookies.get('sb-amjjhdsbvpnjdgdlvoka-auth-token');
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'middleware.ts:38',message:'Middleware request',data:{pathname,hasAuthCookie:!!authCookie,authCookieValue:authCookie?.value?.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,D'})}).catch(()=>{});
+  // #endregion
 
   // CRITICAL FIX: If cookie exists but getSession fails, manually parse and set session
   // This handles the case where cookies are set manually but Supabase SSR can't parse them
@@ -104,7 +108,15 @@ export async function middleware(request: NextRequest) {
       data: { user: fetchedUser },
     } = await supabase.auth.getUser();
     user = fetchedUser;
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'middleware.ts:107',message:'Middleware getUser fallback',data:{hasUser:!!user,userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
   }
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'middleware.ts:109',message:'Middleware final user check',data:{pathname,hasUser:!!user,userId:user?.id,willRedirect:pathname.startsWith('/dashboard') && !user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+  // #endregion
 
   // Protect dashboard routes - require authentication
   if (pathname.startsWith("/dashboard") && !user) {

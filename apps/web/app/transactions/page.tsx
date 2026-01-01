@@ -29,23 +29,69 @@ async function getTransactions(supabase: SupabaseClient, userId: string, limit?:
 
 export default async function TransactionsPage() {
   const supabase = await createClient();
+  
+  // Try standard getUser first
   const {
-    data: { user },
+    data: { user: fetchedUser },
   } = await supabase.auth.getUser();
+  
+  let user = fetchedUser;
+  let accessToken: string | null = null;
+  let refreshToken: string | null = null;
+  
+  // Fallback: If getUser failed, extract user and tokens from cookie
+  if (!user) {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const authCookie = cookieStore.get('sb-amjjhdsbvpnjdgdlvoka-auth-token');
+    
+    if (authCookie?.value && authCookie.value.startsWith('{')) {
+      try {
+        const sessionData = JSON.parse(authCookie.value);
+        if (sessionData.user && sessionData.access_token) {
+          accessToken = sessionData.access_token;
+          refreshToken = sessionData.refresh_token || null;
+          user = sessionData.user;
+          
+          // Verify token is still valid
+          try {
+            const verifyResponse = await fetch(
+              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${sessionData.access_token}`,
+                  'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                },
+              }
+            );
+            
+            if (verifyResponse.ok) {
+              const verifiedUser = await verifyResponse.json();
+              user = verifiedUser;
+            }
+          } catch {
+            // Verification failed, use user from cookie
+          }
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  } else {
+    // If getUser succeeded, get the session to extract tokens
+    const { data: session } = await supabase.auth.getSession();
+    accessToken = session?.session?.access_token || null;
+    refreshToken = session?.session?.refresh_token || null;
+  }
 
   if (!user) {
     redirect("/login");
   }
 
   const userId = user.id;
-
-  // Get session tokens for authenticated client
-  const { data: session } = await supabase.auth.getSession();
-  const accessToken = session?.session?.access_token || null;
-  const refreshToken = session?.session?.refresh_token || null;
-
-  // Create authenticated client for RLS
-  const authenticatedSupabase = accessToken
+  
+  // Create authenticated client if we have access token (for RLS)
+  const authenticatedSupabase = accessToken 
     ? await createAuthenticatedClient(accessToken, refreshToken || undefined)
     : supabase;
 
