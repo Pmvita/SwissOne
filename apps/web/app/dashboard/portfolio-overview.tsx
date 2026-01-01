@@ -70,46 +70,84 @@ export function PortfolioOverview({ totalValue, assetClassBreakdown, holdings, p
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
         {/* Pie Chart */}
         <AnimatedCard className="p-4 md:p-6">
-          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Asset Allocation</h3>
-          <div className="flex flex-col xl:flex-row items-center gap-4 md:gap-6">
-            <div className="w-full xl:w-1/2">
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ percentage }) => `${percentage}%`}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[entry.name as keyof typeof COLORS] || COLORS.Other} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => formatCurrency(value, "USD")}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="w-full xl:w-1/2 space-y-2">
-              {pieData.map((item) => (
-                <div key={item.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded flex-shrink-0"
-                      style={{ backgroundColor: COLORS[item.name as keyof typeof COLORS] || COLORS.Other }}
+          <div className="mb-6">
+            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1">Asset Allocation</h3>
+            <p className="text-sm text-gray-600">Portfolio distribution by asset class</p>
+          </div>
+          
+          <div className="flex flex-col xl:flex-row items-center gap-6 md:gap-8">
+            {/* Pie Chart */}
+            <div className="w-full xl:w-1/2 flex-shrink-0 flex justify-center">
+              <div className="w-full max-w-[280px]">
+                <ResponsiveContainer width="100%" aspect={1}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ percentage }) => `${percentage}%`}
+                      outerRadius={95}
+                      innerRadius={35}
+                      fill="#8884d8"
+                      dataKey="value"
+                      stroke="#fff"
+                      strokeWidth={2}
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[entry.name as keyof typeof COLORS] || COLORS.Other} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: number) => formatCurrency(value, "USD")}
+                      contentStyle={{
+                        backgroundColor: "#fff",
+                        border: "1px solid #E5E7EB",
+                        borderRadius: "8px",
+                        padding: "8px 12px",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      }}
                     />
-                    <span className="text-xs md:text-sm text-gray-700">{item.name}</span>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            
+            {/* Legend with enhanced styling */}
+            <div className="w-full xl:w-1/2 space-y-3">
+              {pieData.map((item) => {
+                const color = COLORS[item.name as keyof typeof COLORS] || COLORS.Other;
+                return (
+                  <div 
+                    key={item.name} 
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group gap-3"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div
+                        className="w-5 h-5 rounded flex-shrink-0 shadow-sm"
+                        style={{ backgroundColor: color }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm md:text-base font-semibold text-gray-900 truncate">{item.name}</p>
+                        <p className="text-xs text-gray-600 mt-0.5">{item.percentage}% of portfolio</p>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm md:text-base font-bold text-gray-900 break-words">
+                        {formatCurrency(item.value, "USD")}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-xs md:text-sm font-semibold text-gray-900">
-                    {formatCurrency(item.value, "USD")}
-                  </span>
+                );
+              })}
+              
+              {/* Total Summary */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <span className="text-sm font-semibold text-gray-700">Total Portfolio Value</span>
+                  <span className="text-base md:text-lg font-bold text-gray-900 break-words">{formatCurrency(totalValue, "USD")}</span>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </AnimatedCard>
