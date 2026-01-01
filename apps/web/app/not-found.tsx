@@ -4,6 +4,11 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 export const revalidate = 0;
 
+// Prevent static generation of 404 page
+export function generateStaticParams() {
+  return [];
+}
+
 export default function NotFound() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">

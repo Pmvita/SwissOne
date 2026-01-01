@@ -66,11 +66,8 @@ export function ConsoleFilter() {
     };
   }, []);
 
-  // Don't render during static generation
-  if (!mounted || typeof window === "undefined") {
-    return null;
-  }
-
+  // Don't render during static generation - always return null
+  // This component only has side effects, no visual output
   return null;
 }
 

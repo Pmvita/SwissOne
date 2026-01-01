@@ -15,9 +15,9 @@ export function AnalyticsWrapper() {
   }, []);
 
   // Don't render during static generation or SSR
-  // Return empty fragment instead of null to avoid React rendering issues
+  // Return null instead of empty fragment to avoid React rendering issues
   if (!mounted || typeof window === "undefined") {
-    return <></>;
+    return null;
   }
 
   return <Analytics />;
