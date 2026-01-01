@@ -378,38 +378,38 @@ export default async function AccountsPage() {
                 <FadeIn key={category.id} delay={0.4 + index * 0.1}>
                   {category.accountId ? (
                     <Link href={`/accounts/${category.accountId}`}>
-                      <AnimatedCard className="p-4 hover:shadow-lg transition-all cursor-pointer group">
-                        <div className="flex items-start gap-4">
+                      <AnimatedCard className="p-3 hover:shadow-lg transition-all cursor-pointer group">
+                        <div className="flex items-start gap-3">
                           {/* Icon - Larger, darker green */}
-                          <div className="bg-green-700 p-3 rounded-lg flex-shrink-0">
-                            <IconComponent className="h-6 w-6 text-white" />
+                          <div className="bg-green-700 p-2.5 rounded-lg flex-shrink-0">
+                            <IconComponent className="h-5 w-5 text-white" />
                           </div>
                           
                           {/* Main Content Area */}
                           <div className="flex-1 min-w-0">
                             {/* Title row with value and arrow on the right */}
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-between mb-1">
                               <div className="flex items-center gap-2">
-                                <h3 className="text-base font-bold text-gray-900">
+                                <h3 className="text-sm font-bold text-gray-900">
                                   {category.name}
                                 </h3>
-                                <span className="text-base font-medium text-gray-500">
+                                <span className="text-sm font-medium text-gray-500">
                                   ({category.percentage.toFixed(0)}%)
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-base font-bold text-gray-900">
+                                <span className="text-sm font-bold text-gray-900">
                                   {formatCurrency(category.value, "USD")}
                                 </span>
-                                <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-primary-700 transition-colors" />
+                                <ArrowRight className="h-3.5 w-3.5 text-gray-400 group-hover:text-primary-700 transition-colors" />
                               </div>
                             </div>
                             
                             {/* Description with plus signs */}
-                            <div className="flex items-center gap-1.5 mb-2 flex-wrap text-sm text-gray-600">
+                            <div className="flex items-center gap-1.5 mb-1 flex-wrap text-xs text-gray-600">
                               {descriptionParts.map((part, idx) => (
-                                <span key={idx} className="flex items-center gap-1.5">
-                                  {idx > 0 && <Plus className="h-3 w-3 text-green-600 flex-shrink-0" />}
+                                <span key={idx} className="flex items-center gap-1">
+                                  {idx > 0 && <Plus className="h-2.5 w-2.5 text-green-600 flex-shrink-0" />}
                                   <span>{part}</span>
                                 </span>
                               ))}
@@ -417,9 +417,9 @@ export default async function AccountsPage() {
                             
                             {/* Daily gain badge - compact, below value area */}
                             <div className="flex justify-end">
-                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 rounded-md">
-                                <ArrowUp className="h-3 w-3 text-green-600" />
-                                <span className="text-sm font-semibold text-green-600">
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 rounded-md">
+                                <ArrowUp className="h-2.5 w-2.5 text-green-600" />
+                                <span className="text-xs font-semibold text-green-600">
                                   +{formatCurrency(category.dailyGain, "USD")}
                                 </span>
                               </div>
@@ -429,37 +429,37 @@ export default async function AccountsPage() {
                       </AnimatedCard>
                     </Link>
                   ) : (
-                    <AnimatedCard className="p-4">
-                      <div className="flex items-start gap-4">
-                        <div className="bg-green-700 p-3 rounded-lg flex-shrink-0">
-                          <IconComponent className="h-6 w-6 text-white" />
+                    <AnimatedCard className="p-3">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-green-700 p-2.5 rounded-lg flex-shrink-0">
+                          <IconComponent className="h-5 w-5 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center justify-between mb-1">
                             <div className="flex items-center gap-2">
-                              <h3 className="text-base font-bold text-gray-900">
+                              <h3 className="text-sm font-bold text-gray-900">
                                 {category.name}
                               </h3>
-                              <span className="text-base font-medium text-gray-500">
+                              <span className="text-sm font-medium text-gray-500">
                                 ({category.percentage.toFixed(0)}%)
                               </span>
                             </div>
-                            <span className="text-base font-bold text-gray-900">
+                            <span className="text-sm font-bold text-gray-900">
                               {formatCurrency(category.value, "USD")}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1.5 mb-2 flex-wrap text-sm text-gray-600">
+                          <div className="flex items-center gap-1.5 mb-1 flex-wrap text-xs text-gray-600">
                             {descriptionParts.map((part, idx) => (
-                              <span key={idx} className="flex items-center gap-1.5">
-                                {idx > 0 && <Plus className="h-3 w-3 text-green-600 flex-shrink-0" />}
+                              <span key={idx} className="flex items-center gap-1">
+                                {idx > 0 && <Plus className="h-2.5 w-2.5 text-green-600 flex-shrink-0" />}
                                 <span>{part}</span>
                               </span>
                             ))}
                           </div>
                           <div className="flex justify-end">
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 rounded-md">
-                              <ArrowUp className="h-3 w-3 text-green-600" />
-                              <span className="text-sm font-semibold text-green-600">
+                            <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 rounded-md">
+                              <ArrowUp className="h-2.5 w-2.5 text-green-600" />
+                              <span className="text-xs font-semibold text-green-600">
                                 +{formatCurrency(category.dailyGain, "USD")}
                               </span>
                             </div>
