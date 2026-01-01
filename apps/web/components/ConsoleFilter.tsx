@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Filters out Next.js 15 params/searchParams warnings from React DevTools
@@ -8,7 +8,11 @@ import { useEffect } from "react";
  * during inspection, not actual runtime errors in our code.
  */
 export function ConsoleFilter() {
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
+    
     // Only run on client side
     if (typeof window === "undefined") {
       return;
@@ -22,7 +26,7 @@ export function ConsoleFilter() {
     const originalError = console.error;
     const originalWarn = console.warn;
 
-    // Filter out Next.js 15 params/searchParams warnings from React DevTools
+    // Filter out Next.js 15 warnings about params/searchParams
     const shouldFilter = (args: any[]): boolean => {
       if (!args || args.length === 0) return false;
       
@@ -62,7 +66,11 @@ export function ConsoleFilter() {
     };
   }, []);
 
-  // Return empty fragment instead of null to avoid React rendering issues during static generation
-  return <></>;
+  // Don't render during static generation
+  if (!mounted || typeof window === "undefined") {
+    return null;
+  }
+
+  return null;
 }
 
