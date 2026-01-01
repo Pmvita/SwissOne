@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 
 // Force dynamic rendering to avoid React 19 + Next.js 15 static generation issues
 export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
 
 export default function Error({
   error,
@@ -34,12 +35,12 @@ export default function Error({
           >
             Try again
           </button>
-          <Link
+          <a
             href="/landing"
             className="px-6 py-3 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors"
           >
             Go home
-          </Link>
+          </a>
         </div>
       </div>
     </div>

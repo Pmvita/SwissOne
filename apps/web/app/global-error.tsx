@@ -1,5 +1,10 @@
 "use client";
 
+// Force dynamic rendering to avoid React 19 + Next.js 15 static generation issues
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
+
 export default function GlobalError({
   error,
   reset,
