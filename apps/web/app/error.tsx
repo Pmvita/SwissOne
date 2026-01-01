@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-
 // Force dynamic rendering to avoid React 19 + Next.js 15 static generation issues
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -14,14 +12,9 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    // Log error to console in development
-    if (process.env.NODE_ENV === "development") {
-      console.error("Application error:", error);
-    }
-  }, [error]);
-
-  // Use inline styles to avoid CSS class serialization issues during static generation
+  // Don't use useEffect or access error object during static generation
+  // This prevents React serialization errors
+  // Use inline styles to avoid CSS class serialization issues
   return (
     <div style={{ 
       display: 'flex', 
