@@ -62,6 +62,7 @@ export function ConsoleFilter() {
     };
   }, []);
 
-  return null;
+  // Return empty fragment instead of null to avoid React rendering issues during static generation
+  return <></>;
 }
 
