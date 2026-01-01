@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { createClient as createSupabaseClient, SupabaseClient } from "@supabase/supabase-js";
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -32,4 +33,30 @@ export async function createClient() {
     }
   );
 }
+
+/**
+ * Create an authenticated Supabase client using access token.
+ * This creates a client with the session set, allowing RLS to work correctly.
+ */
+export async function createAuthenticatedClient(accessToken: string, refreshToken?: string): Promise<SupabaseClient> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  
+  // Create a standard Supabase client (not SSR) and set the session
+  const client = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+  
+  // Set the session using the access token - this is what RLS needs
+  await client.auth.setSession({
+    access_token: accessToken,
+    refresh_token: refreshToken || accessToken, // Use access token as fallback if no refresh token
+  });
+  
+  return client;
+}
+
 

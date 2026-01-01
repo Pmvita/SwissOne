@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { sessionTracker } from "@/lib/services/session-tracker";
 
 export async function POST(request: Request) {
   try {
@@ -267,6 +268,51 @@ export async function POST(request: Request) {
         // Set on the response
         response.cookies.set(name, value, cookieOptions);
       });
+    }
+
+    // Auto-create profile if it doesn't exist (like dashboard does)
+    let profile = profileData?.[0];
+    if (!profile) {
+      console.log('[LOGIN API] Profile not found, auto-creating profile for user:', authData.user.id);
+      const username = userEmail.split('@')[0];
+      const { data: newProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          email: userEmail,
+          username: username,
+          role: 'admin', // Default to admin for first-time users
+          // Note: base_currency column doesn't exist in profiles table - removed
+        })
+        .select()
+        .single();
+      
+      if (createError) {
+        console.error('[LOGIN API] Failed to auto-create profile:', createError);
+        // Continue anyway - user can still log in
+      } else {
+        profile = newProfile;
+      }
+    }
+
+    // Register session in database for tracking
+    try {
+      const fullName = profile?.full_name || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || userEmail;
+      const requestHeaders = request.headers;
+      const ipAddress = requestHeaders.get('x-forwarded-for') || requestHeaders.get('x-real-ip') || undefined;
+      const userAgent = requestHeaders.get('user-agent') || undefined;
+      
+      await sessionTracker.registerSession(
+        authData.user.id,
+        profile?.username || userEmail,
+        fullName,
+        profile?.role || 'user',
+        ipAddress || undefined,
+        userAgent || undefined
+      );
+    } catch (sessionError) {
+      // Don't fail login if session tracking fails
+      console.error('[LOGIN API] Failed to register session:', sessionError);
     }
 
     // Return JSON response with redirect URL - cookies are already set via setAll

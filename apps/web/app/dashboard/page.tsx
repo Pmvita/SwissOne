@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAuthenticatedClient } from "@/lib/supabase/server";
 import { AnimatedCard, FadeIn } from "@/components/ui/animated";
 import { AnimatedLinkButton } from "@/components/ui/animated/AnimatedLinkButton";
 import { Logo } from "@/components/ui/Logo";
@@ -12,17 +12,32 @@ import {
   ArrowDownRight,
   Building2,
   Plus,
-  Eye
+  Eye,
+  Shield
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
+import { SupabaseClient } from "@supabase/supabase-js";
 
-async function getAccounts(userId: string) {
-  const supabase = await createClient();
+async function getAccounts(supabase: SupabaseClient, userId: string) {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:getAccounts:entry',message:'getAccounts called',data:{userId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  
+  // Check if client has active session
+  const { data: sessionCheck } = await supabase.auth.getSession();
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:getAccounts:session',message:'Session check before query',data:{hasSession:!!sessionCheck?.session,userId:sessionCheck?.session?.user?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
+  
   const { data, error } = await supabase
     .from("accounts")
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:getAccounts:result',message:'Accounts query result',data:{error:error?.message,errorCode:error?.code,dataLength:data?.length||0,hasData:!!data,firstAccountId:data?.[0]?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
 
   if (error) {
     console.error("Error fetching accounts:", error);
@@ -31,14 +46,17 @@ async function getAccounts(userId: string) {
   return data || [];
 }
 
-async function getTransactions(userId: string, limit: number = 5) {
-  const supabase = await createClient();
+async function getTransactions(supabase: SupabaseClient, userId: string, limit: number = 5) {
   const { data, error } = await supabase
     .from("transactions")
     .select("*, accounts(name, type)")
     .eq("user_id", userId)
     .order("date", { ascending: false })
     .limit(limit);
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:getTransactions:result',message:'Transactions query result',data:{error:error?.message,errorCode:error?.code,dataLength:data?.length||0,hasData:!!data},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
 
   if (error) {
     console.error("Error fetching transactions:", error);
@@ -50,14 +68,25 @@ async function getTransactions(userId: string, limit: number = 5) {
 export default async function DashboardPage() {
   const supabase = await createClient();
   
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:DashboardPage:entry',message:'DashboardPage started',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  
   // Try standard getUser first
   const {
     data: { user: fetchedUser },
+    error: getUserError,
   } = await supabase.auth.getUser();
   
-  let user = fetchedUser;
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:DashboardPage:getUser',message:'getUser result',data:{hasUser:!!fetchedUser,userId:fetchedUser?.id,getUserError:getUserError?.message},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   
-  // Fallback: If getUser failed, extract user from cookie directly (same as middleware)
+  let user = fetchedUser;
+  let accessToken: string | null = null;
+  let refreshToken: string | null = null;
+  
+  // Fallback: If getUser failed, extract user and tokens from cookie
   if (!user) {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
@@ -66,7 +95,11 @@ export default async function DashboardPage() {
     if (authCookie?.value && authCookie.value.startsWith('{')) {
       try {
         const sessionData = JSON.parse(authCookie.value);
-        if (sessionData.user) {
+        if (sessionData.user && sessionData.access_token) {
+          accessToken = sessionData.access_token;
+          refreshToken = sessionData.refresh_token || null;
+          user = sessionData.user;
+          
           // Verify token is still valid
           try {
             const verifyResponse = await fetch(
@@ -82,19 +115,20 @@ export default async function DashboardPage() {
             if (verifyResponse.ok) {
               const verifiedUser = await verifyResponse.json();
               user = verifiedUser;
-            } else {
-              // Token invalid, use user from cookie anyway for this request
-              user = sessionData.user;
             }
           } catch {
             // Verification failed, use user from cookie
-            user = sessionData.user;
           }
         }
       } catch {
         // Ignore parse errors
       }
     }
+  } else {
+    // If getUser succeeded, get the session to extract tokens
+    const { data: session } = await supabase.auth.getSession();
+    accessToken = session?.session?.access_token || null;
+    refreshToken = session?.session?.refresh_token || null;
   }
 
   if (!user) {
@@ -102,8 +136,52 @@ export default async function DashboardPage() {
   }
 
   const userId = user.id;
-  const accounts = await getAccounts(userId);
-  const recentTransactions = await getTransactions(userId, 5);
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:DashboardPage:userId',message:'User ID extracted',data:{userId,hasAccessToken:!!accessToken},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
+  
+  // Create authenticated client if we have access token (for RLS)
+  const authenticatedSupabase = accessToken 
+    ? await createAuthenticatedClient(accessToken, refreshToken || undefined)
+    : supabase;
+  
+  // Get user profile to check role (use authenticated client)
+  const { data: profile, error: profileError } = await authenticatedSupabase
+    .from('profiles')
+    .select('role, email, username')
+    .eq('id', userId)
+    .maybeSingle(); // Use maybeSingle() to handle missing profiles gracefully
+  
+  if (profileError && profileError.code !== 'PGRST116') {
+    // PGRST116 = not found (0 rows), which is expected if profile doesn't exist
+    console.error('[Dashboard] Profile query error:', profileError);
+  }
+  
+  const isAdminOrStaff = profile?.role === 'admin' || profile?.role === 'staff';
+  
+  // Update session activity (silently fail if table doesn't exist)
+  try {
+    const { sessionTracker } = await import('@/lib/services/session-tracker');
+    await sessionTracker.updateActivity(userId);
+  } catch (error: any) {
+    // Don't log PGRST205 errors (table doesn't exist - migration not run yet)
+    if (error?.code !== 'PGRST205') {
+      console.error('Failed to update session activity:', error);
+    }
+  }
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:DashboardPage:beforeQueries',message:'Before queries',data:{hasAccessToken:!!accessToken,usingAuthenticatedClient:!!accessToken,queryUserId:userId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'F'})}).catch(()=>{});
+  // #endregion
+  
+  // Use authenticated client for queries so RLS works correctly
+  const accounts = await getAccounts(authenticatedSupabase, userId);
+  const recentTransactions = await getTransactions(authenticatedSupabase, userId, 5);
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:DashboardPage:afterQueries',message:'Queries completed',data:{accountsCount:accounts.length,transactionsCount:recentTransactions.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
 
   // Calculate totals
   const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
@@ -154,6 +232,15 @@ export default async function DashboardPage() {
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-700 hidden sm:inline">{user.email}</span>
+              {/* Show Security Dashboard link for admin/staff */}
+              {isAdminOrStaff && (
+                <Link
+                  href="/security"
+                  className="px-3 py-1.5 text-sm font-semibold border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                >
+                  Security
+                </Link>
+              )}
               <form action="/auth/signout" method="post">
                 <button
                   type="submit"

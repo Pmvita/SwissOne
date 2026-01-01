@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "seed": "tsx scripts/seed-account.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.1.0",
@@ -26,10 +27,12 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.16",
+    "dotenv": "^16.4.7",
     "eslint": "^8",
     "eslint-config-next": "^15.0.3",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.3.3"
   }
 }
