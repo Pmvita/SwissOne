@@ -375,9 +375,9 @@ export default async function DashboardPage() {
                   </div>
                   <AnimatedLinkButton 
                     href="/opportunities" 
-                    variant="default" 
+                    variant="primary" 
                     size="sm"
-                    className="w-full bg-primary-700 hover:bg-primary-800 text-white"
+                    className="w-full"
                   >
                     Explore Opportunities
                   </AnimatedLinkButton>
