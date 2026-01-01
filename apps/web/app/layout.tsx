@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   description: "Swiss private banking application",
 };
 
+// Force dynamic rendering to prevent static generation issues with error pages
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
+
 export default function RootLayout({
   children,
 }: Readonly<{
