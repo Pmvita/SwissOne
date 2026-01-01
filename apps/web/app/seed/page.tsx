@@ -55,7 +55,7 @@ export default function SeedPage() {
         <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-800">
             <strong>Warning:</strong> This will create multiple accounts, portfolios, and transactions. 
-            Make sure you're logged in as an admin user.
+            Make sure you&apos;re logged in as an admin user.
           </p>
         </div>
         

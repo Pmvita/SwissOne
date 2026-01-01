@@ -161,7 +161,7 @@ export default async function DocumentsPage() {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Document Management</h3>
               <p className="text-gray-500 mb-6">
-                Document management features will be available here. You'll be able to view, upload, and download your financial documents.
+                Document management features will be available here. You&apos;ll be able to view, upload, and download your financial documents.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button className="inline-flex items-center justify-center px-4 py-2 bg-primary-700 text-white rounded-lg hover:bg-primary-800 transition-colors">

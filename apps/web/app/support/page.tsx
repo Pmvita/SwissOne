@@ -223,7 +223,7 @@ export default async function SupportPage() {
                   How do I contact my private wealth advisor?
                 </h4>
                 <p className="text-sm text-gray-600">
-                  You can contact your advisor through the phone, email, or message center options above. Your advisor's contact information is also available on the Investments dashboard.
+                  You can contact your advisor through the phone, email, or message center options above. Your advisor&apos;s contact information is also available on the Investments dashboard.
                 </p>
               </div>
             </div>
