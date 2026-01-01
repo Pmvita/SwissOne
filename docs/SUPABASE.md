@@ -493,12 +493,17 @@ To swap providers without touching frontend code:
 
 ### Background Price Fetching
 
-A background cron job (`/api/cron/fetch-prices`) runs every minute to fetch and store market prices:
+A background cron job (`/api/cron/fetch-prices`) runs daily to fetch and store market prices:
 
 - **Vercel Cron Configuration**: Defined in `vercel.json`
+- **Schedule**: Daily at 9:00 AM UTC (`0 9 * * *`)
+- **Note**: Vercel Hobby plan limits cron jobs to once per day. For more frequent updates, consider:
+  - Upgrading to Vercel Pro plan (allows minute/hourly schedules)
+  - Using external cron services (e.g., cron-job.org, EasyCron)
+  - Using Supabase Edge Functions with pg_cron
 - **Refresh Cadence**:
-  - Equities & ETFs: Near real-time (every minute)
-  - Bonds & Cash: Periodic (hourly/daily)
+  - Equities & ETFs: Daily (9 AM UTC)
+  - Bonds & Cash: Daily (9 AM UTC)
 - **Automatic Retry**: Failed requests are retried with the next provider in priority order
 
 ### Real-Time AUM Calculation
