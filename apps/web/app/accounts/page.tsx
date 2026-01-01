@@ -346,20 +346,6 @@ export default async function AccountsPage() {
           </FadeIn>
         </div>
 
-        {/* Total Value Card (Below top section) */}
-        <FadeIn delay={0.3}>
-          <AnimatedCard className="p-6 mb-8">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-700">Total Value: All all accounts</p>
-              <div className="flex items-center gap-2 text-green-600">
-                <ArrowUp className="h-4 w-4" />
-                <span className="text-base font-semibold">+{formatCurrency(dailyChangeAmount, "USD")}</span>
-                <span className="text-base font-semibold">+{dailyChangePercent.toFixed(2)}%</span>
-              </div>
-            </div>
-          </AnimatedCard>
-        </FadeIn>
-
         {/* Wealth Allocation Cards */}
         {allocationCategories.length === 0 ? (
           <FadeIn delay={0.4}>
