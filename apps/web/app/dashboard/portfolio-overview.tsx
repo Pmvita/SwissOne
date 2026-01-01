@@ -98,7 +98,7 @@ export function PortfolioOverview({ totalValue, assetClassBreakdown, holdings, p
                       ))}
                     </Pie>
                     <Tooltip 
-                      formatter={(value: number) => formatCurrency(value, "USD")}
+                      formatter={(value: number | undefined) => formatCurrency(value ?? 0, "USD")}
                       contentStyle={{
                         backgroundColor: "#fff",
                         border: "1px solid #E5E7EB",
@@ -184,7 +184,7 @@ export function PortfolioOverview({ totalValue, assetClassBreakdown, holdings, p
                 tickFormatter={(value) => `$${(value / 1000000).toFixed(0)}M`}
               />
               <Tooltip 
-                formatter={(value: number) => formatCurrency(value, "USD")}
+                formatter={(value: number | undefined) => formatCurrency(value ?? 0, "USD")}
                 labelStyle={{ color: "#374151" }}
               />
               <Legend />
