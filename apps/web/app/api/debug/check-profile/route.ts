@@ -82,11 +82,11 @@ export async function GET() {
         message: profileError.message,
         details: profileError.details,
       } : null,
-      authUserExists: !!authUserData?.user,
-      authUser: authUserData?.user ? {
-        id: authUserData.user.id,
-        email: authUserData.user.email,
-        created_at: authUserData.user.created_at,
+      authUserExists: !!authUserData?.data?.user,
+      authUser: authUserData?.data?.user ? {
+        id: authUserData.data.user.id,
+        email: authUserData.data.user.email,
+        created_at: authUserData.data.user.created_at,
       } : null,
     });
   } catch (error: any) {
