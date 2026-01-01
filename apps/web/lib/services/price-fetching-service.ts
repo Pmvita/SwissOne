@@ -16,7 +16,7 @@ interface Holding {
 
 export class PriceFetchingService {
   private pricingService: PricingService;
-  private supabase: Awaited<ReturnType<typeof createClient>>;
+  private supabase!: Awaited<ReturnType<typeof createClient>>;
 
   constructor() {
     this.pricingService = new PricingService();
