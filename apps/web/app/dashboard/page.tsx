@@ -19,25 +19,11 @@ import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 async function getAccounts(supabase: SupabaseClient, userId: string) {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:getAccounts:entry',message:'getAccounts called',data:{userId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
-  
-  // Check if client has active session
-  const { data: sessionCheck } = await supabase.auth.getSession();
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:getAccounts:session',message:'Session check before query',data:{hasSession:!!sessionCheck?.session,userId:sessionCheck?.session?.user?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
-  
   const { data, error } = await supabase
     .from("accounts")
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
-
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:getAccounts:result',message:'Accounts query result',data:{error:error?.message,errorCode:error?.code,dataLength:data?.length||0,hasData:!!data,firstAccountId:data?.[0]?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-  // #endregion
 
   if (error) {
     console.error("Error fetching accounts:", error);
@@ -54,10 +40,6 @@ async function getTransactions(supabase: SupabaseClient, userId: string, limit: 
     .order("date", { ascending: false })
     .limit(limit);
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:getTransactions:result',message:'Transactions query result',data:{error:error?.message,errorCode:error?.code,dataLength:data?.length||0,hasData:!!data},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-  // #endregion
-
   if (error) {
     console.error("Error fetching transactions:", error);
     return [];
@@ -68,19 +50,10 @@ async function getTransactions(supabase: SupabaseClient, userId: string, limit: 
 export default async function DashboardPage() {
   const supabase = await createClient();
   
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:DashboardPage:entry',message:'DashboardPage started',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
-  
   // Try standard getUser first
   const {
     data: { user: fetchedUser },
-    error: getUserError,
   } = await supabase.auth.getUser();
-  
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:DashboardPage:getUser',message:'getUser result',data:{hasUser:!!fetchedUser,userId:fetchedUser?.id,getUserError:getUserError?.message},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   
   let user = fetchedUser;
   let accessToken: string | null = null;
@@ -137,10 +110,6 @@ export default async function DashboardPage() {
 
   const userId = user.id;
   
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:DashboardPage:userId',message:'User ID extracted',data:{userId,hasAccessToken:!!accessToken},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'E'})}).catch(()=>{});
-  // #endregion
-  
   // Create authenticated client if we have access token (for RLS)
   const authenticatedSupabase = accessToken 
     ? await createAuthenticatedClient(accessToken, refreshToken || undefined)
@@ -171,17 +140,9 @@ export default async function DashboardPage() {
     }
   }
   
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:DashboardPage:beforeQueries',message:'Before queries',data:{hasAccessToken:!!accessToken,usingAuthenticatedClient:!!accessToken,queryUserId:userId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'F'})}).catch(()=>{});
-  // #endregion
-  
   // Use authenticated client for queries so RLS works correctly
   const accounts = await getAccounts(authenticatedSupabase, userId);
   const recentTransactions = await getTransactions(authenticatedSupabase, userId, 5);
-
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'dashboard/page.tsx:DashboardPage:afterQueries',message:'Queries completed',data:{accountsCount:accounts.length,transactionsCount:recentTransactions.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-  // #endregion
 
   // Calculate totals
   const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
