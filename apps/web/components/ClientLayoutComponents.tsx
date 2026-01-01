@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 
 // Dynamically import client components with SSR disabled to prevent static generation issues
 const ConsoleFilter = dynamic(() => import("@/components/ConsoleFilter").then(mod => ({ default: mod.ConsoleFilter })), {
@@ -16,6 +17,17 @@ const AnalyticsWrapper = dynamic(() => import("@/components/AnalyticsWrapper").t
  * This prevents React rendering errors during Next.js build process
  */
 export function ClientLayoutComponents() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render during static generation or SSR
+  if (!mounted || typeof window === "undefined") {
+    return null;
+  }
+
   return (
     <>
       <ConsoleFilter />
