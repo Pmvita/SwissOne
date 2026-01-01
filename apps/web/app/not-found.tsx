@@ -1,11 +1,25 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 // Force dynamic rendering - this page should never be statically generated
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 export const revalidate = 0;
 
 export default function NotFound() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render during static generation
+  if (!mounted) {
+    return null;
+  }
+
   // Return minimal JSX with inline styles to avoid React serialization issues
-  // Using inline styles instead of className to prevent any CSS module issues
   return (
     <div style={{ 
       display: 'flex', 
@@ -29,8 +43,7 @@ export default function NotFound() {
             backgroundColor: '#1e40af',
             color: 'white',
             borderRadius: '0.5rem',
-            textDecoration: 'none',
-            transition: 'background-color 0.2s'
+            textDecoration: 'none'
           }}
         >
           Go home
