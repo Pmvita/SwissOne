@@ -29,6 +29,11 @@ const nextConfig: NextConfig = {
       fullUrl: false,
     },
   },
+  // Skip static generation of 404 page to avoid React rendering errors
+  // The not-found.tsx page will be rendered dynamically at request time
+  generateBuildId: async () => {
+    return `build-${Date.now()}`;
+  },
 };
 
 export default nextConfig;
