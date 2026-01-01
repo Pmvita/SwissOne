@@ -125,7 +125,7 @@ export default async function AccountsPage() {
       {/* Navigation Bar (Desktop) */}
       <nav className="hidden md:block bg-primary-100 border-b border-primary-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
+          <div className="flex space-x-8 justify-end">
             <Link href="/accounts" className="px-3 py-4 text-sm font-medium text-primary-900 border-b-2 border-primary-700">
               Accounts
             </Link>
