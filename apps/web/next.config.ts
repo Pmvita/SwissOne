@@ -34,6 +34,8 @@ const nextConfig: NextConfig = {
   generateBuildId: async () => {
     return `build-${Date.now()}`;
   },
+  // Skip static optimization for 404 and error pages
+  skipTrailingSlashRedirect: true,
 };
 
 export default nextConfig;
