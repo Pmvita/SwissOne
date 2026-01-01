@@ -9,8 +9,6 @@ const nextConfig: NextConfig = {
   // Skip static optimization for error pages to avoid React 19 context issues
   experimental: {
     optimizePackageImports: ["@swissone/shared"],
-    // Try to prevent static generation of error pages
-    missingSuspenseWithCSRBailout: false,
   },
   // Suppress Next.js 15 params/searchParams warnings from React DevTools
   // These are false positives from DevTools trying to serialize component props
