@@ -432,19 +432,19 @@ export default async function DashboardPage() {
                 portfolios={portfolios}
               />
             </FadeIn>
-
-            {/* Portfolio Breakdown */}
-            <FadeIn delay={0.4}>
-              <div className="mt-8">
-                <PortfolioBreakdown
-                  holdings={holdings}
-                  portfolios={portfolios}
-                  totalAUM={totalAUM}
-                />
-              </div>
-            </FadeIn>
           </div>
         </div>
+
+        {/* Portfolio Breakdown - Full Width */}
+        <FadeIn delay={0.4}>
+          <div className="mt-8">
+            <PortfolioBreakdown
+              holdings={holdings}
+              portfolios={portfolios}
+              totalAUM={totalAUM}
+            />
+          </div>
+        </FadeIn>
       </main>
 
       {/* Mobile Bottom Navigation */}
