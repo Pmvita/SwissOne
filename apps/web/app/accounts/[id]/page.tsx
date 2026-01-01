@@ -7,15 +7,31 @@ import { Wallet, Building2, TrendingUp, CreditCard, User, Shield, ArrowLeft } fr
 import { formatCurrency } from "@/lib/utils/format";
 import { SupabaseClient } from "@supabase/supabase-js";
 
-async function getAccounts(supabase: SupabaseClient, userId: string) {
+async function getAccount(supabase: SupabaseClient, accountId: string, userId: string) {
   const { data, error } = await supabase
     .from("accounts")
     .select("*")
+    .eq("id", accountId)
     .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+    .single();
 
   if (error) {
-    console.error("Error fetching accounts:", error);
+    console.error("Error fetching account:", error);
+    return null;
+  }
+  return data;
+}
+
+async function getTransactions(supabase: SupabaseClient, accountId: string, limit: number = 20) {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("*")
+    .eq("account_id", accountId)
+    .order("transaction_date", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("Error fetching transactions:", error);
     return [];
   }
   return data || [];
@@ -51,7 +67,12 @@ function getAccountColor(type: string) {
   }
 }
 
-export default async function AccountsPage() {
+interface AccountDetailPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function AccountDetailPage({ params }: AccountDetailPageProps) {
+  const { id: accountId } = await params;
   const supabase = await createClient();
   
   // Try standard getUser first
@@ -128,11 +149,18 @@ export default async function AccountsPage() {
 
   const isAdminOrStaff = profile?.role === "admin" || profile?.role === "staff";
 
-  // Fetch accounts
-  const accounts = await getAccounts(authenticatedSupabase, userId);
+  // Fetch account
+  const account = await getAccount(authenticatedSupabase, accountId, userId);
 
-  // Calculate totals
-  const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
+  if (!account) {
+    redirect("/accounts");
+  }
+
+  // Fetch transactions
+  const transactions = await getTransactions(authenticatedSupabase, accountId, 20);
+
+  const IconComponent = getAccountIcon(account.type);
+  const colorClass = getAccountColor(account.type);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -195,101 +223,103 @@ export default async function AccountsPage() {
         {/* Page Header */}
         <FadeIn delay={0.1}>
           <div className="mb-6">
-            <Link href="/dashboard" className="inline-flex items-center text-sm text-primary-700 hover:text-primary-900 mb-4">
+            <Link href="/accounts" className="inline-flex items-center text-sm text-primary-700 hover:text-primary-900 mb-4">
               <ArrowLeft className="h-4 w-4 mr-1" />
-              Back to Dashboard
+              Back to Accounts
             </Link>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Your Accounts</h2>
-            <p className="mt-2 text-gray-600">Manage and view all your banking accounts</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`${colorClass} p-3 rounded-lg`}>
+                <IconComponent className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900">{account.name}</h2>
+                <p className="text-sm text-gray-600 capitalize mt-1">{account.type} Account</p>
+              </div>
+            </div>
           </div>
         </FadeIn>
 
-        {/* Summary Card */}
+        {/* Account Overview Card */}
         <FadeIn delay={0.2}>
           <AnimatedCard className="p-6 mb-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Total Balance Across All Accounts</p>
-                <p className="text-3xl font-bold text-primary-700">
-                  {formatCurrency(totalBalance, "USD")}
+                <p className="text-sm text-gray-600 mb-1">Current Balance</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {formatCurrency(Number(account.balance || 0), account.currency || "USD")}
                 </p>
               </div>
-              <div className="mt-4 md:mt-0">
-                <p className="text-sm text-gray-600 mb-1">Number of Accounts</p>
-                <p className="text-2xl font-bold text-gray-900">{accounts.length}</p>
-              </div>
+              {account.account_number && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Account Number</p>
+                  <p className="text-lg font-mono text-gray-900">
+                    ****{account.account_number.toString().slice(-4)}
+                  </p>
+                </div>
+              )}
+              {account.iban && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">IBAN</p>
+                  <p className="text-lg font-mono text-gray-900 break-all">
+                    {account.iban}
+                  </p>
+                </div>
+              )}
             </div>
           </AnimatedCard>
         </FadeIn>
 
-        {/* Accounts List */}
-        {accounts.length === 0 ? (
-          <FadeIn delay={0.3}>
-            <AnimatedCard className="p-12">
-              <div className="text-center">
-                <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Wallet className="h-8 w-8 text-gray-400" />
+        {/* Recent Transactions */}
+        <FadeIn delay={0.3}>
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Recent Transactions</h3>
+            {transactions.length === 0 ? (
+              <AnimatedCard className="p-12">
+                <div className="text-center">
+                  <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <TrendingUp className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No transactions found</h3>
+                  <p className="text-gray-500">Transactions will appear here once available</p>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No accounts found</h3>
-                <p className="text-gray-500">Accounts will appear here once created</p>
-              </div>
-            </AnimatedCard>
-          </FadeIn>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {accounts.map((account, index) => {
-              const IconComponent = getAccountIcon(account.type);
-              const colorClass = getAccountColor(account.type);
-
-              return (
-                <FadeIn key={account.id} delay={0.3 + index * 0.1}>
-                  <Link href={`/accounts/${account.id}`}>
-                    <AnimatedCard className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`${colorClass} p-3 rounded-lg`}>
-                            <IconComponent className="h-6 w-6 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">{account.name}</h3>
-                            <p className="text-sm text-gray-500 capitalize">{account.type}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div>
-                          <p className="text-sm text-gray-600">Balance</p>
-                          <p className="text-2xl font-bold text-gray-900">
-                            {formatCurrency(Number(account.balance || 0), account.currency || "USD")}
-                          </p>
-                        </div>
-
-                        {account.account_number && (
-                          <div>
-                            <p className="text-xs text-gray-500">Account Number</p>
-                            <p className="text-sm font-mono text-gray-700">
-                              ****{account.account_number.toString().slice(-4)}
-                            </p>
-                          </div>
-                        )}
-
-                        {account.iban && (
-                          <div>
-                            <p className="text-xs text-gray-500">IBAN</p>
-                            <p className="text-sm font-mono text-gray-700 break-all">
-                              {account.iban}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </AnimatedCard>
-                  </Link>
-                </FadeIn>
-              );
-            })}
+              </AnimatedCard>
+            ) : (
+              <AnimatedCard className="p-6">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Description</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Type</th>
+                        <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {transactions.map((transaction) => (
+                        <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4 text-sm text-gray-900">
+                            {new Date(transaction.transaction_date).toLocaleDateString()}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900">{transaction.description || "N/A"}</td>
+                          <td className="py-3 px-4 text-sm text-gray-600 capitalize">{transaction.type || "N/A"}</td>
+                          <td className={`py-3 px-4 text-sm font-semibold text-right ${
+                            transaction.type === "credit" || transaction.type === "deposit" 
+                              ? "text-green-600" 
+                              : "text-red-600"
+                          }`}>
+                            {transaction.type === "credit" || transaction.type === "deposit" ? "+" : "-"}
+                            {formatCurrency(Math.abs(Number(transaction.amount || 0)), transaction.currency || account.currency || "USD")}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </AnimatedCard>
+            )}
           </div>
-        )}
+        </FadeIn>
       </main>
 
       {/* Bottom Navigation (Mobile) */}
@@ -317,3 +347,4 @@ export default async function AccountsPage() {
     </div>
   );
 }
+
