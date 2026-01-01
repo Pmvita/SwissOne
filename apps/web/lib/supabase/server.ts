@@ -4,12 +4,6 @@ import { createClient as createSupabaseClient, SupabaseClient } from "@supabase/
 
 export async function createClient() {
   const cookieStore = await cookies();
-  
-  // #region agent log
-  const allCookies = cookieStore.getAll();
-  const authCookie = allCookies.find(c => c.name.includes('auth-token'));
-  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/supabase/server.ts:5',message:'createClient called',data:{cookieCount:allCookies.length,hasAuthCookie:!!authCookie,authCookieName:authCookie?.name,authCookieValueLength:authCookie?.value?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,E'})}).catch(()=>{});
-  // #endregion
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

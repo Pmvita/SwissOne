@@ -63,10 +63,6 @@ export default async function AccountsPage() {
   let accessToken: string | null = null;
   let refreshToken: string | null = null;
   
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/accounts/page.tsx:54',message:'AccountsPage getUser result',data:{hasUser:!!user,userId:user?.id,willRedirect:!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
-  
   // Fallback: If getUser failed, extract user and tokens from cookie
   if (!user) {
     const { cookies } = await import("next/headers");
@@ -105,10 +101,6 @@ export default async function AccountsPage() {
         // Ignore parse errors
       }
     }
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/accounts/page.tsx:87',message:'AccountsPage cookie fallback',data:{hasUser:!!user,userId:user?.id,hasAccessToken:!!accessToken},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
   } else {
     // If getUser succeeded, get the session to extract tokens
     const { data: session } = await supabase.auth.getSession();
@@ -117,9 +109,6 @@ export default async function AccountsPage() {
   }
 
   if (!user) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/673bf0ab-9c13-41ee-a779-6b775f589b14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app/accounts/page.tsx:99',message:'AccountsPage redirecting to login',data:{reason:'no user after fallback'},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     redirect("/login");
   }
 
