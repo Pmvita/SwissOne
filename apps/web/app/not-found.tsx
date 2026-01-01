@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import Link from "next/link";
 
 // Force this to be a dynamic route that never gets statically generated
 export const dynamic = "force-dynamic";
@@ -11,7 +11,19 @@ export async function generateStaticParams() {
 }
 
 export default function NotFound() {
-  // This will trigger the not-found page to be rendered dynamically
-  notFound();
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
+        <p className="text-xl text-gray-600 mb-8">Page not found</p>
+        <Link
+          href="/landing"
+          className="inline-block px-6 py-3 bg-primary-700 text-white rounded-lg hover:bg-primary-800 transition-colors"
+        >
+          Go home
+        </Link>
+      </div>
+    </div>
+  );
 }
 
