@@ -1,5 +1,9 @@
 // Minimal 404 page to prevent Next.js from using error.tsx for 404s
 // This prevents React serialization errors during static generation
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+export const revalidate = 0;
+
 export default function NotFound() {
   return (
     <div style={{
