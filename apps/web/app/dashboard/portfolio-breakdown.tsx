@@ -142,7 +142,7 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
           return acc;
         }, {} as Record<string, any>);
 
-        const holdingsList = Object.values(uniqueHoldings);
+        const holdingsList: any[] = Object.values(uniqueHoldings);
         
         const isExpanded = expandedSections[groupName] ?? true; // Default to expanded on desktop (lg+ screens)
         
@@ -175,7 +175,7 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
             </div>
             
             <div className={`space-y-3 md:space-y-4 ${!isExpanded ? 'hidden lg:block' : ''}`}>
-              {(showAllHoldings[groupName] ? holdingsList : holdingsList.slice(0, 3)).map((holding, index) => {
+              {(showAllHoldings[groupName] ? holdingsList : holdingsList.slice(0, 3)).map((holding: any, index: number) => {
                 // Calculate raw holding value
                 const rawValue = Number(holding.quantity || 0) * Number(holding.current_price || 0);
                 
