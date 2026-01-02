@@ -1,11 +1,37 @@
-// Force dynamic rendering to prevent static generation issues
-export const dynamic = "force-dynamic";
-export const dynamicParams = true;
-export const revalidate = 0;
+"use client";
+
+import { useEffect, useState } from "react";
 
 // Simple 404 page that doesn't cause static generation issues
 // Note: This is rendered within the layout, so no html/body tags
+// Made a client component to prevent static generation during build
+// Client components are not statically generated, preventing React rendering errors
 export default function NotFound() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Return minimal content during SSR/static generation
+  if (!mounted) {
+    return (
+      <div style={{
+        display: 'flex',
+        minHeight: '100vh',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f9fafb'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#111827' }}>
+            404
+          </h1>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       display: 'flex',
