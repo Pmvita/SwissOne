@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 // Force dynamic rendering to avoid React 19 + Next.js 15 static generation issues
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -12,9 +14,32 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  // Don't use useEffect or access error object during static generation
-  // This prevents React serialization errors
-  // Use inline styles to avoid CSS class serialization issues
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // During static generation, return minimal content to avoid React serialization errors
+  if (!mounted || typeof window === "undefined") {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        minHeight: '100vh', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        backgroundColor: '#f9fafb' 
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#111827' }}>
+            Error
+          </h1>
+        </div>
+      </div>
+    );
+  }
+
+  // Full error page only after client-side mount
   return (
     <div style={{ 
       display: 'flex', 
