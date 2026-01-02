@@ -16,13 +16,8 @@ const nextConfig: NextConfig = {
     maxInactiveAge: 60 * 1000,
     pagesBufferLength: 2,
   },
-  // Temporarily disable webpack caching to reduce disk usage (disk is full)
-  webpack: (config, { dev, isServer }) => {
-    if (dev) {
-      config.cache = false; // Disable webpack cache to save disk space
-    }
-    return config;
-  },
+  // Next.js 16 uses Turbopack by default - add empty config to use it
+  turbopack: {},
   // Logging configuration
   logging: {
     fetches: {
