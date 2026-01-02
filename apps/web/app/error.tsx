@@ -20,8 +20,9 @@ export default function Error({
     setMounted(true);
   }, []);
 
-  // During static generation, return minimal content to avoid React serialization errors
-  if (!mounted || typeof window === "undefined") {
+  // During static generation or if reset is not available, return minimal content
+  // This prevents React serialization errors during build
+  if (!mounted || typeof window === "undefined" || typeof reset !== "function") {
     return (
       <div style={{ 
         display: 'flex', 
