@@ -36,6 +36,9 @@ const nextConfig: NextConfig = {
   },
   // Skip static optimization for 404 and error pages
   skipTrailingSlashRedirect: true,
+  // Disable static page generation completely to avoid React serialization issues
+  // This forces all pages to be rendered dynamically
+  output: 'standalone',
 };
 
 export default nextConfig;
