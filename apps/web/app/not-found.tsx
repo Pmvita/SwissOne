@@ -1,37 +1,16 @@
-"use client";
+import { unstable_noStore } from 'next/cache';
 
-import { useEffect, useState } from "react";
+// Force dynamic rendering - prevent static generation during build
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+export const revalidate = 0;
 
-// Simple 404 page that doesn't cause static generation issues
-// Note: This is rendered within the layout, so no html/body tags
-// Made a client component to prevent static generation during build
-// Client components are not statically generated, preventing React rendering errors
+// Simple 404 page - use unstable_noStore to force dynamic rendering
+// This prevents Next.js from trying to statically generate it during build
 export default function NotFound() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Return minimal content during SSR/static generation
-  if (!mounted) {
-    return (
-      <div style={{
-        display: 'flex',
-        minHeight: '100vh',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#f9fafb'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#111827' }}>
-            404
-          </h1>
-        </div>
-      </div>
-    );
-  }
-
+  // Force dynamic rendering by marking this as uncacheable
+  unstable_noStore();
+  
   return (
     <div style={{
       display: 'flex',
