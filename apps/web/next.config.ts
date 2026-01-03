@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@swissone/shared"],
   // For monorepo: ensure Next.js can trace files from root
-  outputFileTracingRoot: path.join(__dirname, "../.."),
+  // Only set if not on Vercel (Vercel handles this automatically)
+  ...(process.env.VERCEL ? {} : { outputFileTracingRoot: path.join(__dirname, "../..") }),
   // Skip static optimization for error pages to avoid React 19 context issues
   experimental: {
     optimizePackageImports: ["@swissone/shared"],
