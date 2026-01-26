@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#102a43"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.swissone.app",
@@ -29,15 +31,24 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-router", "expo-secure-store"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": ""
+        "projectId": "72f971b3-7ae4-4853-9f25-ab824f3e87b9"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/72f971b3-7ae4-4853-9f25-ab824f3e87b9"
     }
   }
 }
