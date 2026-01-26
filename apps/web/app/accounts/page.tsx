@@ -3,7 +3,24 @@ import { createClient, createAuthenticatedClient } from "@/lib/supabase/server";
 import { AnimatedCard, FadeIn } from "@/components/ui/animated";
 import { Logo } from "@/components/ui/Logo";
 import Link from "next/link";
-import { Wallet, Building2, TrendingUp, CreditCard, User, Shield, ArrowLeft, ShoppingBag, Briefcase, PiggyBank, CheckCircle2, ArrowRight, ArrowUp, Plus, Gem } from "lucide-react";
+import { 
+  Wallet, 
+  Building2, 
+  TrendingUp, 
+  CreditCard, 
+  User, 
+  Shield, 
+  ArrowRight, 
+  ArrowUpRight,
+  ArrowDownRight,
+  Eye,
+  Download,
+  MoreVertical,
+  Copy,
+  CheckCircle2,
+  Clock,
+  DollarSign
+} from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 import { SupabaseClient } from "@supabase/supabase-js";
 
@@ -36,14 +53,29 @@ function getAccountIcon(type: string) {
   }
 }
 
-function getAccountColor(type: string) {
+function getAccountTypeLabel(type: string): string {
   switch (type) {
     case "checking":
-      return "bg-primary-600";
+      return "Checking";
     case "savings":
-      return "bg-accent-600";
+      return "Savings";
     case "investment":
+      return "Investment";
+    case "credit":
+      return "Credit";
+    default:
+      return "Account";
+  }
+}
+
+function getAccountTypeColor(type: string): string {
+  switch (type) {
+    case "checking":
+      return "bg-blue-600";
+    case "savings":
       return "bg-green-600";
+    case "investment":
+      return "bg-purple-600";
     case "credit":
       return "bg-orange-600";
     default:
@@ -51,182 +83,11 @@ function getAccountColor(type: string) {
   }
 }
 
-interface WealthAllocationCategory {
-  id: string;
-  name: string;
-  shortName: string;
-  percentage: number;
-  value: number;
-  dailyGain: number;
-  description: string;
-  icon: any;
-  accountId?: string;
-}
-
-// Map accounts to wealth allocation categories
-// Supports both seed-account.ts structure and API route structure
-function mapAccountsToCategories(accounts: any[], totalBalance: number): WealthAllocationCategory[] {
-  const categories: WealthAllocationCategory[] = [];
-  const matchedAccountIds = new Set<string>();
-  
-  // === Seed-account.ts structure ===
-  
-  // Find Safety & Financial Foundation Account (40%)
-  const safetyAccount = accounts.find(acc => acc.name.includes('Safety & Financial Foundation'));
-  if (safetyAccount) {
-    matchedAccountIds.add(safetyAccount.id);
-    categories.push({
-      id: 'safety',
-      name: 'Safety & Stability',
-      shortName: 'Safety & Stability',
-      percentage: (Number(safetyAccount.balance || 0) / totalBalance) * 100,
-      value: Number(safetyAccount.balance || 0),
-      dailyGain: Number(safetyAccount.balance || 0) * 0.0002, // Mock 0.02% daily gain
-      description: 'High Interest Savings, U.S. Treasury bonds + Money Market Funds',
-      icon: Shield,
-      accountId: safetyAccount.id,
-    });
-  }
-  
-  // Find Long Term Investing Account (30%)
-  const longTermAccount = accounts.find(acc => acc.name.includes('Long Term Investing'));
-  if (longTermAccount) {
-    matchedAccountIds.add(longTermAccount.id);
-    categories.push({
-      id: 'longterm',
-      name: 'Long Term Investing',
-      shortName: 'Long Term Investing',
-      percentage: (Number(longTermAccount.balance || 0) / totalBalance) * 100,
-      value: Number(longTermAccount.balance || 0),
-      dailyGain: Number(longTermAccount.balance || 0) * 0.0021, // Mock 0.21% daily gain
-      description: 'Global Equity ETPs • Dividend Growth Stocks',
-      icon: TrendingUp,
-      accountId: longTermAccount.id,
-    });
-  }
-  
-  // Find Lifestyle Allocation Checking Account (10%)
-  const lifestyleAccount = accounts.find(acc => acc.name.includes('Lifestyle Allocation'));
-  if (lifestyleAccount) {
-    matchedAccountIds.add(lifestyleAccount.id);
-    categories.push({
-      id: 'lifestyle',
-      name: 'Lifestyle Allocation',
-      shortName: 'Lifestyle Allocation',
-      percentage: (Number(lifestyleAccount.balance || 0) / totalBalance) * 100,
-      value: Number(lifestyleAccount.balance || 0),
-      dailyGain: Number(lifestyleAccount.balance || 0) * 0.0002, // Mock 0.02% daily gain
-      description: 'Personal expenses + Large purchase purchases',
-      icon: ShoppingBag,
-      accountId: lifestyleAccount.id,
-    });
-  }
-  
-  // Find Professional Advice & Structure Checking Account (5%)
-  const professionalAccount = accounts.find(acc => acc.name.includes('Professional Advice'));
-  if (professionalAccount) {
-    matchedAccountIds.add(professionalAccount.id);
-    categories.push({
-      id: 'professional',
-      name: 'Professional Advice',
-      shortName: 'Professional Advice',
-      percentage: (Number(professionalAccount.balance || 0) / totalBalance) * 100,
-      value: Number(professionalAccount.balance || 0),
-      dailyGain: Number(professionalAccount.balance || 0) * 0.0005, // Mock 0.05% daily gain
-      description: 'Tax, legal, & estate planning',
-      icon: Briefcase,
-      accountId: professionalAccount.id,
-    });
-  }
-  
-  // Find Cash Reserve Checking Account (5%)
-  const cashReserveAccount = accounts.find(acc => acc.name.includes('Cash Reserve'));
-  if (cashReserveAccount) {
-    matchedAccountIds.add(cashReserveAccount.id);
-    categories.push({
-      id: 'cashreserve',
-      name: 'Cash Reserve',
-      shortName: 'Cash Reserve',
-      percentage: (Number(cashReserveAccount.balance || 0) / totalBalance) * 100,
-      value: Number(cashReserveAccount.balance || 0),
-      dailyGain: Number(cashReserveAccount.balance || 0) * 0.0015, // Mock 0.15% daily gain
-      description: 'High liquidity, immediate cash reserve',
-      icon: PiggyBank,
-      accountId: cashReserveAccount.id,
-    });
-  }
-
-  // === API route structure ===
-  
-  // Find Public Markets Investment Account (40%)
-  const publicMarketsAccount = accounts.find(acc => acc.name.includes('Public Markets'));
-  if (publicMarketsAccount && !matchedAccountIds.has(publicMarketsAccount.id)) {
-    matchedAccountIds.add(publicMarketsAccount.id);
-    categories.push({
-      id: 'public-markets',
-      name: 'Public Markets',
-      shortName: 'Public Markets',
-      percentage: (Number(publicMarketsAccount.balance || 0) / totalBalance) * 100,
-      value: Number(publicMarketsAccount.balance || 0),
-      dailyGain: Number(publicMarketsAccount.balance || 0) * 0.0021, // Mock 0.21% daily gain
-      description: 'Stocks, ETFs, and Bonds',
-      icon: TrendingUp,
-      accountId: publicMarketsAccount.id,
-    });
-  }
-  
-  // Find Private Equity & Venture Capital Account (30%)
-  const peVcAccount = accounts.find(acc => acc.name.includes('Private Equity') || acc.name.includes('Venture Capital'));
-  if (peVcAccount && !matchedAccountIds.has(peVcAccount.id)) {
-    matchedAccountIds.add(peVcAccount.id);
-    categories.push({
-      id: 'pe-vc',
-      name: 'Private Equity & VC',
-      shortName: 'PE & VC',
-      percentage: (Number(peVcAccount.balance || 0) / totalBalance) * 100,
-      value: Number(peVcAccount.balance || 0),
-      dailyGain: Number(peVcAccount.balance || 0) * 0.0015, // Mock 0.15% daily gain
-      description: 'Private equity funds and venture capital investments',
-      icon: Building2,
-      accountId: peVcAccount.id,
-    });
-  }
-  
-  // Find Cash & Money Market Account (20%)
-  const cashMoneyMarketAccount = accounts.find(acc => acc.name.includes('Cash & Money Market') || acc.name.includes('Money Market'));
-  if (cashMoneyMarketAccount && !matchedAccountIds.has(cashMoneyMarketAccount.id)) {
-    matchedAccountIds.add(cashMoneyMarketAccount.id);
-    categories.push({
-      id: 'cash-money-market',
-      name: 'Cash & Money Market',
-      shortName: 'Cash & MM',
-      percentage: (Number(cashMoneyMarketAccount.balance || 0) / totalBalance) * 100,
-      value: Number(cashMoneyMarketAccount.balance || 0),
-      dailyGain: Number(cashMoneyMarketAccount.balance || 0) * 0.0002, // Mock 0.02% daily gain
-      description: 'High liquidity cash and money market funds',
-      icon: PiggyBank,
-      accountId: cashMoneyMarketAccount.id,
-    });
-  }
-  
-  // Find Alternative Investments Account (10%)
-  const altInvestmentsAccount = accounts.find(acc => acc.name.includes('Alternative Investments'));
-  if (altInvestmentsAccount && !matchedAccountIds.has(altInvestmentsAccount.id)) {
-    matchedAccountIds.add(altInvestmentsAccount.id);
-    categories.push({
-      id: 'alternative',
-      name: 'Alternative Investments',
-      shortName: 'Alternatives',
-      percentage: (Number(altInvestmentsAccount.balance || 0) / totalBalance) * 100,
-      value: Number(altInvestmentsAccount.balance || 0),
-      dailyGain: Number(altInvestmentsAccount.balance || 0) * 0.001, // Mock 0.10% daily gain
-      description: 'Crypto, REITs, Commodities, and other alternatives',
-      icon: Gem,
-      accountId: altInvestmentsAccount.id,
-    });
-  }
-  
-  return categories.sort((a, b) => b.value - a.value);
+function maskAccountNumber(accountNumber: string | number | null): string {
+  if (!accountNumber) return "**** ****";
+  const str = accountNumber.toString();
+  if (str.length <= 4) return `**** ${str}`;
+  return `****${str.slice(-4)}`;
 }
 
 export default async function AccountsPage() {
@@ -309,15 +170,33 @@ export default async function AccountsPage() {
   // Fetch accounts
   const accounts = await getAccounts(authenticatedSupabase, userId);
 
+  // Group accounts by type (standard banking order: checking, savings, investment, credit)
+  const accountTypeOrder = ['checking', 'savings', 'investment', 'credit', 'loan'];
+  const groupedAccounts = accounts.reduce((acc, account) => {
+    const type = account.type || 'other';
+    if (!acc[type]) {
+      acc[type] = [];
+    }
+    acc[type].push(account);
+    return acc;
+  }, {} as Record<string, typeof accounts>);
+
+  // Sort accounts within each group by balance (highest first)
+  Object.keys(groupedAccounts).forEach(type => {
+    groupedAccounts[type].sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0));
+  });
+
   // Calculate totals
   const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
+  const accountCount = accounts.length;
   
-  // Calculate daily change (mock calculation - 0.083% daily gain for now)
-  const dailyChangeAmount = totalBalance * 0.00083;
-  const dailyChangePercent = 0.08;
-  
-  // Map accounts to wealth allocation categories
-  const allocationCategories = mapAccountsToCategories(accounts, totalBalance);
+  // Calculate balances by type
+  const checkingBalance = accounts
+    .filter(acc => acc.type === 'checking')
+    .reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
+  const savingsBalance = accounts
+    .filter(acc => acc.type === 'savings')
+    .reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
   
   // Get display name
   const displayName = profile?.full_name || 
@@ -329,30 +208,31 @@ export default async function AccountsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-primary-700 text-white">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 justify-between items-center">
             <div className="flex items-center gap-3">
               <Logo size="sm" className="flex-shrink-0" />
-              <h1 className="text-xl font-bold text-white">SwissOne</h1>
+              <h1 className="text-xl font-bold text-gray-900">SwissOne Private Banking</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-white/80 hidden sm:inline">{user.email}</span>
+              <span className="text-sm text-gray-600 hidden sm:inline">{user.email}</span>
               {isAdminOrStaff && (
                 <Link
                   href="/security"
-                  className="px-3 py-1.5 text-sm font-semibold border-2 border-white/30 text-white rounded-lg hover:bg-white/10 focus:ring-2 focus:ring-white/50 focus:ring-offset-2 transition-colors"
+                  className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
+                  <Shield className="h-4 w-4 inline mr-1" />
                   Security
                 </Link>
               )}
               <form action="/auth/signout" method="post">
                 <button
                   type="submit"
-                  className="px-3 py-1.5 text-sm font-semibold border-2 border-white/30 text-white rounded-lg hover:bg-white/10 transition-colors flex items-center gap-2"
+                  className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
                 >
                   <User className="h-4 w-4" />
-                  Log Out
+                  Sign Out
                 </button>
               </form>
             </div>
@@ -361,78 +241,97 @@ export default async function AccountsPage() {
       </header>
 
       {/* Navigation Bar (Desktop) */}
-      <nav className="hidden md:block bg-primary-100 border-b border-primary-200">
+      <nav className="hidden md:block bg-white border-b border-gray-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8 justify-end">
-            <Link href="/accounts" className="px-3 py-4 text-sm font-medium text-primary-900 border-b-2 border-primary-700">
+          <div className="flex space-x-8">
+            <Link href="/accounts" className="px-3 py-4 text-sm font-semibold text-primary-700 border-b-2 border-primary-700">
               Accounts
             </Link>
-            <Link href="/dashboard" className="px-3 py-4 text-sm font-medium text-primary-900 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
+            <Link href="/dashboard" className="px-3 py-4 text-sm font-medium text-gray-700 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
               Investments
             </Link>
-            <Link href="/transactions" className="px-3 py-4 text-sm font-medium text-primary-900 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
+            <Link href="/transactions" className="px-3 py-4 text-sm font-medium text-gray-700 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
               Transfers
             </Link>
-            <Link href="/documents" className="px-3 py-4 text-sm font-medium text-primary-900 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
+            <Link href="/documents" className="px-3 py-4 text-sm font-medium text-gray-700 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
               Documents
             </Link>
-            <Link href="/support" className="px-3 py-4 text-sm font-medium text-primary-900 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
+            <Link href="/support" className="px-3 py-4 text-sm font-medium text-gray-700 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
               Support
             </Link>
           </div>
         </div>
       </nav>
 
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Top Section: Profile (Left) + Total Value (Right) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* User Profile Section */}
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        {/* Page Header */}
+        <div className="mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">My Accounts</h2>
+          <p className="text-sm text-gray-600 mt-1">View and manage your accounts</p>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
           <FadeIn delay={0.1}>
-            <AnimatedCard className="p-6 h-full">
-              <div className="flex items-center gap-4 h-full">
-                {/* Profile Picture Placeholder with Verification Badge */}
-                <div className="relative flex-shrink-0">
-                  <div className="h-[100px] w-[100px] bg-primary-100 rounded-full flex items-center justify-center">
-                    <User className="h-12 w-12 text-primary-700" />
-                  </div>
-                  {/* Verification Badge */}
-                  <div className="absolute bottom-0 right-0 h-6 w-6 bg-green-600 rounded-full flex items-center justify-center border-2 border-white">
-                    <CheckCircle2 className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-xl font-bold text-gray-900 truncate">{displayName}</h2>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-sm font-medium text-gray-600">{profile?.role || 'Client'}</span>
-                    <span className="text-sm font-medium text-gray-600">Verified Account</span>
-                  </div>
-                </div>
+            <AnimatedCard className="p-6 bg-gradient-to-br from-primary-700 to-primary-800 text-white">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-white/90">Total Balance</p>
+                <DollarSign className="h-5 w-5 text-white/80" />
               </div>
+              <p className="text-3xl md:text-4xl font-bold mb-1">
+                {formatCurrency(totalBalance, "USD")}
+              </p>
+              <p className="text-xs text-white/80">Across {accountCount} {accountCount === 1 ? 'account' : 'accounts'}</p>
             </AnimatedCard>
           </FadeIn>
 
-          {/* Total Value Section */}
           <FadeIn delay={0.2}>
-            <AnimatedCard className="p-6 h-full">
-              <div className="text-right flex flex-col justify-center h-full">
-                <p className="text-sm text-gray-600 mb-1">Total Value</p>
-                <p className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                  {formatCurrency(totalBalance, "USD")}
-                </p>
-                <div className="flex items-center justify-end gap-2 text-green-600">
-                  <ArrowUp className="h-4 w-4" />
-                  <span className="text-lg font-semibold">+{formatCurrency(dailyChangeAmount, "USD")}</span>
-                  <span className="text-lg font-semibold">+{dailyChangePercent.toFixed(2)}%</span>
-                </div>
+            <AnimatedCard className="p-6 bg-white border border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-gray-600">Checking & Savings</p>
+                <Wallet className="h-5 w-5 text-gray-400" />
               </div>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
+                {formatCurrency(checkingBalance + savingsBalance, "USD")}
+              </p>
+              <p className="text-xs text-gray-500">Available for transactions</p>
+            </AnimatedCard>
+          </FadeIn>
+
+          <FadeIn delay={0.3}>
+            <AnimatedCard className="p-6 bg-white border border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-gray-600">Total Accounts</p>
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+              </div>
+              <p className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">{accountCount}</p>
+              <p className="text-xs text-gray-500">All accounts active</p>
             </AnimatedCard>
           </FadeIn>
         </div>
 
-        {/* Wealth Allocation Cards */}
-        {allocationCategories.length === 0 ? (
+        {/* Quick Actions */}
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-3">
+            <button className="px-4 py-2 bg-primary-700 text-white rounded-lg hover:bg-primary-800 transition-colors text-sm font-medium flex items-center gap-2">
+              <ArrowUpRight className="h-4 w-4" />
+              Transfer Money
+            </button>
+            <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              Download Statements
+            </button>
+            <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              View All Transactions
+            </button>
+          </div>
+        </div>
+
+        {/* Accounts List - Grouped by Type */}
+        {accounts.length === 0 ? (
           <FadeIn delay={0.4}>
-            <AnimatedCard className="p-12">
+            <AnimatedCard className="p-12 bg-white border border-gray-200">
               <div className="text-center">
                 <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Wallet className="h-8 w-8 text-gray-400" />
@@ -443,115 +342,105 @@ export default async function AccountsPage() {
             </AnimatedCard>
           </FadeIn>
         ) : (
-          <div className="space-y-4">
-            {allocationCategories.map((category, index) => {
-              const IconComponent = category.icon;
-              const dailyGainPercent = (category.dailyGain / category.value) * 100;
-              
-              // Format description - split by comma and add plus signs between items
-              const descriptionParts = category.description
-                .split(',')
-                .map(part => part.trim().replace(/\s*[+•]\s*/g, ' ').trim())
-                .filter(part => part.length > 0);
-              
+          <div className="space-y-6">
+            {accountTypeOrder.map((type, typeIndex) => {
+              const typeAccounts = groupedAccounts[type] || [];
+              if (typeAccounts.length === 0) return null;
+
+              const typeLabel = getAccountTypeLabel(type);
+              let delay = 0.4 + typeIndex * 0.1;
+
               return (
-                <FadeIn key={category.id} delay={0.4 + index * 0.1}>
-                  {category.accountId ? (
-                    <Link href={`/accounts/${category.accountId}`}>
-                      <AnimatedCard className="p-3 hover:shadow-lg transition-all cursor-pointer group">
-                        <div className="flex items-start gap-3">
-                          {/* Icon - Larger, darker green */}
-                          <div className="bg-green-700 p-2.5 rounded-lg flex-shrink-0">
-                            <IconComponent className="h-5 w-5 text-white" />
-                          </div>
-                          
-                          {/* Main Content Area */}
-                          <div className="flex-1 min-w-0">
-                            {/* Title row with value and arrow on the right */}
-                            <div className="flex items-center justify-between mb-1">
-                              <div className="flex items-center gap-2">
-                                <h3 className="text-sm font-bold text-gray-900">
-                                  {category.name}
-                                </h3>
-                                <span className="text-sm font-medium text-gray-500">
-                                  ({category.percentage.toFixed(0)}%)
-                                </span>
+                <div key={type}>
+                  {/* Section Header */}
+                  <div className="mb-3">
+                    <h3 className="text-lg font-semibold text-gray-900">{typeLabel} Accounts</h3>
+                    <p className="text-sm text-gray-500">
+                      {typeAccounts.length} {typeAccounts.length === 1 ? 'account' : 'accounts'}
+                    </p>
+                  </div>
+
+                  {/* Accounts in this group */}
+                  <div className="space-y-3">
+                    {typeAccounts.map((account, accountIndex) => {
+                      const IconComponent = getAccountIcon(account.type);
+                      const accountTypeLabel = getAccountTypeLabel(account.type);
+                      const accountTypeColor = getAccountTypeColor(account.type);
+                      const balance = Number(account.balance || 0);
+                      const accountNumber = maskAccountNumber(account.account_number);
+
+                      return (
+                        <FadeIn key={account.id} delay={delay + accountIndex * 0.05}>
+                          <AnimatedCard className="bg-white border border-gray-200 hover:shadow-md transition-all">
+                            <Link href={`/accounts/${account.id}`}>
+                              <div className="p-5">
+                                <div className="flex items-center justify-between">
+                                  {/* Account Info */}
+                                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                                    {/* Account Icon */}
+                                    <div className={`${accountTypeColor} p-3 rounded-lg flex-shrink-0`}>
+                                      <IconComponent className="h-5 w-5 text-white" />
+                                    </div>
+                                    
+                                    {/* Account Details */}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="text-base font-semibold text-gray-900 truncate">
+                                          {account.name}
+                                        </h4>
+                                      </div>
+                                      <div className="flex items-center gap-3 text-xs text-gray-600">
+                                        {account.account_number && (
+                                          <span className="font-mono">{accountNumber}</span>
+                                        )}
+                                        {account.iban && (
+                                          <span className="font-mono truncate max-w-[200px]">{account.iban}</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Balance */}
+                                  <div className="text-right flex-shrink-0 ml-4">
+                                    <p className="text-xl md:text-2xl font-bold text-gray-900">
+                                      {formatCurrency(balance, account.currency || "USD")}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-0.5">Available</p>
+                                  </div>
+
+                                  {/* Arrow */}
+                                  <div className="ml-4 flex-shrink-0">
+                                    <ArrowRight className="h-5 w-5 text-gray-400" />
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-bold text-gray-900">
-                                  {formatCurrency(category.value, "USD")}
-                                </span>
-                                <ArrowRight className="h-3.5 w-3.5 text-gray-400 group-hover:text-primary-700 transition-colors" />
-                              </div>
-                            </div>
-                            
-                            {/* Description with plus signs */}
-                            <div className="flex items-center gap-1.5 mb-1 flex-wrap text-xs text-gray-600">
-                              {descriptionParts.map((part, idx) => (
-                                <span key={idx} className="flex items-center gap-1">
-                                  {idx > 0 && <Plus className="h-2.5 w-2.5 text-green-600 flex-shrink-0" />}
-                                  <span>{part}</span>
-                                </span>
-                              ))}
-                            </div>
-                            
-                            {/* Daily gain badge - compact, below value area */}
-                            <div className="flex justify-end">
-                              <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 rounded-md">
-                                <ArrowUp className="h-2.5 w-2.5 text-green-600" />
-                                <span className="text-xs font-semibold text-green-600">
-                                  +{formatCurrency(category.dailyGain, "USD")}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </AnimatedCard>
-                    </Link>
-                  ) : (
-                    <AnimatedCard className="p-3">
-                      <div className="flex items-start gap-3">
-                        <div className="bg-green-700 p-2.5 rounded-lg flex-shrink-0">
-                          <IconComponent className="h-5 w-5 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                              <h3 className="text-sm font-bold text-gray-900">
-                                {category.name}
-                              </h3>
-                              <span className="text-sm font-medium text-gray-500">
-                                ({category.percentage.toFixed(0)}%)
-                              </span>
-                            </div>
-                            <span className="text-sm font-bold text-gray-900">
-                              {formatCurrency(category.value, "USD")}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 mb-1 flex-wrap text-xs text-gray-600">
-                            {descriptionParts.map((part, idx) => (
-                              <span key={idx} className="flex items-center gap-1">
-                                {idx > 0 && <Plus className="h-2.5 w-2.5 text-green-600 flex-shrink-0" />}
-                                <span>{part}</span>
-                              </span>
-                            ))}
-                          </div>
-                          <div className="flex justify-end">
-                            <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 rounded-md">
-                              <ArrowUp className="h-2.5 w-2.5 text-green-600" />
-                              <span className="text-xs font-semibold text-green-600">
-                                +{formatCurrency(category.dailyGain, "USD")}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </AnimatedCard>
-                  )}
-                </FadeIn>
+                            </Link>
+                          </AnimatedCard>
+                        </FadeIn>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </div>
+        )}
+
+        {/* Additional Information */}
+        {accounts.length > 0 && (
+          <FadeIn delay={0.6}>
+            <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Shield className="h-5 w-5 text-blue-700 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-1">Secure Banking</h4>
+                  <p className="text-xs text-blue-800">
+                    Your accounts are protected by Swiss banking security standards. All transactions are encrypted and monitored 24/7.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </FadeIn>
         )}
       </main>
 
@@ -563,7 +452,7 @@ export default async function AccountsPage() {
             Accounts
           </Link>
           <Link href="/transactions" className="flex flex-col items-center justify-center text-xs text-gray-600 hover:text-primary-700 transition-colors">
-            <TrendingUp className="h-5 w-5 mb-1" />
+            <ArrowUpRight className="h-5 w-5 mb-1" />
             Transfers
           </Link>
           <Link href="/dashboard" className="flex flex-col items-center justify-center text-xs text-gray-600 hover:text-primary-700 transition-colors">

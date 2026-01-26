@@ -2,7 +2,7 @@
 // Uses PricingService with enhanced rate limiting and safety measures
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAuthenticatedClient } from '@/lib/supabase/server';
 import { PricingService } from '@/lib/services/pricing-service';
 import { rateLimiter, RATE_LIMIT_CONFIGS } from '@/lib/services/rate-limiter';
 
@@ -42,16 +42,57 @@ function isValidSymbol(symbol: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Check for Authorization header (mobile app) or cookies (web app)
+    const authHeader = request.headers.get('authorization');
+    let supabase;
+    let user;
     
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Mobile app: Use Authorization header
+      const accessToken = authHeader.replace('Bearer ', '');
+      
+      // Verify token and get user directly from Supabase Auth API
+      try {
+        const verifyResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            },
+          }
+        );
+        
+        if (!verifyResponse.ok) {
+          return NextResponse.json(
+            { error: 'Unauthorized - Invalid or expired token' },
+            { status: 401 }
+          );
+        }
+        
+        user = await verifyResponse.json();
+        
+        // Create authenticated client for RLS (use token in headers)
+        supabase = await createAuthenticatedClient(accessToken);
+      } catch (error) {
+        console.error('[Price API] Token verification error:', error);
+        return NextResponse.json(
+          { error: 'Unauthorized - Token verification failed' },
+          { status: 401 }
+        );
+      }
+    } else {
+      // Web app: Use cookies
+      supabase = await createClient();
+      const { data: { user: userData }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !userData) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      user = userData;
     }
 
     // Check rate limit using enhanced rate limiter
@@ -223,16 +264,59 @@ export async function POST(request: NextRequest) {
 // GET endpoint for single symbol (convenience)
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    // Check for Authorization header (mobile app) or cookies (web app)
+    const authHeader = request.headers.get('authorization');
+    let supabase;
+    let user;
     
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Mobile app: Use Authorization header
+      const accessToken = authHeader.replace('Bearer ', '');
+      
+      // Verify token and get user directly from Supabase Auth API
+      try {
+        const verifyResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            },
+          }
+        );
+        
+        if (!verifyResponse.ok) {
+          const errorText = await verifyResponse.text().catch(() => 'Invalid token');
+          console.error('[Price API] Token verification failed:', verifyResponse.status, errorText);
+          return NextResponse.json(
+            { error: 'Unauthorized - Invalid or expired token' },
+            { status: 401 }
+          );
+        }
+        
+        user = await verifyResponse.json();
+        
+        // Create a simple client for any future database queries (not needed for pricing service)
+        supabase = await createAuthenticatedClient(accessToken);
+      } catch (error) {
+        console.error('[Price API] Token verification error:', error);
+        return NextResponse.json(
+          { error: 'Unauthorized - Token verification failed' },
+          { status: 401 }
+        );
+      }
+    } else {
+      // Web app: Use cookies
+      supabase = await createClient();
+      const { data: { user: userData }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !userData) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      user = userData;
     }
 
     // Check rate limit

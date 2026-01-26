@@ -42,19 +42,31 @@ export async function createAuthenticatedClient(accessToken: string, refreshToke
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   
-  // Create a standard Supabase client (not SSR) and set the session
+  // Create a standard Supabase client (not SSR) with custom headers
   const client = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
     },
+    global: {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    },
   });
   
-  // Set the session using the access token - this is what RLS needs
-  await client.auth.setSession({
-    access_token: accessToken,
-    refresh_token: refreshToken || accessToken, // Use access token as fallback if no refresh token
-  });
+  // Try to set the session - this enables RLS
+  // If refreshToken is provided, use it; otherwise use accessToken as fallback
+  try {
+    await client.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken || accessToken,
+    });
+  } catch (error) {
+    // If setSession fails, the token in headers should still work for RLS
+    // RLS reads from the Authorization header
+    console.warn('[createAuthenticatedClient] setSession failed, using header auth:', error instanceof Error ? error.message : error);
+  }
   
   return client;
 }

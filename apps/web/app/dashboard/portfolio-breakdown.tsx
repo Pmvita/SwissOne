@@ -281,7 +281,9 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
                         <div className="flex items-center gap-2">
                           <p className="font-medium text-sm md:text-base text-gray-900 truncate">{holding.name || holding.symbol}</p>
                           {holding.hasRealtimePrice && (
-                            <Activity className="h-3 w-3 text-green-600 animate-pulse" title="Live price" />
+                            <span title="Live price">
+                              <Activity className="h-3 w-3 text-green-600 animate-pulse" />
+                            </span>
                           )}
                           {pricesLoading && !holding.hasRealtimePrice && (
                             <div className="h-3 w-3 border-2 border-gray-300 border-t-primary-600 rounded-full animate-spin" />
@@ -324,7 +326,9 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
                             <div className="flex items-center gap-1">
                               <p className="font-medium text-gray-900">{formatCurrency(currentPrice, holding.currency || "USD")}</p>
                               {holding.hasRealtimePrice && (
-                                <Activity className="h-3 w-3 text-green-600" title="Live price" />
+                                <span title="Live price">
+                                  <Activity className="h-3 w-3 text-green-600" />
+                                </span>
                               )}
                             </div>
                             {holding.realtimeChangePercent !== undefined && (

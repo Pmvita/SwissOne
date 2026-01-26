@@ -37,8 +37,18 @@ class PriceService {
       process.env.EXPO_PUBLIC_APP_URL || // Fallback to app URL if API URL not set
       process.env.NEXT_PUBLIC_APP_URL;
     
+    if (__DEV__ && apiUrl) {
+      console.log('[PriceService] Using API URL:', apiUrl);
+    }
+    
     if (!apiUrl) {
-      // Don't use localhost fallback - it won't work on physical devices
+      if (__DEV__) {
+        console.warn('[PriceService] API URL not configured. Available env vars:', {
+          EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
+          EXPO_PUBLIC_WEB_URL: process.env.EXPO_PUBLIC_WEB_URL,
+          EXPO_PUBLIC_APP_URL: process.env.EXPO_PUBLIC_APP_URL,
+        });
+      }
       return null;
     }
     
@@ -53,9 +63,16 @@ class PriceService {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
+      
+      if (__DEV__ && session) {
+        console.log('[PriceService] Session found, token length:', session.access_token?.length || 0);
+      }
+      
       return session?.access_token || null;
     } catch (error) {
-      console.error('Error getting auth token:', error);
+      if (__DEV__) {
+        console.error('[PriceService] Error getting auth token:', error);
+      }
       return null;
     }
   }
@@ -82,15 +99,22 @@ class PriceService {
           this.lastRequestTime = Date.now();
 
           if (!response.ok) {
+            const errorText = await response.text().catch(() => response.statusText);
+            if (__DEV__) {
+              console.error(`[PriceService] API error ${response.status}:`, errorText);
+            }
             if (response.status === 429) {
               throw new Error('Rate limit exceeded. Please wait a moment.');
             }
-            throw new Error(`API error: ${response.statusText}`);
+            throw new Error(`API error: ${response.status} ${errorText}`);
           }
 
           const data = await response.json();
           resolve(data as T);
         } catch (error) {
+          if (__DEV__) {
+            console.error('[PriceService] Fetch error:', error instanceof Error ? error.message : error);
+          }
           reject(error);
         }
       });
@@ -163,17 +187,27 @@ class PriceService {
       const apiBaseUrl = this.getApiBaseUrl();
       if (!apiBaseUrl) {
         // API URL not configured - return cached prices only
-        console.warn('Price API not configured. Set EXPO_PUBLIC_API_URL or EXPO_PUBLIC_WEB_URL to enable real-time prices.');
+        if (__DEV__) {
+          console.warn('[PriceService] API URL not configured. Set EXPO_PUBLIC_API_URL or EXPO_PUBLIC_WEB_URL to enable real-time prices.');
+        }
         return cachedPrices;
       }
 
       const authToken = await this.getAuthToken();
       if (!authToken) {
-        console.warn('Not authenticated - cannot fetch prices');
+        if (__DEV__) {
+          console.warn('[PriceService] Not authenticated - cannot fetch prices');
+        }
         return cachedPrices;
       }
 
       const apiUrl = `${apiBaseUrl}/api/prices`;
+      
+      if (__DEV__) {
+        console.log('[PriceService] Fetching prices from:', apiUrl);
+        console.log('[PriceService] Symbols:', uncachedSymbols.length, uncachedSymbols);
+        console.log('[PriceService] Has auth token:', !!authToken, 'Token length:', authToken.length);
+      }
       
       const response = await this.rateLimitedFetch<{
         success: boolean;
@@ -209,9 +243,13 @@ class PriceService {
       return priceMap;
     } catch (error) {
       // Silently fail - return cached prices or empty map
-      // Don't log errors in production to avoid spam
+      // Log detailed error in development for debugging
       if (__DEV__) {
-        console.warn('Error fetching prices (using cached/fallback):', error instanceof Error ? error.message : error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.warn('[PriceService] Error fetching prices (using cached/fallback):', errorMsg);
+        if (error instanceof Error && error.stack) {
+          console.warn('[PriceService] Stack:', error.stack);
+        }
       }
       return cachedPrices;
     }

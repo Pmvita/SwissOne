@@ -376,11 +376,6 @@ export default function AccountsScreen() {
 
   // Calculate totals
   const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
-  const dailyChangeAmount = totalBalance * 0.00083;
-  const dailyChangePercent = 0.08;
-
-  // Map accounts to wealth allocation categories
-  const allocationCategories = mapAccountsToCategories(accounts, totalBalance);
 
   // Get display name
   const displayName = profile?.full_name || 
@@ -405,7 +400,7 @@ export default function AccountsScreen() {
         <View className="flex-row items-center justify-between mb-2">
           <View>
             <Text className="text-white text-2xl font-bold">Accounts</Text>
-            <Text className="text-white/80 text-sm mt-1">Wealth allocation overview</Text>
+            <Text className="text-white/80 text-sm mt-1">All your accounts in one place</Text>
           </View>
         </View>
       </View>
@@ -417,52 +412,24 @@ export default function AccountsScreen() {
         }
       >
         <View className="px-4 py-6">
-          {/* Total Value Hero Card */}
+          {/* Total Balance Hero Card */}
           <FadeIn delay={100}>
             <AnimatedCard className="p-6 mb-4" style={{ backgroundColor: '#1e3a8a' }}>
               <View className="items-center">
-                <Text className="text-white/80 text-sm font-medium mb-2">Total Portfolio Value</Text>
-                <Text className="text-4xl font-bold text-white mb-3">
+                <Text className="text-white/80 text-sm font-medium mb-2">Total Balance</Text>
+                <Text className="text-4xl font-bold text-white mb-2">
                   {formatCurrency(totalBalance, "CHF")}
                 </Text>
-                <View className="flex-row items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
-                  <Ionicons name="arrow-up" size={16} color="white" />
-                  <Text className="text-white font-semibold text-sm">
-                    +{formatCurrency(dailyChangeAmount, "CHF")} (+{dailyChangePercent.toFixed(2)}%)
-                  </Text>
-                </View>
+                <Text className="text-white/70 text-xs">
+                  Across {accounts.length} account{accounts.length !== 1 ? 's' : ''}
+                </Text>
               </View>
             </AnimatedCard>
           </FadeIn>
 
-          {/* Profile Card */}
-          <FadeIn delay={150}>
-            <AnimatedCard className="p-4 mb-4">
-              <View className="flex-row items-center gap-4">
-                <View className="relative">
-                  <View className="h-16 w-16 bg-primary-100 rounded-full items-center justify-center">
-                    <Ionicons name="person" size={32} color="#334e68" />
-                  </View>
-                  <View className="absolute bottom-0 right-0 h-5 w-5 bg-green-600 rounded-full items-center justify-center border-2 border-white">
-                    <Ionicons name="checkmark" size={12} color="white" />
-                  </View>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-lg font-bold text-gray-900" numberOfLines={1}>
-                    {displayName}
-                  </Text>
-                  <Text className="text-sm text-gray-600 mt-1">
-                    {profile?.role || 'Client'} • Verified Account
-                  </Text>
-                  <Text className="text-xs text-gray-500 mt-1">{accounts.length} account{accounts.length !== 1 ? 's' : ''}</Text>
-                </View>
-              </View>
-            </AnimatedCard>
-          </FadeIn>
-
-          {/* Wealth Allocation Categories */}
-          {allocationCategories.length === 0 ? (
-            <FadeIn delay={200}>
+          {/* Accounts List - Grouped by Type */}
+          {accounts.length === 0 ? (
+            <FadeIn delay={150}>
               <AnimatedCard className="p-12">
                 <View className="items-center">
                   <View className="h-20 w-20 bg-gray-100 rounded-full items-center justify-center mb-4">
@@ -476,162 +443,140 @@ export default function AccountsScreen() {
               </AnimatedCard>
             </FadeIn>
           ) : (
-            <View className="mb-4">
-              <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-xl font-bold text-gray-900">Wealth Allocation</Text>
-                <Text className="text-sm text-gray-500">{allocationCategories.length} categories</Text>
-              </View>
-              
-              <View className="gap-3">
-                {allocationCategories.map((category, index) => {
-                  const dailyGainPercent = category.value > 0 
-                    ? (category.dailyGain / category.value) * 100 
-                    : 0;
-                  
-                  const descriptionParts = category.description
-                    .split(/[,•+]/)
-                    .map(part => part.trim())
-                    .filter(part => part.length > 0);
-                  
-                  return (
-                    <FadeIn key={category.id} delay={200 + index * 50}>
-                      <TouchableOpacity
-                        onPress={() => {
-                          if (category.accountId) {
-                            const account = accounts.find(acc => acc.id === category.accountId);
-                            if (account) {
-                              openAccountModal(account);
-                            }
-                          }
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <AnimatedCard className="p-5">
-                          <View className="flex-row items-start gap-4">
-                            {/* Icon */}
-                            <View className="bg-primary-600 p-3 rounded-xl">
-                              <Ionicons name={category.icon as any} size={24} color="white" />
-                            </View>
-                            
-                            {/* Main Content */}
-                            <View className="flex-1 min-w-0">
-                              {/* Title and Value */}
-                              <View className="flex-row items-start justify-between mb-2">
-                                <View className="flex-1 min-w-0">
-                                  <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
-                                    {category.name}
-                                  </Text>
-                                  <Text className="text-xs text-gray-500 mt-0.5">
-                                    {category.percentage.toFixed(1)}% of portfolio
-                                  </Text>
-                                </View>
-                                <View className="items-end ml-2">
-                                  <Text className="text-lg font-bold text-gray-900">
-                                    {formatCurrency(category.value, "CHF")}
-                                  </Text>
-                                  {category.accountId && (
-                                    <Ionicons name="chevron-forward" size={18} color="#9ca3af" style={{ marginTop: 4 }} />
-                                  )}
-                                </View>
-                              </View>
-                              
-                              {/* Description */}
-                              <View className="mb-3">
-                                <Text className="text-xs text-gray-600 leading-4" numberOfLines={2}>
-                                  {category.description}
-                                </Text>
-                              </View>
-                              
-                              {/* Daily Gain Badge */}
-                              <View className="flex-row items-center gap-2">
-                                <View className="flex-row items-center gap-1 bg-green-50 px-2 py-1 rounded-md">
-                                  <Ionicons name="arrow-up" size={12} color="#16a34a" />
-                                  <Text className="text-xs font-semibold text-green-600">
-                                    +{formatCurrency(category.dailyGain, "CHF")}
-                                  </Text>
-                                </View>
-                                <Text className="text-xs text-gray-500">
-                                  Today
-                                </Text>
-                              </View>
-                            </View>
-                          </View>
-                        </AnimatedCard>
-                      </TouchableOpacity>
-                    </FadeIn>
-                  );
-                })}
-              </View>
-            </View>
-          )}
+            <View>
+              {/* Group accounts by type */}
+              {(() => {
+                const groupedAccounts: Record<string, Account[]> = {
+                  checking: [],
+                  savings: [],
+                  investment: [],
+                  credit: [],
+                  loan: [],
+                  other: [],
+                };
 
-          {/* All Accounts List */}
-          {accounts.length > 0 && (
-            <FadeIn delay={300}>
-              <View className="mt-2">
-                <View className="flex-row items-center justify-between mb-4">
-                  <Text className="text-xl font-bold text-gray-900">All Accounts</Text>
-                  <Text className="text-sm text-gray-500">{accounts.length} total</Text>
-                </View>
-                
-                <View className="gap-3">
-                  {accounts.map((account, index) => {
-                    const iconMap: Record<string, string> = {
-                      checking: 'wallet',
-                      savings: 'business',
-                      investment: 'trending-up',
-                      credit: 'card',
-                    };
-                    const colorMap: Record<string, string> = {
-                      checking: 'bg-primary-600',
-                      savings: 'bg-blue-600',
-                      investment: 'bg-green-600',
-                      credit: 'bg-orange-600',
-                    };
-                    
-                    const icon = iconMap[account.type] || 'wallet';
-                    const color = colorMap[account.type] || 'bg-gray-600';
-                    
-                    return (
-                      <TouchableOpacity
-                        key={account.id}
-                        onPress={() => openAccountModal(account)}
-                        activeOpacity={0.7}
-                      >
-                        <AnimatedCard delay={350 + index * 30} className="p-4">
-                          <View className="flex-row items-center justify-between">
-                            <View className="flex-row items-center gap-4 flex-1">
-                              <View className={`h-14 w-14 ${color} rounded-xl items-center justify-center`}>
-                                <Ionicons name={icon as any} size={28} color="white" />
-                              </View>
-                              <View className="flex-1 min-w-0">
-                                <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
-                                  {account.name}
-                                </Text>
-                                <Text className="text-sm text-gray-500 capitalize mt-0.5">
-                                  {account.type}
-                                </Text>
-                                {account.account_number && (
-                                  <Text className="text-xs text-gray-400 mt-1">
-                                    ****{account.account_number.toString().slice(-4)}
-                                  </Text>
-                                )}
-                              </View>
-                            </View>
-                            <View className="items-end ml-3">
-                              <Text className="text-lg font-bold text-gray-900">
-                                {formatCurrency(Number(account.balance || 0), account.currency || "CHF")}
-                              </Text>
-                              <Ionicons name="chevron-forward" size={20} color="#9ca3af" style={{ marginTop: 4 }} />
-                            </View>
-                          </View>
-                        </AnimatedCard>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-            </FadeIn>
+                accounts.forEach(account => {
+                  const type = account.type || 'other';
+                  if (groupedAccounts[type]) {
+                    groupedAccounts[type].push(account);
+                  } else {
+                    groupedAccounts.other.push(account);
+                  }
+                });
+
+                const typeLabels: Record<string, string> = {
+                  checking: 'Checking Accounts',
+                  savings: 'Savings Accounts',
+                  investment: 'Investment Accounts',
+                  credit: 'Credit Cards',
+                  loan: 'Loans',
+                  other: 'Other Accounts',
+                };
+
+                const typeIcons: Record<string, string> = {
+                  checking: 'wallet',
+                  savings: 'business',
+                  investment: 'trending-up',
+                  credit: 'card',
+                  loan: 'cash',
+                  other: 'wallet',
+                };
+
+                let delay = 150;
+                const sections: JSX.Element[] = [];
+
+                Object.entries(groupedAccounts).forEach(([type, typeAccounts]) => {
+                  if (typeAccounts.length === 0) return;
+
+                  sections.push(
+                    <View key={type} className="mb-6">
+                      <View className="flex-row items-center gap-2 mb-3">
+                        <Ionicons 
+                          name={typeIcons[type] as any} 
+                          size={20} 
+                          color="#334e68" 
+                        />
+                        <Text className="text-lg font-bold text-gray-900">
+                          {typeLabels[type] || type.charAt(0).toUpperCase() + type.slice(1)}
+                        </Text>
+                        <Text className="text-sm text-gray-500">
+                          ({typeAccounts.length})
+                        </Text>
+                      </View>
+                      
+                      <View className="gap-3">
+                        {typeAccounts.map((account, index) => {
+                          const iconMap: Record<string, string> = {
+                            checking: 'wallet',
+                            savings: 'business',
+                            investment: 'trending-up',
+                            credit: 'card',
+                            loan: 'cash',
+                          };
+                          const colorMap: Record<string, string> = {
+                            checking: 'bg-primary-600',
+                            savings: 'bg-blue-600',
+                            investment: 'bg-green-600',
+                            credit: 'bg-orange-600',
+                            loan: 'bg-red-600',
+                          };
+                          
+                          const icon = iconMap[account.type] || 'wallet';
+                          const color = colorMap[account.type] || 'bg-gray-600';
+                          
+                          return (
+                            <FadeIn key={account.id} delay={delay + index * 30}>
+                              <TouchableOpacity
+                                onPress={() => openAccountModal(account)}
+                                activeOpacity={0.7}
+                              >
+                                <AnimatedCard className="p-4">
+                                  <View className="flex-row items-center justify-between">
+                                    <View className="flex-row items-center gap-4 flex-1">
+                                      <View className={`h-14 w-14 ${color} rounded-xl items-center justify-center`}>
+                                        <Ionicons name={icon as any} size={28} color="white" />
+                                      </View>
+                                      <View className="flex-1 min-w-0">
+                                        <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
+                                          {account.name}
+                                        </Text>
+                                        <Text className="text-sm text-gray-500 capitalize mt-0.5">
+                                          {account.type}
+                                        </Text>
+                                        {account.account_number && (
+                                          <Text className="text-xs text-gray-400 mt-1">
+                                            ****{account.account_number.toString().slice(-4)}
+                                          </Text>
+                                        )}
+                                        {account.iban && (
+                                          <Text className="text-xs text-gray-400 mt-1" numberOfLines={1}>
+                                            {account.iban.slice(0, 8)}...{account.iban.slice(-4)}
+                                          </Text>
+                                        )}
+                                      </View>
+                                    </View>
+                                    <View className="items-end ml-3">
+                                      <Text className="text-lg font-bold text-gray-900">
+                                        {formatCurrency(Number(account.balance || 0), account.currency || "CHF")}
+                                      </Text>
+                                      <Ionicons name="chevron-forward" size={20} color="#9ca3af" style={{ marginTop: 4 }} />
+                                    </View>
+                                  </View>
+                                </AnimatedCard>
+                              </TouchableOpacity>
+                            </FadeIn>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  );
+
+                  delay += typeAccounts.length * 30 + 100;
+                });
+
+                return sections;
+              })()}
+            </View>
           )}
         </View>
       </ScrollView>
