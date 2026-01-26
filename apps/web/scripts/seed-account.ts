@@ -420,6 +420,12 @@ async function seedAccount() {
     const longTermAccount = createdAccounts?.find((acc) =>
       acc.name.includes('Long Term Investing')
     );
+    const professionalAccount = createdAccounts?.find((acc) =>
+      acc.name.includes('Professional Advice')
+    );
+
+    // Use current year for transaction dates
+    const currentYear = new Date().getFullYear();
 
     // Sample transactions for Lifestyle Account
     if (lifestyleAccount) {
@@ -435,7 +441,7 @@ async function seedAccount() {
           currency: 'USD',
           description: 'Monthly Income Distribution (Living Off Returns)',
           category: 'income',
-          date: new Date('2024-01-01').toISOString(),
+          date: new Date(`${currentYear}-01-01`).toISOString(),
         },
         {
           account_id: lifestyleAccount.id,
@@ -445,7 +451,7 @@ async function seedAccount() {
           currency: 'USD',
           description: 'Monthly Personal Expenses',
           category: 'expense',
-          date: new Date('2024-01-15').toISOString(),
+          date: new Date(`${currentYear}-01-15`).toISOString(),
         }
       );
     }
@@ -462,8 +468,339 @@ async function seedAccount() {
         currency: 'USD',
         description: 'Annual Charity Distribution (10% of Long Term Investing Returns)',
         category: 'income',
-        date: new Date('2024-01-31').toISOString(),
+        date: new Date(`${currentYear}-01-31`).toISOString(),
       });
+    }
+
+    // Annual costs for Professional Advice & Structure Account
+    // Total Annual Costs: $7.15-18.5M (0.72-1.85% of $1B AUM)
+    // Using mid-range: ~$12.825M annually
+    if (professionalAccount) {
+      // Family Office costs (paid quarterly)
+      const familyOfficeAnnual = 4_000_000; // Mid-range of $2-6M
+      const familyOfficeQuarterly = familyOfficeAnnual / 4;
+      
+      // Trust Administration (paid annually)
+      const trustAdminAnnual = 1_000_000; // Mid-range of $500K-1.5M
+      
+      // Bank Management fees (paid quarterly, 0.25-0.45% of AUM = $2.5-4.5M)
+      const bankManagementAnnual = 3_500_000; // Mid-range
+      const bankManagementQuarterly = bankManagementAnnual / 4;
+      
+      // Bank Custody & Reporting (paid quarterly)
+      const bankCustodyAnnual = 1_000_000; // Mid-range of $500K-1.5M
+      const bankCustodyQuarterly = bankCustodyAnnual / 4;
+      
+      // Legal & Tax Advisors (paid quarterly)
+      const legalTaxAnnual = 1_400_000; // Mid-range of $800K-2M
+      const legalTaxQuarterly = legalTaxAnnual / 4;
+      
+      // Compliance & Reporting (paid quarterly)
+      const complianceAnnual = 650_000; // Mid-range of $300K-1M
+      const complianceQuarterly = complianceAnnual / 4;
+      
+      // Audit & Accounting (paid annually)
+      const auditAnnual = 400_000; // Mid-range of $200K-600K
+      
+      // Insurance & Risk Management (paid annually)
+      const insuranceAnnual = 275_000; // Mid-range of $150K-400K
+      
+      // Operating Company Management (paid quarterly)
+      const operatingCoAnnual = 550_000; // Mid-range of $300K-800K
+      const operatingCoQuarterly = operatingCoAnnual / 4;
+
+      // Use current year for transaction dates
+      const currentYear = new Date().getFullYear();
+
+      // Q1 transactions (January)
+      transactions.push(
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: familyOfficeQuarterly,
+          currency: 'USD',
+          description: 'Q1 Family Office Costs (Executive team, operations, technology, infrastructure)',
+          category: 'expense',
+          date: new Date(`${currentYear}-01-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: bankManagementQuarterly,
+          currency: 'USD',
+          description: 'Q1 Bank Management Fees (0.25-0.45% of AUM, negotiated rate)',
+          category: 'expense',
+          date: new Date(`${currentYear}-01-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: bankCustodyQuarterly,
+          currency: 'USD',
+          description: 'Q1 Bank Custody & Reporting Fees',
+          category: 'expense',
+          date: new Date(`${currentYear}-01-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: legalTaxQuarterly,
+          currency: 'USD',
+          description: 'Q1 Legal & Tax Advisors (Multi-jurisdiction planning)',
+          category: 'expense',
+          date: new Date(`${currentYear}-01-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: complianceQuarterly,
+          currency: 'USD',
+          description: 'Q1 Compliance & Reporting (T1141, T1135, FATCA, CRS)',
+          category: 'expense',
+          date: new Date(`${currentYear}-01-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: operatingCoQuarterly,
+          currency: 'USD',
+          description: 'Q1 Operating Company Management',
+          category: 'expense',
+          date: new Date(`${currentYear}-01-15`).toISOString(),
+        }
+      );
+
+      // Annual transactions (January)
+      transactions.push(
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: trustAdminAnnual,
+          currency: 'USD',
+          description: 'Annual Trust Administration (Multiple trusts across jurisdictions)',
+          category: 'expense',
+          date: new Date('2024-01-31').toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: auditAnnual,
+          currency: 'USD',
+          description: 'Annual Audit & Accounting',
+          category: 'expense',
+          date: new Date('2024-01-31').toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: insuranceAnnual,
+          currency: 'USD',
+          description: 'Annual Insurance & Risk Management',
+          category: 'expense',
+          date: new Date('2024-01-31').toISOString(),
+        }
+      );
+
+      // Q2 transactions (April)
+      transactions.push(
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: familyOfficeQuarterly,
+          currency: 'USD',
+          description: 'Q2 Family Office Costs',
+          category: 'expense',
+          date: new Date(`${currentYear}-04-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: bankManagementQuarterly,
+          currency: 'USD',
+          description: 'Q2 Bank Management Fees',
+          category: 'expense',
+          date: new Date(`${currentYear}-04-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: bankCustodyQuarterly,
+          currency: 'USD',
+          description: 'Q2 Bank Custody & Reporting Fees',
+          category: 'expense',
+          date: new Date(`${currentYear}-04-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: legalTaxQuarterly,
+          currency: 'USD',
+          description: 'Q2 Legal & Tax Advisors',
+          category: 'expense',
+          date: new Date(`${currentYear}-04-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: complianceQuarterly,
+          currency: 'USD',
+          description: 'Q2 Compliance & Reporting',
+          category: 'expense',
+          date: new Date(`${currentYear}-04-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: operatingCoQuarterly,
+          currency: 'USD',
+          description: 'Q2 Operating Company Management',
+          category: 'expense',
+          date: new Date(`${currentYear}-04-15`).toISOString(),
+        }
+      );
+
+      // Q3 transactions (July)
+      transactions.push(
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: familyOfficeQuarterly,
+          currency: 'USD',
+          description: 'Q3 Family Office Costs',
+          category: 'expense',
+          date: new Date(`${currentYear}-07-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: bankManagementQuarterly,
+          currency: 'USD',
+          description: 'Q3 Bank Management Fees',
+          category: 'expense',
+          date: new Date(`${currentYear}-07-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: bankCustodyQuarterly,
+          currency: 'USD',
+          description: 'Q3 Bank Custody & Reporting Fees',
+          category: 'expense',
+          date: new Date(`${currentYear}-07-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: legalTaxQuarterly,
+          currency: 'USD',
+          description: 'Q3 Legal & Tax Advisors',
+          category: 'expense',
+          date: new Date(`${currentYear}-07-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: complianceQuarterly,
+          currency: 'USD',
+          description: 'Q3 Compliance & Reporting',
+          category: 'expense',
+          date: new Date(`${currentYear}-07-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: operatingCoQuarterly,
+          currency: 'USD',
+          description: 'Q3 Operating Company Management',
+          category: 'expense',
+          date: new Date(`${currentYear}-07-15`).toISOString(),
+        }
+      );
+
+      // Q4 transactions (October)
+      transactions.push(
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: familyOfficeQuarterly,
+          currency: 'USD',
+          description: 'Q4 Family Office Costs',
+          category: 'expense',
+          date: new Date(`${currentYear}-10-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: bankManagementQuarterly,
+          currency: 'USD',
+          description: 'Q4 Bank Management Fees',
+          category: 'expense',
+          date: new Date(`${currentYear}-10-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: bankCustodyQuarterly,
+          currency: 'USD',
+          description: 'Q4 Bank Custody & Reporting Fees',
+          category: 'expense',
+          date: new Date(`${currentYear}-10-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: legalTaxQuarterly,
+          currency: 'USD',
+          description: 'Q4 Legal & Tax Advisors',
+          category: 'expense',
+          date: new Date(`${currentYear}-10-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: complianceQuarterly,
+          currency: 'USD',
+          description: 'Q4 Compliance & Reporting',
+          category: 'expense',
+          date: new Date(`${currentYear}-10-15`).toISOString(),
+        },
+        {
+          account_id: professionalAccount.id,
+          user_id: USER_ID,
+          type: 'debit',
+          amount: operatingCoQuarterly,
+          currency: 'USD',
+          description: 'Q4 Operating Company Management',
+          category: 'expense',
+          date: new Date(`${currentYear}-10-15`).toISOString(),
+        }
+      );
     }
 
     if (transactions.length > 0) {
@@ -491,6 +828,18 @@ async function seedAccount() {
     console.log('   - Monthly Income: $900K');
     console.log('   - Charity: 10% of annual returns (approx $1.8M/year)');
     console.log('   - Remaining Income: $10.2M/year to Lifestyle Account');
+    console.log('\n💼 Professional Advice & Structure Annual Costs:');
+    console.log('   - Family Office: $4M/year (quarterly payments)');
+    console.log('   - Trust Administration: $1M/year (annual)');
+    console.log('   - Bank Management: $3.5M/year (quarterly, 0.25-0.45% of AUM)');
+    console.log('   - Bank Custody & Reporting: $1M/year (quarterly)');
+    console.log('   - Legal & Tax Advisors: $1.4M/year (quarterly, multi-jurisdiction)');
+    console.log('   - Compliance & Reporting: $650K/year (quarterly, T1141, T1135, FATCA, CRS)');
+    console.log('   - Audit & Accounting: $400K/year (annual)');
+    console.log('   - Insurance & Risk Management: $275K/year (annual)');
+    console.log('   - Operating Company Management: $550K/year (quarterly)');
+    console.log('   - Total Annual Costs: ~$12.825M (1.28% of $1B AUM)');
+    console.log('   - Cost Range: $7.15-18.5M (0.72-1.85% of AUM)');
   } catch (error: any) {
     console.error('❌ Unexpected error:', error.message);
     console.error(error);
