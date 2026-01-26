@@ -21,7 +21,7 @@
 
 5. **Documentation Created**:
    - `docs/WEALTH_ALLOCATION_MODEL.md` - Complete model documentation
-   - `docs/IMPLEMENTATION_SUMMARY.md` - Implementation details
+   - `docs/SETUP_INSTRUCTIONS.md` - Setup instructions for wealth allocation model
 
 ## ⚠️ Manual Steps Required
 

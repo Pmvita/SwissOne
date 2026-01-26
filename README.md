@@ -85,9 +85,11 @@ See the [docs/](./docs/) directory for detailed documentation:
 - [Architecture](./docs/ARCHITECTURE.md) - System architecture overview
 - [Development Guide](./docs/DEVELOPMENT.md) - Development workflow and best practices
 - [Supabase Setup](./docs/SUPABASE.md) - Database schema and setup
+- [Database Setup](./docs/DATABASE_SETUP.md) - Database migration and setup checklist
 - [Deployment Guide](./docs/DEPLOYMENT.md) - Deployment instructions
 - [Animations Guide](./docs/ANIMATIONS.md) - Custom animated components
-- [Credentials](./docs/Credentials.md) - Test user login credentials (⚠️ Not in version control)
+- [Cron Jobs](./docs/CRON_JOBS.md) - Scheduled tasks and background jobs
+- [Wealth Allocation Model](./docs/WEALTH_ALLOCATION_MODEL.md) - Wealth allocation system documentation
 
 ## License
 

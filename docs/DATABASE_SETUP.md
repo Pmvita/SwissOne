@@ -123,7 +123,7 @@ You should see:
 ## Next Steps
 
 After setting up the database schema, you may want to:
-- Set up a dev user account (see [DATABASE_USER_SETUP.md](./DATABASE_USER_SETUP.md))
+- Create a dev user account via the signup page or Supabase Dashboard
 - Configure email templates (see [SUPABASE_EMAIL_TEMPLATE_SETUP.md](./SUPABASE_EMAIL_TEMPLATE_SETUP.md))
 - Review full database documentation (see [SUPABASE.md](./SUPABASE.md))
 

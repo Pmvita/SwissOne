@@ -104,3 +104,22 @@ Thumbs.db
 # Credentials (contains sensitive login information)
 docs/Credentials.md
 
+# Backup files
+*.bak
+*.backup
+*.old
+.env.local.bak
+.env*.bak
+
+# Large files and build artifacts
+*.map
+*.sst
+.next/cache/
+.next/server/chunks/
+.next/server/edge/chunks/
+
+# OS metadata files
+._*
+.DS_Store
+**/._*
+

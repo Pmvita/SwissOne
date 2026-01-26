@@ -1,16 +1,20 @@
 #!/usr/bin/env node
 /**
  * Test the login API endpoint directly
+ * 
+ * Usage:
+ *   node scripts/test-login-api.js [username] [password]
+ *   Or set TEST_USERNAME and TEST_PASSWORD environment variables
  */
 
 const https = require('https');
 
-const USERNAME = 'pmvita';
-const PASSWORD = 'admin123';
+const USERNAME = process.env.TEST_USERNAME || process.argv[2] || 'testuser';
+const PASSWORD = process.env.TEST_PASSWORD || process.argv[3] || 'testpass';
 
 console.log('🧪 Testing Login API Endpoint\n');
 console.log('Username:', USERNAME);
-console.log('Password:', PASSWORD);
+console.log('Password:', '***' + PASSWORD.slice(-2)); // Only show last 2 chars
 console.log('');
 
 const loginBody = JSON.stringify({
