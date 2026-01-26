@@ -1,39 +1,76 @@
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { createClient } from "@/lib/supabase/client";
-import { AnimatedButton, AnimatedCard, FadeIn, SlideIn } from "@/components/ui/animated";
+import { AnimatedCard, FadeIn, SlideIn } from "@/components/ui/animated";
 import { Ionicons } from "@expo/vector-icons";
-import { formatCurrency, formatDate } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/format";
 
-interface Account {
+interface Holding {
   id: string;
+  portfolio_id: string;
+  symbol: string;
   name: string;
-  type: string;
-  balance: number;
+  quantity: number;
+  purchase_price: number;
+  current_price: number;
   currency: string;
-  account_number?: string;
-  iban?: string;
-}
-
-interface Transaction {
-  id: string;
-  type: string;
-  amount: number;
-  currency: string;
-  description: string;
-  date: string;
-  accounts?: {
+  asset_type?: string;
+  portfolios?: {
+    id: string;
     name: string;
   };
 }
 
-export default function DashboardScreen() {
+interface Portfolio {
+  id: string;
+  name: string;
+  currency: string;
+  user_id: string;
+}
+
+// Asset type to display name mapping
+const ASSET_TYPE_LABELS: Record<string, string> = {
+  equity: "Equities & ETFs",
+  etf: "Equities & ETFs",
+  bond: "Cash & Fixed Income",
+  money_market: "Cash & Fixed Income",
+  cash: "Cash & Fixed Income",
+};
+
+// Colors for asset classes
+const ASSET_COLORS: Record<string, string> = {
+  "Equities & ETFs": "#10B981",
+  "Cash & Fixed Income": "#3B82F6",
+  "Private Equity": "#8B5CF6",
+  "Other": "#6B7280",
+};
+
+// Calculate estimated yield based on asset type
+function getEstimatedYield(assetType?: string): number {
+  switch (assetType) {
+    case "money_market":
+    case "cash":
+      return 5.0;
+    case "bond":
+      return 6.0;
+    case "etf":
+      return 7.0;
+    case "equity":
+      return 6.0;
+    default:
+      return 6.0;
+  }
+}
+
+export default function InvestmentsDashboard() {
   const [user, setUser] = useState<any>(null);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [expandedHoldings, setExpandedHoldings] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     loadData();
@@ -49,27 +86,39 @@ export default function DashboardScreen() {
       setUser(userData);
 
       if (userData) {
-        // Get accounts
-        const { data: accountsData, error: accountsError } = await supabase
-          .from("accounts")
+        // Get portfolios
+        const { data: portfoliosData, error: portfoliosError } = await supabase
+          .from("portfolios")
           .select("*")
           .eq("user_id", userData.id)
           .order("created_at", { ascending: false });
 
-        if (!accountsError && accountsData) {
-          setAccounts(accountsData);
+        if (!portfoliosError && portfoliosData) {
+          setPortfolios(portfoliosData);
         }
 
-        // Get recent transactions
-        const { data: transactionsData, error: transactionsError } = await supabase
-          .from("transactions")
-          .select("*, accounts(name, type)")
-          .eq("user_id", userData.id)
-          .order("date", { ascending: false })
-          .limit(5);
+        // Get holdings
+        if (portfoliosData && portfoliosData.length > 0) {
+          const portfolioIds = portfoliosData.map(p => p.id);
+          const { data: holdingsData, error: holdingsError } = await supabase
+            .from("holdings")
+            .select(`
+              id,
+              portfolio_id,
+              symbol,
+              name,
+              quantity,
+              purchase_price,
+              current_price,
+              currency,
+              asset_type,
+              portfolios(id, name)
+            `)
+            .in("portfolio_id", portfolioIds);
 
-        if (!transactionsError && transactionsData) {
-          setRecentTransactions(transactionsData);
+          if (!holdingsError && holdingsData) {
+            setHoldings(holdingsData);
+          }
         }
       }
     } catch (error) {
@@ -85,52 +134,54 @@ export default function DashboardScreen() {
     setRefreshing(false);
   };
 
-  const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.replace("/(auth)/login");
+  // Calculate portfolio totals
+  let totalPortfolioValue = 0;
+  const assetClassBreakdown: Record<string, number> = {};
+  
+  for (const holding of holdings) {
+    const value = Number(holding.quantity || 0) * Number(holding.current_price || 0);
+    totalPortfolioValue += value;
+    
+    const assetType = holding.asset_type || 'equity';
+    const groupName = ASSET_TYPE_LABELS[assetType] || "Other";
+    assetClassBreakdown[groupName] = (assetClassBreakdown[groupName] || 0) + value;
+  }
+
+  // Group holdings by asset class
+  const groupedHoldings: Record<string, Holding[]> = {};
+  for (const holding of holdings) {
+    const assetType = holding.asset_type || 'equity';
+    const groupName = ASSET_TYPE_LABELS[assetType] || "Other";
+    
+    if (!groupedHoldings[groupName]) {
+      groupedHoldings[groupName] = [];
+    }
+    groupedHoldings[groupName].push(holding);
+  }
+
+  // Calculate performance (mock - in real app would use historical data)
+  const pastYearReturn = 12.3;
+  const pastYearValue = totalPortfolioValue * 0.123;
+
+  const toggleSection = (groupName: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [groupName]: !prev[groupName]
+    }));
   };
 
-  // Calculate totals
-  const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
-  const accountCount = accounts.length;
-
-  // Get account type icon
-  const getAccountIcon = (type: string) => {
-    switch (type) {
-      case "checking":
-        return "wallet";
-      case "savings":
-        return "business";
-      case "investment":
-        return "trending-up";
-      case "credit":
-        return "card";
-      default:
-        return "wallet";
-    }
-  };
-
-  // Get account type color
-  const getAccountColor = (type: string) => {
-    switch (type) {
-      case "checking":
-        return "bg-primary-500";
-      case "savings":
-        return "bg-accent-500";
-      case "investment":
-        return "bg-green-500";
-      case "credit":
-        return "bg-orange-500";
-      default:
-        return "bg-gray-500";
-    }
+  const toggleHoldingDetails = (holdingId: string) => {
+    setExpandedHoldings(prev => ({
+      ...prev,
+      [holdingId]: !prev[holdingId]
+    }));
   };
 
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50">
-        <Text className="text-gray-500">Loading...</Text>
+        <ActivityIndicator size="large" color="#334e68" />
+        <Text className="text-gray-500 mt-4">Loading investments...</Text>
       </View>
     );
   }
@@ -143,248 +194,301 @@ export default function DashboardScreen() {
       }
     >
       <View className="px-4 py-6">
-        {/* Welcome Section */}
+        {/* Header */}
         <FadeIn delay={100}>
           <View className="mb-6">
-            <Text className="text-2xl font-bold text-gray-900">Banking Dashboard</Text>
-            <Text className="text-gray-600 mt-1">Welcome back</Text>
-            {user?.email && (
-              <Text className="text-sm text-gray-500 mt-1">{user.email}</Text>
-            )}
+            <Text className="text-2xl font-bold text-gray-900">Investments</Text>
+            <Text className="text-gray-600 mt-1">Portfolio overview</Text>
           </View>
         </FadeIn>
 
-        {/* Summary Cards */}
-        <View className="flex-row flex-wrap gap-4 mb-6">
-          <AnimatedCard delay={200} className="p-4 flex-1 min-w-[150px]">
-            <View className="flex-row items-center justify-between mb-2">
-              <Ionicons name="wallet" size={24} color="#334e68" />
-            </View>
-            <Text className="text-sm text-gray-500 mb-1">Total Balance</Text>
-            <Text className="text-2xl font-bold text-gray-900">
-              {formatCurrency(totalBalance, "CHF")}
-            </Text>
-          </AnimatedCard>
-
-          <AnimatedCard delay={300} className="p-4 flex-1 min-w-[150px]">
-            <View className="flex-row items-center justify-between mb-2">
-              <Ionicons name="business" size={24} color="#0ea5e9" />
-            </View>
-            <Text className="text-sm text-gray-500 mb-1">Active Accounts</Text>
-            <Text className="text-2xl font-bold text-gray-900">{accountCount}</Text>
-          </AnimatedCard>
-        </View>
-
-        {/* Accounts Section */}
-        <FadeIn delay={400}>
-          <View className="mb-6">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-xl font-bold text-gray-900">Your Accounts</Text>
-              <TouchableOpacity onPress={() => router.push("/(tabs)/accounts")}>
-                <Text className="text-primary-700 font-medium text-sm">View All</Text>
-              </TouchableOpacity>
-            </View>
-
-            {accounts.length === 0 ? (
-              <AnimatedCard delay={500}>
-                <View className="p-8 items-center">
-                  <View className="h-16 w-16 bg-gray-100 rounded-full items-center justify-center mb-4">
-                    <Ionicons name="wallet" size={32} color="#9ca3af" />
-                  </View>
-                  <Text className="text-lg font-semibold text-gray-900 mb-2">No accounts yet</Text>
-                  <Text className="text-gray-500 text-center mb-6">
-                    Get started by creating your first banking account
+        {/* Total Portfolio Value Card */}
+        <FadeIn delay={200}>
+          <AnimatedCard className="p-6 mb-4" style={{ backgroundColor: '#334e68' }}>
+            <View className="items-center">
+              <Text className="text-sm mb-2" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Total Portfolio Value</Text>
+              <Text className="text-4xl font-bold mb-4" style={{ color: '#ffffff' }}>
+                {formatCurrency(totalPortfolioValue, "USD")}
+              </Text>
+              <View className="flex-row items-center gap-4 mt-2">
+                <View className="items-center">
+                  <Text className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Past Year Return</Text>
+                  <Text className="text-lg font-semibold" style={{ color: '#86efac' }}>+{pastYearReturn.toFixed(1)}%</Text>
+                </View>
+                <View style={{ height: 16, width: 1, backgroundColor: 'rgba(255, 255, 255, 0.3)' }} />
+                <View className="items-center">
+                  <Text className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Past Year Value</Text>
+                  <Text className="text-lg font-semibold" style={{ color: '#86efac' }}>
+                    +{formatCurrency(pastYearValue, "USD")}
                   </Text>
-                  <AnimatedButton
-                    variant="primary"
-                    className="w-full"
-                    onPress={() => router.push("/(tabs)/accounts")}
-                  >
-                    <View className="flex-row items-center gap-2">
-                      <Ionicons name="add" size={20} color="white" />
-                      <Text className="text-white font-semibold">Create Account</Text>
-                    </View>
-                  </AnimatedButton>
                 </View>
-              </AnimatedCard>
-            ) : (
-              <View className="gap-4">
-                {accounts.slice(0, 3).map((account, index) => {
-                  const iconName = getAccountIcon(account.type);
-                  const colorClass = getAccountColor(account.type);
-                  return (
-                    <AnimatedCard key={account.id} delay={500 + index * 100}>
-                      <TouchableOpacity
-                        onPress={() => router.push(`/(tabs)/accounts/${account.id}`)}
-                        activeOpacity={0.7}
-                      >
-                        <View className="p-4">
-                          <View className="flex-row items-center justify-between mb-3">
-                            <View className="flex-row items-center gap-3">
-                              <View className={`h-12 w-12 ${colorClass} rounded-lg items-center justify-center`}>
-                                <Ionicons name={iconName as any} size={24} color="white" />
-                              </View>
-                              <View>
-                                <Text className="text-lg font-semibold text-gray-900">{account.name}</Text>
-                                <Text className="text-sm text-gray-500 capitalize">{account.type}</Text>
-                              </View>
-                            </View>
-                            <View className="items-end">
-                              <Text className="text-xl font-bold text-gray-900">
-                                {formatCurrency(Number(account.balance || 0), account.currency || "CHF")}
-                              </Text>
-                              {account.account_number && (
-                                <Text className="text-xs text-gray-400 mt-1">
-                                  ****{account.account_number.slice(-4)}
-                                </Text>
-                              )}
-                            </View>
-                          </View>
-                          {account.iban && (
-                            <View className="pt-3 border-t border-gray-100">
-                              <Text className="text-xs text-gray-500">IBAN: {account.iban}</Text>
-                            </View>
-                          )}
-                        </View>
-                      </TouchableOpacity>
-                    </AnimatedCard>
-                  );
-                })}
-                {accounts.length > 3 && (
-                  <AnimatedCard delay={800}>
-                    <TouchableOpacity
-                      onPress={() => router.push("/(tabs)/accounts")}
-                      className="p-4 items-center"
-                    >
-                      <Text className="text-primary-700 font-medium">
-                        View {accounts.length - 3} more account{accounts.length - 3 !== 1 ? "s" : ""}
-                      </Text>
-                    </TouchableOpacity>
-                  </AnimatedCard>
-                )}
               </View>
-            )}
-          </View>
+            </View>
+          </AnimatedCard>
         </FadeIn>
 
-        {/* Recent Transactions */}
-        <FadeIn delay={600}>
+        {/* Asset Allocation Summary */}
+        <FadeIn delay={300}>
           <View className="mb-6">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-xl font-bold text-gray-900">Recent Transactions</Text>
-              <TouchableOpacity onPress={() => router.push("/(tabs)/transactions")}>
-                <Text className="text-primary-700 font-medium text-sm">View All</Text>
-              </TouchableOpacity>
-            </View>
-
-            {recentTransactions.length === 0 ? (
-              <AnimatedCard delay={700}>
-                <View className="p-8 items-center">
-                  <View className="h-12 w-12 bg-gray-100 rounded-full items-center justify-center mb-3">
-                    <Ionicons name="arrow-up" size={24} color="#9ca3af" />
-                  </View>
-                  <Text className="text-sm text-gray-500">No transactions yet</Text>
-                </View>
-              </AnimatedCard>
-            ) : (
-              <AnimatedCard delay={700}>
-                <View className="divide-y divide-gray-100">
-                  {recentTransactions.map((transaction) => {
-                    const isCredit = transaction.type === "credit";
-                    const amount = Number(transaction.amount || 0);
+            <Text className="text-lg font-bold text-gray-900 mb-4">Asset Allocation</Text>
+            <AnimatedCard className="p-4">
+              <View className="gap-3">
+                {Object.entries(assetClassBreakdown)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([groupName, value]) => {
+                    const percentage = totalPortfolioValue > 0 
+                      ? Math.round((value / totalPortfolioValue) * 100) 
+                      : 0;
+                    const color = ASSET_COLORS[groupName] || ASSET_COLORS["Other"];
+                    
                     return (
-                      <View key={transaction.id} className="p-4">
+                      <View key={groupName} className="gap-2">
                         <View className="flex-row items-center justify-between">
-                          <View className="flex-row items-center gap-3 flex-1">
-                            <View className={`h-8 w-8 rounded-full items-center justify-center ${
-                              isCredit ? "bg-green-100" : "bg-red-100"
-                            }`}>
-                              <Ionicons
-                                name={isCredit ? "arrow-down" : "arrow-up"}
-                                size={16}
-                                color={isCredit ? "#16a34a" : "#dc2626"}
-                              />
-                            </View>
-                            <View className="flex-1">
-                              <Text className="text-sm font-medium text-gray-900" numberOfLines={1}>
-                                {transaction.description || "Transaction"}
-                              </Text>
-                              <Text className="text-xs text-gray-500">
-                                {transaction.accounts?.name || "Account"}
-                              </Text>
-                            </View>
+                          <View className="flex-row items-center gap-2 flex-1">
+                            <View 
+                              className="w-4 h-4 rounded"
+                              style={{ backgroundColor: color }}
+                            />
+                            <Text className="text-sm font-semibold text-gray-900 flex-1">
+                              {groupName}
+                            </Text>
                           </View>
                           <View className="items-end">
-                            <Text className={`text-sm font-semibold ${
-                              isCredit ? "text-green-600" : "text-red-600"
-                            }`}>
-                              {isCredit ? "+" : "-"}{formatCurrency(Math.abs(amount), transaction.currency || "CHF")}
+                            <Text className="text-sm font-bold text-gray-900">
+                              {formatCurrency(value, "USD")}
                             </Text>
-                            <Text className="text-xs text-gray-400">
-                              {formatDate(transaction.date)}
-                            </Text>
+                            <Text className="text-xs text-gray-500">{percentage}%</Text>
                           </View>
+                        </View>
+                        {/* Progress bar */}
+                        <View className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <View 
+                            className="h-full rounded-full"
+                            style={{ 
+                              width: `${percentage}%`,
+                              backgroundColor: color 
+                            }}
+                          />
                         </View>
                       </View>
                     );
                   })}
+              </View>
+            </AnimatedCard>
+          </View>
+        </FadeIn>
+
+        {/* Holdings by Asset Class */}
+        <FadeIn delay={400}>
+          <View className="mb-6">
+            <Text className="text-lg font-bold text-gray-900 mb-4">Holdings</Text>
+            
+            {Object.keys(groupedHoldings).length === 0 ? (
+              <AnimatedCard>
+                <View className="p-8 items-center">
+                  <View className="h-16 w-16 bg-gray-100 rounded-full items-center justify-center mb-4">
+                    <Ionicons name="trending-up" size={32} color="#9ca3af" />
+                  </View>
+                  <Text className="text-lg font-semibold text-gray-900 mb-2">No holdings yet</Text>
+                  <Text className="text-gray-500 text-center">
+                    Your investment holdings will appear here
+                  </Text>
                 </View>
               </AnimatedCard>
+            ) : (
+              <View className="gap-4">
+                {Object.entries(groupedHoldings)
+                  .sort((a, b) => {
+                    const aValue = assetClassBreakdown[a[0]] || 0;
+                    const bValue = assetClassBreakdown[b[0]] || 0;
+                    return bValue - aValue;
+                  })
+                  .map(([groupName, groupHoldings]) => {
+                    const total = assetClassBreakdown[groupName] || 0;
+                    const percentage = totalPortfolioValue > 0 
+                      ? Math.round((total / totalPortfolioValue) * 100) 
+                      : 0;
+                    const color = ASSET_COLORS[groupName] || ASSET_COLORS["Other"];
+                    const isExpanded = expandedSections[groupName] ?? false;
+                    
+                    return (
+                      <AnimatedCard key={groupName} className="overflow-hidden">
+                        {/* Section Header */}
+                        <TouchableOpacity
+                          onPress={() => toggleSection(groupName)}
+                          activeOpacity={0.7}
+                        >
+                          <View className="p-4 flex-row items-center justify-between">
+                            <View className="flex-row items-center gap-3 flex-1">
+                              <View 
+                                className="w-5 h-5 rounded"
+                                style={{ backgroundColor: color }}
+                              />
+                              <View className="flex-1">
+                                <Text className="text-base font-semibold text-gray-900">
+                                  {groupName}
+                                </Text>
+                                <Text className="text-xs text-gray-500">
+                                  {percentage}% • {groupHoldings.length} holding{groupHoldings.length !== 1 ? 's' : ''}
+                                </Text>
+                              </View>
+                            </View>
+                            <View className="items-end mr-2">
+                              <Text className="text-sm font-bold text-gray-900">
+                                {formatCurrency(total, "USD")}
+                              </Text>
+                            </View>
+                            <Ionicons 
+                              name={isExpanded ? "chevron-down" : "chevron-forward"} 
+                              size={20} 
+                              color="#6b7280" 
+                            />
+                          </View>
+                        </TouchableOpacity>
+
+                        {/* Holdings List */}
+                        {isExpanded && (
+                          <View className="border-t border-gray-100">
+                            {groupHoldings.map((holding, index) => {
+                              const rawValue = Number(holding.quantity || 0) * Number(holding.current_price || 0);
+                              const purchaseValue = Number(holding.quantity || 0) * Number(holding.purchase_price || 0);
+                              const gainLoss = rawValue - purchaseValue;
+                              const gainLossPercent = purchaseValue > 0 
+                                ? ((gainLoss / purchaseValue) * 100) 
+                                : 0;
+                              const yieldPercent = getEstimatedYield(holding.asset_type);
+                              const holdingId = holding.id;
+                              const isHoldingExpanded = expandedHoldings[holdingId] || false;
+
+                              return (
+                                <View 
+                                  key={holdingId} 
+                                  className="border-b border-gray-50"
+                                  style={index === groupHoldings.length - 1 ? { borderBottomWidth: 0 } : {}}
+                                >
+                                  <TouchableOpacity
+                                    onPress={() => toggleHoldingDetails(holdingId)}
+                                    activeOpacity={0.7}
+                                  >
+                                    <View className="p-4">
+                                      <View className="flex-row items-center justify-between mb-2">
+                                        <View className="flex-1">
+                                          <Text className="text-sm font-semibold text-gray-900" numberOfLines={1}>
+                                            {holding.name || holding.symbol}
+                                          </Text>
+                                          <Text className="text-xs text-gray-500 mt-0.5">
+                                            {holding.symbol} • Est. {yieldPercent.toFixed(1)}% Yield
+                                          </Text>
+                                        </View>
+                                        <View className="items-end ml-3">
+                                          <Text className="text-sm font-bold text-gray-900">
+                                            {formatCurrency(rawValue, holding.currency || "USD")}
+                                          </Text>
+                                          <Text className={`text-xs font-medium ${
+                                            gainLoss >= 0 ? "text-green-600" : "text-red-600"
+                                          }`}>
+                                            {gainLoss >= 0 ? "+" : ""}{formatCurrency(gainLoss, holding.currency || "USD")} ({gainLossPercent >= 0 ? "+" : ""}{gainLossPercent.toFixed(2)}%)
+                                          </Text>
+                                        </View>
+                                      </View>
+                                      
+                                      {isHoldingExpanded && (
+                                        <View className="mt-3 pt-3 border-t border-gray-100">
+                                          <View className="flex-row flex-wrap gap-3">
+                                            <View className="flex-1 min-w-[45%]">
+                                              <Text className="text-xs text-gray-500">Quantity</Text>
+                                              <Text className="text-sm font-medium text-gray-900">
+                                                {Number(holding.quantity || 0).toLocaleString()}
+                                              </Text>
+                                            </View>
+                                            <View className="flex-1 min-w-[45%]">
+                                              <Text className="text-xs text-gray-500">Current Price</Text>
+                                              <Text className="text-sm font-medium text-gray-900">
+                                                {formatCurrency(Number(holding.current_price || 0), holding.currency || "USD")}
+                                              </Text>
+                                            </View>
+                                            <View className="flex-1 min-w-[45%]">
+                                              <Text className="text-xs text-gray-500">Purchase Price</Text>
+                                              <Text className="text-sm font-medium text-gray-900">
+                                                {formatCurrency(Number(holding.purchase_price || 0), holding.currency || "USD")}
+                                              </Text>
+                                            </View>
+                                            <View className="flex-1 min-w-[45%]">
+                                              <Text className="text-xs text-gray-500">Purchase Value</Text>
+                                              <Text className="text-sm font-medium text-gray-900">
+                                                {formatCurrency(purchaseValue, holding.currency || "USD")}
+                                              </Text>
+                                            </View>
+                                            <View className="flex-1 min-w-[45%]">
+                                              <Text className="text-xs text-gray-500">Estimated Yield</Text>
+                                              <Text className="text-sm font-medium text-gray-900">
+                                                {yieldPercent.toFixed(2)}%
+                                              </Text>
+                                            </View>
+                                            {holding.portfolios && (
+                                              <View className="flex-1 min-w-[45%]">
+                                                <Text className="text-xs text-gray-500">Portfolio</Text>
+                                                <Text className="text-sm font-medium text-gray-900" numberOfLines={1}>
+                                                  {holding.portfolios.name}
+                                                </Text>
+                                              </View>
+                                            )}
+                                          </View>
+                                        </View>
+                                      )}
+                                    </View>
+                                  </TouchableOpacity>
+                                </View>
+                              );
+                            })}
+                          </View>
+                        )}
+                      </AnimatedCard>
+                    );
+                  })}
+              </View>
             )}
           </View>
         </FadeIn>
 
         {/* Quick Actions */}
-        <FadeIn delay={800}>
-          <AnimatedCard>
-            <View className="p-5">
-              <Text className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</Text>
-              <View className="flex-row flex-wrap gap-3">
-                <TouchableOpacity
-                  onPress={() => router.push("/(tabs)/accounts")}
-                  className="flex-1 min-w-[45%] p-4 border-2 border-primary-700 rounded-lg items-center gap-2"
-                >
-                  <Ionicons name="wallet" size={24} color="#334e68" />
-                  <Text className="text-primary-700 font-medium">Accounts</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => router.push("/(tabs)/transactions")}
-                  className="flex-1 min-w-[45%] p-4 border-2 border-primary-700 rounded-lg items-center gap-2"
-                >
-                  <Ionicons name="list" size={24} color="#334e68" />
-                  <Text className="text-primary-700 font-medium">Transactions</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => router.push("/(tabs)/portfolio")}
-                  className="flex-1 min-w-[45%] p-4 border-2 border-primary-700 rounded-lg items-center gap-2"
-                >
-                  <Ionicons name="trending-up" size={24} color="#334e68" />
-                  <Text className="text-primary-700 font-medium">Portfolio</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  disabled
-                  className="flex-1 min-w-[45%] p-4 border-2 border-gray-300 rounded-lg items-center gap-2 opacity-50"
-                >
-                  <Ionicons name="card" size={24} color="#9ca3af" />
-                  <Text className="text-gray-400 font-medium">Transfer</Text>
-                </TouchableOpacity>
-              </View>
+        <FadeIn delay={500}>
+          <View className="mb-6">
+            <Text className="text-lg font-bold text-gray-900 mb-4">Quick Actions</Text>
+            <View className="flex-row flex-wrap gap-3">
+              <TouchableOpacity
+                onPress={() => {
+                  // TODO: Navigate to transfer funds screen
+                  console.log("Transfer funds");
+                }}
+                className="flex-1 min-w-[45%] p-4 border-2 border-primary-700 rounded-lg items-center gap-2"
+              >
+                <Ionicons name="swap-horizontal" size={24} color="#334e68" />
+                <Text className="text-primary-700 font-medium">Transfer Funds</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  // TODO: Navigate to rebalance portfolio screen
+                  console.log("Rebalance portfolio");
+                }}
+                className="flex-1 min-w-[45%] p-4 border-2 border-primary-700 rounded-lg items-center gap-2"
+              >
+                <Ionicons name="sync" size={24} color="#334e68" />
+                <Text className="text-primary-700 font-medium">Rebalance Portfolio</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  // TODO: Navigate to add investment screen
+                  console.log("Add investment");
+                }}
+                className="flex-1 min-w-[45%] p-4 border-2 border-primary-700 rounded-lg items-center gap-2"
+              >
+                <Ionicons name="add-circle" size={24} color="#334e68" />
+                <Text className="text-primary-700 font-medium">Add Investment</Text>
+              </TouchableOpacity>
             </View>
-          </AnimatedCard>
-        </FadeIn>
-
-        {/* Sign Out */}
-        <SlideIn direction="up" delay={900}>
-          <View className="mt-6">
-            <AnimatedButton
-              variant="primary"
-              className="bg-red-500 w-full"
-              onPress={handleSignOut}
-            >
-              <Text className="text-white font-semibold">Sign Out</Text>
-            </AnimatedButton>
           </View>
-        </SlideIn>
+        </FadeIn>
       </View>
     </ScrollView>
   );

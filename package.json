@@ -43,5 +43,8 @@
     "monorepo"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "react-native-worklets": "^0.5.1"
+  }
 }
