@@ -183,7 +183,9 @@ export default async function AccountsPage() {
 
   // Sort accounts within each group by balance (highest first)
   Object.keys(groupedAccounts).forEach(type => {
-    groupedAccounts[type].sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0));
+    groupedAccounts[type].sort((a: typeof accounts[0], b: typeof accounts[0]) => 
+      Number(b.balance || 0) - Number(a.balance || 0)
+    );
   });
 
   // Calculate totals
