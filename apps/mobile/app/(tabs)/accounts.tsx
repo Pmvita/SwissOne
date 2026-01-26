@@ -151,6 +151,18 @@ interface Transaction {
   date: string;
 }
 
+interface Holding {
+  id: string;
+  portfolio_id: string;
+  symbol: string;
+  name: string;
+  quantity: number;
+  purchase_price: number;
+  current_price: number;
+  currency: string;
+  asset_type?: string;
+}
+
 export default function AccountsScreen() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -160,7 +172,9 @@ export default function AccountsScreen() {
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [accountTransactions, setAccountTransactions] = useState<Transaction[]>([]);
+  const [accountHoldings, setAccountHoldings] = useState<Holding[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [loadingHoldings, setLoadingHoldings] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -213,9 +227,14 @@ export default function AccountsScreen() {
     setSelectedAccount(account);
     setModalVisible(true);
     setLoadingTransactions(true);
+    setLoadingHoldings(true);
     
     const supabase = createClient();
     try {
+      // Get current user
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      // Get transactions
       const { data: transactionsData, error: transactionsError } = await supabase
         .from("transactions")
         .select("*")
@@ -226,10 +245,46 @@ export default function AccountsScreen() {
       if (!transactionsError && transactionsData) {
         setAccountTransactions(transactionsData);
       }
+
+      // Get portfolios for this account (match by name)
+      // Portfolios are linked to accounts by matching names (e.g., "Long Term Investing" account -> "Long Term Investing" portfolio)
+      if (currentUser) {
+        const { data: portfoliosData, error: portfoliosError } = await supabase
+          .from("portfolios")
+          .select("id, name")
+          .eq("user_id", currentUser.id)
+          .ilike("name", `%${account.name}%`);
+
+        if (!portfoliosError && portfoliosData && portfoliosData.length > 0) {
+          const portfolioIds = portfoliosData.map(p => p.id);
+          
+          // Get holdings for these portfolios
+          const { data: holdingsData, error: holdingsError } = await supabase
+            .from("holdings")
+            .select(`
+              id,
+              portfolio_id,
+              symbol,
+              name,
+              quantity,
+              purchase_price,
+              current_price,
+              currency,
+              asset_type
+            `)
+            .in("portfolio_id", portfolioIds)
+            .order("name", { ascending: true });
+
+          if (!holdingsError && holdingsData) {
+            setAccountHoldings(holdingsData);
+          }
+        }
+      }
     } catch (error) {
-      console.error("Error loading transactions:", error);
+      console.error("Error loading account data:", error);
     } finally {
       setLoadingTransactions(false);
+      setLoadingHoldings(false);
     }
   };
 
@@ -237,6 +292,7 @@ export default function AccountsScreen() {
     setModalVisible(false);
     setSelectedAccount(null);
     setAccountTransactions([]);
+    setAccountHoldings([]);
   };
 
   // Calculate totals
@@ -594,6 +650,114 @@ export default function AccountsScreen() {
                     </View>
                   </View>
                 </AnimatedCard>
+
+                {/* Portfolio Holdings */}
+                <View className="mb-6">
+                  <Text className="text-xl font-bold text-gray-900 mb-4">Portfolio</Text>
+                  
+                  {loadingHoldings ? (
+                    <AnimatedCard className="p-12">
+                      <View className="items-center">
+                        <ActivityIndicator size="large" color="#334e68" />
+                        <Text className="text-gray-500 mt-4">Loading holdings...</Text>
+                      </View>
+                    </AnimatedCard>
+                  ) : accountHoldings.length === 0 ? (
+                    <AnimatedCard className="p-12">
+                      <View className="items-center">
+                        <View className="h-16 w-16 bg-gray-100 rounded-full items-center justify-center mb-4">
+                          <Ionicons name="trending-up" size={32} color="#9ca3af" />
+                        </View>
+                        <Text className="text-lg font-semibold text-gray-900 mb-2">No holdings found</Text>
+                        <Text className="text-gray-500 text-center">
+                          Investment holdings will appear here once available
+                        </Text>
+                      </View>
+                    </AnimatedCard>
+                  ) : (
+                    <AnimatedCard className="p-4">
+                      <View className="gap-3">
+                        {accountHoldings.map((holding, index) => {
+                          const rawValue = Number(holding.quantity || 0) * Number(holding.current_price || 0);
+                          const purchaseValue = Number(holding.quantity || 0) * Number(holding.purchase_price || 0);
+                          const gainLoss = rawValue - purchaseValue;
+                          const gainLossPercent = purchaseValue > 0 
+                            ? ((gainLoss / purchaseValue) * 100) 
+                            : 0;
+                          
+                          return (
+                            <View 
+                              key={holding.id}
+                              className={`pb-3 ${index !== accountHoldings.length - 1 ? 'border-b border-gray-100' : ''}`}
+                            >
+                              <View className="flex-row items-center justify-between mb-2">
+                                <View className="flex-1 min-w-0">
+                                  <Text className="text-sm font-semibold text-gray-900" numberOfLines={1}>
+                                    {holding.name || holding.symbol}
+                                  </Text>
+                                  <Text className="text-xs text-gray-500 mt-0.5">
+                                    {holding.symbol} • {Number(holding.quantity || 0).toLocaleString()} shares
+                                  </Text>
+                                </View>
+                                <View className="items-end ml-3">
+                                  <Text className="text-sm font-bold text-gray-900">
+                                    {formatCurrency(rawValue, holding.currency || selectedAccount.currency || "USD")}
+                                  </Text>
+                                  <Text className={`text-xs font-medium ${
+                                    gainLoss >= 0 ? "text-green-600" : "text-red-600"
+                                  }`}>
+                                    {gainLoss >= 0 ? "+" : ""}{formatCurrency(gainLoss, holding.currency || selectedAccount.currency || "USD")} ({gainLossPercent >= 0 ? "+" : ""}{gainLossPercent.toFixed(2)}%)
+                                  </Text>
+                                </View>
+                              </View>
+                              
+                              <View className="flex-row flex-wrap gap-3 mt-2">
+                                <View>
+                                  <Text className="text-xs text-gray-500">Current Price</Text>
+                                  <Text className="text-xs font-medium text-gray-900">
+                                    {formatCurrency(Number(holding.current_price || 0), holding.currency || selectedAccount.currency || "USD")}
+                                  </Text>
+                                </View>
+                                <View>
+                                  <Text className="text-xs text-gray-500">Purchase Price</Text>
+                                  <Text className="text-xs font-medium text-gray-900">
+                                    {formatCurrency(Number(holding.purchase_price || 0), holding.currency || selectedAccount.currency || "USD")}
+                                  </Text>
+                                </View>
+                                {holding.asset_type && (
+                                  <View>
+                                    <Text className="text-xs text-gray-500">Asset Type</Text>
+                                    <Text className="text-xs font-medium text-gray-900 capitalize">
+                                      {holding.asset_type.replace('_', ' ')}
+                                    </Text>
+                                  </View>
+                                )}
+                              </View>
+                            </View>
+                          );
+                        })}
+                      </View>
+                      
+                      {/* Portfolio Summary */}
+                      {accountHoldings.length > 0 && (
+                        <View className="mt-4 pt-4 border-t border-gray-200">
+                          <View className="flex-row items-center justify-between">
+                            <Text className="text-sm font-semibold text-gray-700">Total Portfolio Value</Text>
+                            <Text className="text-sm font-bold text-gray-900">
+                              {formatCurrency(
+                                accountHoldings.reduce((sum, h) => 
+                                  sum + (Number(h.quantity || 0) * Number(h.current_price || 0)), 
+                                  0
+                                ),
+                                selectedAccount.currency || "USD"
+                              )}
+                            </Text>
+                          </View>
+                        </View>
+                      )}
+                    </AnimatedCard>
+                  )}
+                </View>
 
                 {/* Recent Transactions */}
                 <View className="mb-6">
