@@ -364,7 +364,7 @@ export default async function AccountsPage() {
 
                   {/* Accounts in this group */}
                   <div className="space-y-3">
-                    {typeAccounts.map((account, accountIndex) => {
+                    {typeAccounts.map((account: typeof accounts[0], accountIndex: number) => {
                       const IconComponent = getAccountIcon(account.type);
                       const accountTypeLabel = getAccountTypeLabel(account.type);
                       const accountTypeColor = getAccountTypeColor(account.type);
