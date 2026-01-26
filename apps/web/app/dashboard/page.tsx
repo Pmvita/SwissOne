@@ -87,6 +87,7 @@ async function getHoldingsWithPrices(supabase: SupabaseClient, userId: string) {
     // Then get all holdings for those portfolios
     // Note: asset_type and market_symbol columns don't exist in holdings table yet
     // The portfolio breakdown component handles missing asset_type with a fallback
+    // Filter by portfolio_id AND ensure portfolios belong to user (defensive security check)
     const { data: holdings, error } = await supabase
       .from("holdings")
       .select(`
@@ -98,9 +99,10 @@ async function getHoldingsWithPrices(supabase: SupabaseClient, userId: string) {
         purchase_price,
         current_price,
         currency,
-        portfolios(id, name, user_id)
+        portfolios!inner(id, name, user_id)
       `)
-      .in("portfolio_id", portfolioIds);
+      .in("portfolio_id", portfolioIds)
+      .eq("portfolios.user_id", userId);
 
     if (error) {
       console.error("Error fetching holdings:", error);
@@ -214,7 +216,7 @@ export default async function DashboardPage() {
   const portfolios = await getPortfolios(authenticatedSupabase, userId);
   const holdings = await getHoldingsWithPrices(authenticatedSupabase, userId);
 
-  // Calculate totals - AUM is the sum of account balances (~$1.5B USD)
+  // Calculate totals - AUM is the sum of account balances (~$1B USD)
   const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
   const totalAUM = totalBalance; // Total AUM = sum of account balances
   const accountCount = accounts.length;

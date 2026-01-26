@@ -22,11 +22,12 @@ async function getAccount(supabase: SupabaseClient, accountId: string, userId: s
   return data;
 }
 
-async function getTransactions(supabase: SupabaseClient, accountId: string, limit: number = 20) {
+async function getTransactions(supabase: SupabaseClient, accountId: string, userId: string, limit: number = 20) {
   const { data, error } = await supabase
     .from("transactions")
     .select("*")
     .eq("account_id", accountId)
+    .eq("user_id", userId)
     .order("date", { ascending: false })
     .limit(limit);
 
@@ -156,8 +157,8 @@ export default async function AccountDetailPage({ params }: AccountDetailPagePro
     redirect("/accounts");
   }
 
-  // Fetch transactions
-  const transactions = await getTransactions(authenticatedSupabase, accountId, 20);
+  // Fetch transactions (scoped to user for security)
+  const transactions = await getTransactions(authenticatedSupabase, accountId, userId, 20);
 
   const IconComponent = getAccountIcon(account.type);
   const colorClass = getAccountColor(account.type);

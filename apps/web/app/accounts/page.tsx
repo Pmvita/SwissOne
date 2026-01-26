@@ -3,7 +3,7 @@ import { createClient, createAuthenticatedClient } from "@/lib/supabase/server";
 import { AnimatedCard, FadeIn } from "@/components/ui/animated";
 import { Logo } from "@/components/ui/Logo";
 import Link from "next/link";
-import { Wallet, Building2, TrendingUp, CreditCard, User, Shield, ArrowLeft, ShoppingBag, Briefcase, PiggyBank, CheckCircle2, ArrowRight, ArrowUp, Plus } from "lucide-react";
+import { Wallet, Building2, TrendingUp, CreditCard, User, Shield, ArrowLeft, ShoppingBag, Briefcase, PiggyBank, CheckCircle2, ArrowRight, ArrowUp, Plus, Gem } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 import { SupabaseClient } from "@supabase/supabase-js";
 
@@ -63,12 +63,18 @@ interface WealthAllocationCategory {
   accountId?: string;
 }
 
+// Map accounts to wealth allocation categories
+// Supports both seed-account.ts structure and API route structure
 function mapAccountsToCategories(accounts: any[], totalBalance: number): WealthAllocationCategory[] {
   const categories: WealthAllocationCategory[] = [];
+  const matchedAccountIds = new Set<string>();
+  
+  // === Seed-account.ts structure ===
   
   // Find Safety & Financial Foundation Account (40%)
   const safetyAccount = accounts.find(acc => acc.name.includes('Safety & Financial Foundation'));
   if (safetyAccount) {
+    matchedAccountIds.add(safetyAccount.id);
     categories.push({
       id: 'safety',
       name: 'Safety & Stability',
@@ -85,6 +91,7 @@ function mapAccountsToCategories(accounts: any[], totalBalance: number): WealthA
   // Find Long Term Investing Account (30%)
   const longTermAccount = accounts.find(acc => acc.name.includes('Long Term Investing'));
   if (longTermAccount) {
+    matchedAccountIds.add(longTermAccount.id);
     categories.push({
       id: 'longterm',
       name: 'Long Term Investing',
@@ -101,6 +108,7 @@ function mapAccountsToCategories(accounts: any[], totalBalance: number): WealthA
   // Find Lifestyle Allocation Checking Account (10%)
   const lifestyleAccount = accounts.find(acc => acc.name.includes('Lifestyle Allocation'));
   if (lifestyleAccount) {
+    matchedAccountIds.add(lifestyleAccount.id);
     categories.push({
       id: 'lifestyle',
       name: 'Lifestyle Allocation',
@@ -117,6 +125,7 @@ function mapAccountsToCategories(accounts: any[], totalBalance: number): WealthA
   // Find Professional Advice & Structure Checking Account (5%)
   const professionalAccount = accounts.find(acc => acc.name.includes('Professional Advice'));
   if (professionalAccount) {
+    matchedAccountIds.add(professionalAccount.id);
     categories.push({
       id: 'professional',
       name: 'Professional Advice',
@@ -133,6 +142,7 @@ function mapAccountsToCategories(accounts: any[], totalBalance: number): WealthA
   // Find Cash Reserve Checking Account (5%)
   const cashReserveAccount = accounts.find(acc => acc.name.includes('Cash Reserve'));
   if (cashReserveAccount) {
+    matchedAccountIds.add(cashReserveAccount.id);
     categories.push({
       id: 'cashreserve',
       name: 'Cash Reserve',
@@ -145,8 +155,78 @@ function mapAccountsToCategories(accounts: any[], totalBalance: number): WealthA
       accountId: cashReserveAccount.id,
     });
   }
+
+  // === API route structure ===
   
-  return categories;
+  // Find Public Markets Investment Account (40%)
+  const publicMarketsAccount = accounts.find(acc => acc.name.includes('Public Markets'));
+  if (publicMarketsAccount && !matchedAccountIds.has(publicMarketsAccount.id)) {
+    matchedAccountIds.add(publicMarketsAccount.id);
+    categories.push({
+      id: 'public-markets',
+      name: 'Public Markets',
+      shortName: 'Public Markets',
+      percentage: (Number(publicMarketsAccount.balance || 0) / totalBalance) * 100,
+      value: Number(publicMarketsAccount.balance || 0),
+      dailyGain: Number(publicMarketsAccount.balance || 0) * 0.0021, // Mock 0.21% daily gain
+      description: 'Stocks, ETFs, and Bonds',
+      icon: TrendingUp,
+      accountId: publicMarketsAccount.id,
+    });
+  }
+  
+  // Find Private Equity & Venture Capital Account (30%)
+  const peVcAccount = accounts.find(acc => acc.name.includes('Private Equity') || acc.name.includes('Venture Capital'));
+  if (peVcAccount && !matchedAccountIds.has(peVcAccount.id)) {
+    matchedAccountIds.add(peVcAccount.id);
+    categories.push({
+      id: 'pe-vc',
+      name: 'Private Equity & VC',
+      shortName: 'PE & VC',
+      percentage: (Number(peVcAccount.balance || 0) / totalBalance) * 100,
+      value: Number(peVcAccount.balance || 0),
+      dailyGain: Number(peVcAccount.balance || 0) * 0.0015, // Mock 0.15% daily gain
+      description: 'Private equity funds and venture capital investments',
+      icon: Building2,
+      accountId: peVcAccount.id,
+    });
+  }
+  
+  // Find Cash & Money Market Account (20%)
+  const cashMoneyMarketAccount = accounts.find(acc => acc.name.includes('Cash & Money Market') || acc.name.includes('Money Market'));
+  if (cashMoneyMarketAccount && !matchedAccountIds.has(cashMoneyMarketAccount.id)) {
+    matchedAccountIds.add(cashMoneyMarketAccount.id);
+    categories.push({
+      id: 'cash-money-market',
+      name: 'Cash & Money Market',
+      shortName: 'Cash & MM',
+      percentage: (Number(cashMoneyMarketAccount.balance || 0) / totalBalance) * 100,
+      value: Number(cashMoneyMarketAccount.balance || 0),
+      dailyGain: Number(cashMoneyMarketAccount.balance || 0) * 0.0002, // Mock 0.02% daily gain
+      description: 'High liquidity cash and money market funds',
+      icon: PiggyBank,
+      accountId: cashMoneyMarketAccount.id,
+    });
+  }
+  
+  // Find Alternative Investments Account (10%)
+  const altInvestmentsAccount = accounts.find(acc => acc.name.includes('Alternative Investments'));
+  if (altInvestmentsAccount && !matchedAccountIds.has(altInvestmentsAccount.id)) {
+    matchedAccountIds.add(altInvestmentsAccount.id);
+    categories.push({
+      id: 'alternative',
+      name: 'Alternative Investments',
+      shortName: 'Alternatives',
+      percentage: (Number(altInvestmentsAccount.balance || 0) / totalBalance) * 100,
+      value: Number(altInvestmentsAccount.balance || 0),
+      dailyGain: Number(altInvestmentsAccount.balance || 0) * 0.001, // Mock 0.10% daily gain
+      description: 'Crypto, REITs, Commodities, and other alternatives',
+      icon: Gem,
+      accountId: altInvestmentsAccount.id,
+    });
+  }
+  
+  return categories.sort((a, b) => b.value - a.value);
 }
 
 export default async function AccountsPage() {

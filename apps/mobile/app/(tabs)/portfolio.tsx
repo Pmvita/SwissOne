@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { AnimatedCard, FadeIn } from "@/components/ui/animated";
 import { Ionicons } from "@expo/vector-icons";
 import { formatCurrency } from "@/lib/utils/format";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Holding {
   id: string;
@@ -64,6 +65,7 @@ function getEstimatedYield(assetType?: string): number {
 }
 
 export default function PortfolioScreen() {
+  const insets = useSafeAreaInsets();
   const [user, setUser] = useState<any>(null);
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
@@ -186,21 +188,27 @@ export default function PortfolioScreen() {
     );
   }
 
+  const portfolioCurrency = portfolios.length > 0 ? portfolios[0].currency || "CHF" : "CHF";
+
   return (
-    <ScrollView 
-      className="flex-1 bg-gray-50"
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <View className="px-4 py-6">
-        {/* Header */}
-        <FadeIn delay={100}>
-          <View className="mb-6">
-            <Text className="text-2xl font-bold text-gray-900">Portfolio</Text>
-            <Text className="text-gray-600 mt-1">Investment overview</Text>
+    <View className="flex-1 bg-white">
+      {/* Header */}
+      <View style={{ backgroundColor: '#1e3a8a', paddingTop: insets.top + 8 }} className="pb-4 px-4">
+        <View className="flex-row items-center justify-between mb-2">
+          <View>
+            <Text className="text-white text-2xl font-bold">Portfolio</Text>
+            <Text className="text-white/80 text-sm mt-1">Investment overview</Text>
           </View>
-        </FadeIn>
+        </View>
+      </View>
+
+      <ScrollView 
+        className="flex-1 bg-gray-50"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View className="px-4 py-6">
 
         {/* Total Portfolio Value Card */}
         <FadeIn delay={200}>
@@ -208,7 +216,7 @@ export default function PortfolioScreen() {
             <View className="items-center">
               <Text className="text-sm mb-2" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Total Portfolio Value</Text>
               <Text className="text-4xl font-bold mb-4" style={{ color: '#ffffff' }}>
-                {formatCurrency(totalPortfolioValue, "USD")}
+                {formatCurrency(totalPortfolioValue, portfolioCurrency)}
               </Text>
               <View className="flex-row items-center gap-4 mt-2">
                 <View className="items-center">
@@ -219,7 +227,7 @@ export default function PortfolioScreen() {
                 <View className="items-center">
                   <Text className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Past Year Value</Text>
                   <Text className="text-lg font-semibold" style={{ color: '#86efac' }}>
-                    +{formatCurrency(pastYearValue, "USD")}
+                    +{formatCurrency(pastYearValue, portfolioCurrency)}
                   </Text>
                 </View>
               </View>
@@ -255,7 +263,7 @@ export default function PortfolioScreen() {
                           </View>
                           <View className="items-end">
                             <Text className="text-sm font-bold text-gray-900">
-                              {formatCurrency(value, "USD")}
+                              {formatCurrency(value, portfolios.length > 0 ? portfolios[0].currency || "CHF" : "CHF")}
                             </Text>
                             <Text className="text-xs text-gray-500">{percentage}%</Text>
                           </View>
@@ -335,7 +343,7 @@ export default function PortfolioScreen() {
                             </View>
                             <View className="items-end mr-2">
                               <Text className="text-sm font-bold text-gray-900">
-                                {formatCurrency(total, "USD")}
+                                {formatCurrency(total, portfolioCurrency)}
                               </Text>
                             </View>
                             <Ionicons 
@@ -382,12 +390,12 @@ export default function PortfolioScreen() {
                                         </View>
                                         <View className="items-end ml-3">
                                           <Text className="text-sm font-bold text-gray-900">
-                                            {formatCurrency(rawValue, holding.currency || "USD")}
+                                            {formatCurrency(rawValue, holding.currency || portfolioCurrency)}
                                           </Text>
                                           <Text className={`text-xs font-medium ${
                                             gainLoss >= 0 ? "text-green-600" : "text-red-600"
                                           }`}>
-                                            {gainLoss >= 0 ? "+" : ""}{formatCurrency(gainLoss, holding.currency || "USD")} ({gainLossPercent >= 0 ? "+" : ""}{gainLossPercent.toFixed(2)}%)
+                                            {gainLoss >= 0 ? "+" : ""}{formatCurrency(gainLoss, holding.currency || portfolioCurrency)} ({gainLossPercent >= 0 ? "+" : ""}{gainLossPercent.toFixed(2)}%)
                                           </Text>
                                         </View>
                                       </View>
@@ -404,19 +412,19 @@ export default function PortfolioScreen() {
                                             <View className="flex-1 min-w-[45%]">
                                               <Text className="text-xs text-gray-500">Current Price</Text>
                                               <Text className="text-sm font-medium text-gray-900">
-                                                {formatCurrency(Number(holding.current_price || 0), holding.currency || "USD")}
+                                                {formatCurrency(Number(holding.current_price || 0), holding.currency || portfolioCurrency)}
                                               </Text>
                                             </View>
                                             <View className="flex-1 min-w-[45%]">
                                               <Text className="text-xs text-gray-500">Purchase Price</Text>
                                               <Text className="text-sm font-medium text-gray-900">
-                                                {formatCurrency(Number(holding.purchase_price || 0), holding.currency || "USD")}
+                                                {formatCurrency(Number(holding.purchase_price || 0), holding.currency || portfolioCurrency)}
                                               </Text>
                                             </View>
                                             <View className="flex-1 min-w-[45%]">
                                               <Text className="text-xs text-gray-500">Purchase Value</Text>
                                               <Text className="text-sm font-medium text-gray-900">
-                                                {formatCurrency(purchaseValue, holding.currency || "USD")}
+                                                {formatCurrency(purchaseValue, holding.currency || portfolioCurrency)}
                                               </Text>
                                             </View>
                                             <View className="flex-1 min-w-[45%]">
@@ -450,7 +458,8 @@ export default function PortfolioScreen() {
             )}
           </View>
         </FadeIn>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </View>
   );
 }

@@ -168,114 +168,44 @@ export async function POST(request: Request) {
 
     const userId = user.id;
 
-    // Define accounts based on Manifestation.md data
+    // Define accounts for $1B AUM portfolio
+    // Total AUM: $1,000,000,000 USD
     const accounts: SeedAccount[] = [
-      // Family Office Account (Swiss Private Banking)
+      // Public Markets Account (40% = $400M)
       {
-        name: 'Mvita Reserve Holdings LLC - Family Office Account',
+        name: 'Public Markets Investment Account',
         type: 'investment',
         currency: 'USD',
-        balance: 60000000, // $60M/yr from VC&PE
-        account_number: 'CH-001-FO',
+        balance: 400_000_000,
+        account_number: 'CH-001-PUBLIC',
         iban: 'CH9300762011623852957',
       },
-      // Offshore Account (Swiss Private Banking - 9% ROI)
+      // Private Equity & Venture Capital Account (30% = $300M)
       {
-        name: 'Mvita Reserve Holdings LLC - Offshore Account',
+        name: 'Private Equity & Venture Capital Account',
         type: 'investment',
         currency: 'USD',
-        balance: 57125000, // $57.125M/yr from VC&PE
-        account_number: 'CH-002-OFF',
+        balance: 300_000_000,
+        account_number: 'CH-002-PE-VC',
         iban: 'CH9300762011623852958',
       },
-      // Mvita Capital Investments - Swiss Private Banking
+      // Cash & Money Market Account (20% = $200M)
       {
-        name: 'Mvita Capital Investments - Swiss Private Banking (Primary)',
-        type: 'investment',
+        name: 'Cash & Money Market Account',
+        type: 'savings',
         currency: 'USD',
-        balance: 500000000, // $500M
-        account_number: 'CH-003-MCI-1',
+        balance: 200_000_000,
+        account_number: 'CH-003-CASH',
         iban: 'CH9300762011623852959',
       },
+      // Alternative Investments Account (10% = $100M)
       {
-        name: 'Mvita Capital Investments - Swiss Private Banking (Secondary)',
+        name: 'Alternative Investments Account',
         type: 'investment',
         currency: 'USD',
-        balance: 100000000, // $100M
-        account_number: 'CH-003-MCI-2',
+        balance: 100_000_000,
+        account_number: 'CH-004-ALT',
         iban: 'CH9300762011623852960',
-      },
-      // Mvita Venture Capital - Swiss Private Banking
-      {
-        name: 'Mvita Venture Capital - Swiss Private Banking',
-        type: 'investment',
-        currency: 'USD',
-        balance: 500000000, // $500M
-        account_number: 'CH-004-MVC',
-        iban: 'CH9300762011623852961',
-      },
-      // Mvita Syndicate - BMO Private Wealth
-      {
-        name: 'Mvita Syndicate - BMO Private Wealth',
-        type: 'investment',
-        currency: 'USD',
-        balance: 100000000, // $100M
-        account_number: 'CA-BMO-001',
-        iban: 'CA0210000123456789012',
-      },
-      // Mvita Syndicate - RBC Private Wealth
-      {
-        name: 'Mvita Syndicate - RBC Private Wealth',
-        type: 'investment',
-        currency: 'USD',
-        balance: 50000000, // $50M
-        account_number: 'CA-RBC-001',
-        iban: 'CA0210000123456789013',
-      },
-      // Mvita Capital - Emirates NBD Private Banking
-      {
-        name: 'Mvita Capital - Emirates NBD Private Banking',
-        type: 'investment',
-        currency: 'USD',
-        balance: 5000000, // $5M
-        account_number: 'AE-ENBD-001',
-        iban: 'AE070331234567890123456',
-      },
-      // Mvita Capital - First Abu Dhabi Private Banking
-      {
-        name: 'Mvita Capital - First Abu Dhabi Private Banking',
-        type: 'investment',
-        currency: 'USD',
-        balance: 5000000, // $5M
-        account_number: 'AE-FAB-001',
-        iban: 'AE070331234567890123457',
-      },
-      // Mvita Capital - WIO Business Banking
-      {
-        name: 'Mvita Capital - WIO Business Banking',
-        type: 'checking',
-        currency: 'USD',
-        balance: 1000000, // $1M
-        account_number: 'AE-WIO-001',
-        iban: 'AE070331234567890123458',
-      },
-      // Mvita Inc - Liechtenstein Private Banking (Primary)
-      {
-        name: 'Mvita Inc - Liechtenstein Private Banking (Primary)',
-        type: 'investment',
-        currency: 'USD',
-        balance: 100000000, // $100M
-        account_number: 'LI-001-MI-1',
-        iban: 'LI21088100002324013AA',
-      },
-      // Mvita Inc - Liechtenstein Private Banking (Secondary)
-      {
-        name: 'Mvita Inc - Liechtenstein Private Banking (Secondary)',
-        type: 'investment',
-        currency: 'USD',
-        balance: 100000000, // $100M
-        account_number: 'LI-001-MI-2',
-        iban: 'LI21088100002324014AA',
       },
     ];
 
@@ -298,186 +228,66 @@ export async function POST(request: Request) {
       );
     }
 
-    // Define portfolios with holdings
+    // Define portfolios with holdings for $1B AUM
     const portfolios: SeedPortfolio[] = [
-      {
-        name: 'Venture Capital & Private Equity Portfolio',
-        currency: 'USD',
-        holdings: [
-          // SecureNet (60% Equity - $1.2B)
-          {
-            symbol: 'SECURENET',
-            market_symbol: 'PRIVATE',
-            name: 'SecureNet - 60% Equity',
-            quantity: 1,
-            purchase_price: 1200000000,
-            current_price: 1200000000,
-            currency: 'USD',
-            asset_type: 'equity',
-            refresh_cadence: 'daily',
-          },
-          // Syndicate X (60% Equity - $1.8B)
-          {
-            symbol: 'SYNDICATE-X',
-            market_symbol: 'PRIVATE',
-            name: 'Syndicate X - 60% Equity',
-            quantity: 1,
-            purchase_price: 1800000000,
-            current_price: 1800000000,
-            currency: 'USD',
-            asset_type: 'equity',
-            refresh_cadence: 'daily',
-          },
-          // MapleAI (60% Equity - $2.0B)
-          {
-            symbol: 'MAPLE-AI',
-            market_symbol: 'PRIVATE',
-            name: 'MapleAI - 60% Equity',
-            quantity: 1,
-            purchase_price: 2000000000,
-            current_price: 2000000000,
-            currency: 'USD',
-            asset_type: 'equity',
-            refresh_cadence: 'daily',
-          },
-          // OrbitTech (60% Equity - $5.1B)
-          {
-            symbol: 'ORBITECH',
-            market_symbol: 'PRIVATE',
-            name: 'OrbitTech - 60% Equity',
-            quantity: 1,
-            purchase_price: 5100000000,
-            current_price: 5100000000,
-            currency: 'USD',
-            asset_type: 'equity',
-            refresh_cadence: 'daily',
-          },
-        ],
-      },
-      {
-        name: 'Private Equity Holdings Portfolio',
-        currency: 'USD',
-        holdings: [
-          // Golden Maple Circuit (60% Equity - $720M)
-          {
-            symbol: 'GOLDEN-MAPLE',
-            market_symbol: 'PRIVATE',
-            name: 'Golden Maple Circuit - 60% Equity',
-            quantity: 1,
-            purchase_price: 720000000,
-            current_price: 720000000,
-            currency: 'USD',
-            asset_type: 'equity',
-            refresh_cadence: 'daily',
-          },
-          // Agape Records (80% Equity - $320M)
-          {
-            symbol: 'AGAPE-RECORDS',
-            market_symbol: 'PRIVATE',
-            name: 'Agape Records - 80% Equity',
-            quantity: 1,
-            purchase_price: 320000000,
-            current_price: 320000000,
-            currency: 'USD',
-            asset_type: 'equity',
-            refresh_cadence: 'daily',
-          },
-          // Maison Agape (80% Equity - $68M)
-          {
-            symbol: 'MAISON-AGAPE',
-            market_symbol: 'PRIVATE',
-            name: 'Maison Agape - 80% Equity',
-            quantity: 1,
-            purchase_price: 68000000,
-            current_price: 68000000,
-            currency: 'USD',
-            asset_type: 'equity',
-            refresh_cadence: 'daily',
-          },
-          // Kinshasa Sky Residences (100% Equity - $1.0B)
-          {
-            symbol: 'KINSHASA-SKY',
-            market_symbol: 'PRIVATE',
-            name: 'Kinshasa Sky Residences - 100% Equity',
-            quantity: 1,
-            purchase_price: 1000000000,
-            current_price: 1000000000,
-            currency: 'USD',
-            asset_type: 'equity',
-            refresh_cadence: 'daily',
-          },
-          // KIEAT University (100% Equity - $500M)
-          {
-            symbol: 'KIEAT-UNIV',
-            market_symbol: 'PRIVATE',
-            name: 'KIEAT University - 100% Equity',
-            quantity: 1,
-            purchase_price: 500000000,
-            current_price: 500000000,
-            currency: 'USD',
-            asset_type: 'equity',
-            refresh_cadence: 'daily',
-          },
-        ],
-      },
       {
         name: 'Public Markets Portfolio',
         currency: 'USD',
         holdings: [
-          // S&P 500 ETF
+          // S&P 500 ETF - $150M
           {
             symbol: 'SPY',
             market_symbol: 'SPY',
             name: 'SPDR S&P 500 ETF Trust',
-            quantity: 100000,
+            quantity: 333_333, // ~$150M at $450/share
             purchase_price: 450.00,
             current_price: 450.00,
             currency: 'USD',
             asset_type: 'etf',
             refresh_cadence: 'realtime',
           },
-          // NASDAQ ETF
+          // NASDAQ ETF - $50M
           {
             symbol: 'QQQ',
             market_symbol: 'QQQ',
             name: 'Invesco QQQ Trust',
-            quantity: 50000,
+            quantity: 131_579, // ~$50M at $380/share
             purchase_price: 380.00,
             current_price: 380.00,
             currency: 'USD',
             asset_type: 'etf',
             refresh_cadence: 'realtime',
           },
-          // Apple Stock
+          // Apple Stock - $100M
           {
             symbol: 'AAPL',
             market_symbol: 'AAPL',
             name: 'Apple Inc.',
-            quantity: 10000,
+            quantity: 571_429, // ~$100M at $175/share
             purchase_price: 175.00,
             current_price: 175.00,
             currency: 'USD',
             asset_type: 'equity',
             refresh_cadence: 'realtime',
           },
-          // Microsoft Stock
+          // Microsoft Stock - $50M
           {
             symbol: 'MSFT',
             market_symbol: 'MSFT',
             name: 'Microsoft Corporation',
-            quantity: 10000,
+            quantity: 131_579, // ~$50M at $380/share
             purchase_price: 380.00,
             current_price: 380.00,
             currency: 'USD',
             asset_type: 'equity',
             refresh_cadence: 'realtime',
           },
-          // US 10-Year Treasury Bond
+          // US 10-Year Treasury Bond - $50M
           {
             symbol: 'US10Y',
             market_symbol: '^TNX',
             name: 'US 10-Year Treasury Bond',
-            quantity: 10000000,
+            quantity: 500_000, // $50M at $100 par value
             purchase_price: 100.00,
             current_price: 100.00,
             currency: 'USD',
@@ -487,32 +297,104 @@ export async function POST(request: Request) {
         ],
       },
       {
-        name: 'Crypto Reserves',
+        name: 'Private Equity & Venture Capital Portfolio',
         currency: 'USD',
         holdings: [
-          // Bitcoin
+          // Private Equity Fund 1 - $100M
+          {
+            symbol: 'PE-FUND-1',
+            market_symbol: 'PRIVATE',
+            name: 'Private Equity Fund I',
+            quantity: 1,
+            purchase_price: 100_000_000,
+            current_price: 100_000_000,
+            currency: 'USD',
+            asset_type: 'equity',
+            refresh_cadence: 'daily',
+          },
+          // Private Equity Fund 2 - $100M
+          {
+            symbol: 'PE-FUND-2',
+            market_symbol: 'PRIVATE',
+            name: 'Private Equity Fund II',
+            quantity: 1,
+            purchase_price: 100_000_000,
+            current_price: 100_000_000,
+            currency: 'USD',
+            asset_type: 'equity',
+            refresh_cadence: 'daily',
+          },
+          // Venture Capital Fund - $100M
+          {
+            symbol: 'VC-FUND-1',
+            market_symbol: 'PRIVATE',
+            name: 'Venture Capital Fund I',
+            quantity: 1,
+            purchase_price: 100_000_000,
+            current_price: 100_000_000,
+            currency: 'USD',
+            asset_type: 'equity',
+            refresh_cadence: 'daily',
+          },
+        ],
+      },
+      {
+        name: 'Cash & Money Market Portfolio',
+        currency: 'USD',
+        holdings: [
+          // Prime Money Market Fund - $200M
+          {
+            symbol: 'MMF-PRIME',
+            market_symbol: 'PRIVATE',
+            name: 'Prime Money Market Fund',
+            quantity: 200_000_000,
+            purchase_price: 1.00,
+            current_price: 1.00,
+            currency: 'USD',
+            asset_type: 'money_market',
+            refresh_cadence: 'daily',
+          },
+        ],
+      },
+      {
+        name: 'Alternative Investments Portfolio',
+        currency: 'USD',
+        holdings: [
+          // Bitcoin - $45M
           {
             symbol: 'BTC',
             market_symbol: 'BTC-USD',
             name: 'Bitcoin',
-            quantity: 1000,
+            quantity: 1000, // ~$45M at $45,000/coin
             purchase_price: 45000.00,
             current_price: 45000.00,
             currency: 'USD',
             asset_type: 'cash',
             refresh_cadence: 'realtime',
           },
-          // Ethereum
+          // Real Estate Investment Trust - $30M
           {
-            symbol: 'ETH',
-            market_symbol: 'ETH-USD',
-            name: 'Ethereum',
-            quantity: 10000,
-            purchase_price: 3000.00,
-            current_price: 3000.00,
+            symbol: 'REIT-FUND',
+            market_symbol: 'PRIVATE',
+            name: 'Commercial Real Estate Fund',
+            quantity: 1,
+            purchase_price: 30_000_000,
+            current_price: 30_000_000,
             currency: 'USD',
-            asset_type: 'cash',
-            refresh_cadence: 'realtime',
+            asset_type: 'equity',
+            refresh_cadence: 'daily',
+          },
+          // Commodities Fund - $25M
+          {
+            symbol: 'COMM-FUND',
+            market_symbol: 'PRIVATE',
+            name: 'Commodities Investment Fund',
+            quantity: 1,
+            purchase_price: 25_000_000,
+            current_price: 25_000_000,
+            currency: 'USD',
+            asset_type: 'equity',
+            refresh_cadence: 'daily',
           },
         ],
       },
@@ -562,93 +444,57 @@ export async function POST(request: Request) {
 
     // Create sample transactions (dividends, interest, expenses)
     const transactions = [];
-    const familyOfficeAccount = createdAccounts?.find((acc) =>
-      acc.name.includes('Family Office Account')
+    const publicMarketsAccount = createdAccounts?.find((acc) =>
+      acc.name.includes('Public Markets')
     );
-    const offshoreAccount = createdAccounts?.find((acc) =>
-      acc.name.includes('Offshore Account')
+    const peVcAccount = createdAccounts?.find((acc) =>
+      acc.name.includes('Private Equity')
+    );
+    const cashAccount = createdAccounts?.find((acc) =>
+      acc.name.includes('Cash & Money Market')
     );
 
-    if (familyOfficeAccount) {
-      // Annual dividends received
+    if (publicMarketsAccount) {
+      // Quarterly dividends from public markets (estimated 2% annual yield on $400M = $8M/year = $2M/quarter)
       transactions.push(
         {
-          account_id: familyOfficeAccount.id,
+          account_id: publicMarketsAccount.id,
           user_id: userId,
           type: 'credit',
-          amount: 30000000, // SecureNet dividend
+          amount: 2_000_000, // Quarterly dividend
           currency: 'USD',
-          description: 'SecureNet - Annual Dividend',
+          description: 'Public Markets - Quarterly Dividend Distribution',
           category: 'dividend',
           date: new Date('2024-01-15').toISOString(),
-        },
-        {
-          account_id: familyOfficeAccount.id,
-          user_id: userId,
-          type: 'credit',
-          amount: 42000000, // Syndicate X dividend
-          currency: 'USD',
-          description: 'Syndicate X - Annual Dividend',
-          category: 'dividend',
-          date: new Date('2024-01-15').toISOString(),
-        },
-        {
-          account_id: familyOfficeAccount.id,
-          user_id: userId,
-          type: 'credit',
-          amount: 40000000, // MapleAI dividend
-          currency: 'USD',
-          description: 'MapleAI - Annual Dividend',
-          category: 'dividend',
-          date: new Date('2024-01-15').toISOString(),
-        },
-        {
-          account_id: familyOfficeAccount.id,
-          user_id: userId,
-          type: 'credit',
-          amount: 85000000, // OrbitTech dividend
-          currency: 'USD',
-          description: 'OrbitTech - Annual Dividend',
-          category: 'dividend',
-          date: new Date('2024-01-15').toISOString(),
-        }
-      );
-
-      // Operating expenses
-      transactions.push(
-        {
-          account_id: familyOfficeAccount.id,
-          user_id: userId,
-          type: 'debit',
-          amount: 10805000, // Staff salaries
-          currency: 'USD',
-          description: 'Family Office - Staff Salaries',
-          category: 'expense',
-          date: new Date('2024-01-31').toISOString(),
-        },
-        {
-          account_id: familyOfficeAccount.id,
-          user_id: userId,
-          type: 'debit',
-          amount: 10000000, // Charity & Tithes
-          currency: 'USD',
-          description: 'Charity & Tithes',
-          category: 'charity',
-          date: new Date('2024-01-31').toISOString(),
         }
       );
     }
 
-    if (offshoreAccount) {
+    if (peVcAccount) {
+      // Annual distributions from PE/VC funds (estimated 8% annual return on $300M = $24M/year)
       transactions.push({
-        account_id: offshoreAccount.id,
+        account_id: peVcAccount.id,
         user_id: userId,
         type: 'credit',
-        amount: 57125000, // Annual income allocation
+        amount: 24_000_000, // Annual distribution
         currency: 'USD',
-        description: 'Annual Income Allocation from VC&PE',
+        description: 'Private Equity & VC - Annual Distribution',
         category: 'income',
-        date: new Date('2024-01-01').toISOString(),
+        date: new Date('2024-01-31').toISOString(),
+      });
+    }
+
+    if (cashAccount) {
+      // Interest income from money market (estimated 4% annual yield on $200M = $8M/year)
+      transactions.push({
+        account_id: cashAccount.id,
+        user_id: userId,
+        type: 'credit',
+        amount: 2_000_000, // Quarterly interest
+        currency: 'USD',
+        description: 'Money Market - Quarterly Interest',
+        category: 'interest',
+        date: new Date('2024-01-15').toISOString(),
       });
     }
 

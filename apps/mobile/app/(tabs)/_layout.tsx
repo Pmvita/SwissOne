@@ -31,6 +31,7 @@ export default function TabsLayout() {
         name="accounts"
         options={{
           title: "Accounts",
+          headerShown: false, // Custom header in component
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="wallet" size={size} color={color} />
           ),
@@ -46,6 +47,7 @@ export default function TabsLayout() {
         name="transactions"
         options={{
           title: "Transactions",
+          headerShown: false, // Custom header in component
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="list" size={size} color={color} />
           ),
@@ -55,6 +57,7 @@ export default function TabsLayout() {
         name="portfolio"
         options={{
           title: "Portfolio",
+          headerShown: false, // Custom header in component
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="trending-up" size={size} color={color} />
           ),
