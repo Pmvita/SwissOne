@@ -85,8 +85,6 @@ async function getHoldingsWithPrices(supabase: SupabaseClient, userId: string) {
     const portfolioIds = userPortfolios.map(p => p.id);
 
     // Then get all holdings for those portfolios
-    // Note: asset_type and market_symbol columns don't exist in holdings table yet
-    // The portfolio breakdown component handles missing asset_type with a fallback
     // Filter by portfolio_id AND ensure portfolios belong to user (defensive security check)
     const { data: holdings, error } = await supabase
       .from("holdings")
@@ -94,11 +92,14 @@ async function getHoldingsWithPrices(supabase: SupabaseClient, userId: string) {
         id,
         portfolio_id,
         symbol,
+        market_symbol,
         name,
         quantity,
         purchase_price,
         current_price,
         currency,
+        asset_type,
+        refresh_cadence,
         portfolios!inner(id, name, user_id)
       `)
       .in("portfolio_id", portfolioIds)

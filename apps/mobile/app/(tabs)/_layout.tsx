@@ -38,12 +38,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="accounts/[id]"
-        options={{
-          href: null, // Hide from tab bar
-        }}
-      />
-      <Tabs.Screen
         name="transactions"
         options={{
           title: "Transactions",

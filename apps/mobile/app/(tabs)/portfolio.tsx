@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { createClient } from "@/lib/supabase/client";
@@ -6,6 +6,7 @@ import { AnimatedCard, FadeIn } from "@/components/ui/animated";
 import { Ionicons } from "@expo/vector-icons";
 import { formatCurrency } from "@/lib/utils/format";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { priceService } from "@/lib/services/price-service";
 
 interface Holding {
   id: string;
@@ -17,10 +18,17 @@ interface Holding {
   current_price: number;
   currency: string;
   asset_type?: string;
+  market_symbol?: string;
   portfolios?: {
     id: string;
     name: string;
   };
+  // Real-time price data
+  realtimePrice?: number;
+  realtimeChangePercent?: number;
+  realtimeChangeAmount?: number;
+  priceLastUpdated?: string;
+  priceSource?: string;
 }
 
 interface Portfolio {
@@ -71,12 +79,28 @@ export default function PortfolioScreen() {
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingPrices, setLoadingPrices] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [expandedHoldings, setExpandedHoldings] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // Separate effect for periodic price refresh
+  useEffect(() => {
+    if (holdings.length === 0) {
+      return;
+    }
+
+    // Refresh prices every 30 seconds when screen is active
+    const priceRefreshInterval = setInterval(() => {
+      // Pass current holdings to avoid stale closure
+      fetchRealtimePrices(holdings);
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(priceRefreshInterval);
+  }, [holdings, fetchRealtimePrices]);
 
   const loadData = async () => {
     setLoading(true);
@@ -114,12 +138,15 @@ export default function PortfolioScreen() {
               current_price,
               currency,
               asset_type,
+              market_symbol,
               portfolios(id, name)
             `)
             .in("portfolio_id", portfolioIds);
 
           if (!holdingsError && holdingsData) {
             setHoldings(holdingsData);
+            // Fetch real-time prices after loading holdings
+            fetchRealtimePrices(holdingsData);
           }
         }
       }
@@ -130,18 +157,81 @@ export default function PortfolioScreen() {
     }
   };
 
+  /**
+   * Fetch real-time prices for all holdings
+   */
+  const fetchRealtimePrices = useCallback(async (holdingsToUpdate?: Holding[]) => {
+    // Always require holdings to be passed in to avoid stale closure issues
+    const holdingsList = holdingsToUpdate || holdings;
+    
+    if (!holdingsList || holdingsList.length === 0) {
+      return;
+    }
+
+    setLoadingPrices(true);
+    
+    try {
+      // Get unique symbols (use market_symbol if available, fallback to symbol)
+      const symbols = holdingsList.map(h => 
+        (h.market_symbol || h.symbol).toUpperCase()
+      );
+      const uniqueSymbols = [...new Set(symbols)];
+      const assetTypes = holdingsList.map(h => h.asset_type || 'equity');
+
+      // Fetch prices (will gracefully handle API unavailability)
+      const prices = await priceService.getPrices(uniqueSymbols, assetTypes);
+
+      // Only update if we got prices back
+      if (prices.size > 0) {
+        // Update holdings with real-time prices
+        setHoldings(prevHoldings => 
+          prevHoldings.map(holding => {
+            const symbol = (holding.market_symbol || holding.symbol).toUpperCase();
+            const priceData = prices.get(symbol);
+            
+            if (priceData) {
+              return {
+                ...holding,
+                realtimePrice: priceData.price,
+                realtimeChangePercent: priceData.changePercent,
+                realtimeChangeAmount: priceData.changeAmount,
+                priceLastUpdated: priceData.timestamp,
+                priceSource: priceData.source,
+              };
+            }
+            return holding;
+          })
+        );
+      }
+    } catch (error) {
+      // Silently fail - prices will use stored current_price
+      // Only log in development
+      if (__DEV__) {
+        console.warn("Price fetch failed (using stored prices):", error instanceof Error ? error.message : error);
+      }
+    } finally {
+      setLoadingPrices(false);
+    }
+  }, [holdings]);
+
   const onRefresh = async () => {
     setRefreshing(true);
+    // Clear price cache to force refresh
+    priceService.clearCache();
     await loadData();
+    // Refresh prices
+    await fetchRealtimePrices();
     setRefreshing(false);
   };
 
-  // Calculate portfolio totals
+  // Calculate portfolio totals using real-time prices when available
   let totalPortfolioValue = 0;
   const assetClassBreakdown: Record<string, number> = {};
   
   for (const holding of holdings) {
-    const value = Number(holding.quantity || 0) * Number(holding.current_price || 0);
+    // Use real-time price if available, otherwise fallback to current_price
+    const price = holding.realtimePrice ?? Number(holding.current_price || 0);
+    const value = Number(holding.quantity || 0) * price;
     totalPortfolioValue += value;
     
     const assetType = holding.asset_type || 'equity';
@@ -214,7 +304,15 @@ export default function PortfolioScreen() {
         <FadeIn delay={200}>
           <AnimatedCard className="p-6 mb-4" style={{ backgroundColor: '#334e68' }}>
             <View className="items-center">
-              <Text className="text-sm mb-2" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Total Portfolio Value</Text>
+              <View className="flex-row items-center gap-2 mb-2">
+                <Text className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Total Portfolio Value</Text>
+                {loadingPrices && (
+                  <ActivityIndicator size="small" color="rgba(255, 255, 255, 0.8)" />
+                )}
+                {!loadingPrices && holdings.some(h => h.realtimePrice) && (
+                  <Ionicons name="pulse" size={12} color="#86efac" />
+                )}
+              </View>
               <Text className="text-4xl font-bold mb-4" style={{ color: '#ffffff' }}>
                 {formatCurrency(totalPortfolioValue, portfolioCurrency)}
               </Text>
@@ -358,7 +456,9 @@ export default function PortfolioScreen() {
                         {isExpanded && (
                           <View className="border-t border-gray-100">
                             {groupHoldings.map((holding, index) => {
-                              const rawValue = Number(holding.quantity || 0) * Number(holding.current_price || 0);
+                              // Use real-time price if available, otherwise fallback to current_price
+                              const currentPrice = holding.realtimePrice ?? Number(holding.current_price || 0);
+                              const rawValue = Number(holding.quantity || 0) * currentPrice;
                               const purchaseValue = Number(holding.quantity || 0) * Number(holding.purchase_price || 0);
                               const gainLoss = rawValue - purchaseValue;
                               const gainLossPercent = purchaseValue > 0 
@@ -367,6 +467,10 @@ export default function PortfolioScreen() {
                               const yieldPercent = getEstimatedYield(holding.asset_type);
                               const holdingId = holding.id;
                               const isHoldingExpanded = expandedHoldings[holdingId] || false;
+                              
+                              // Use real-time change if available
+                              const displayChangePercent = holding.realtimeChangePercent ?? gainLossPercent;
+                              const displayChangeAmount = holding.realtimeChangeAmount ?? gainLoss;
 
                               return (
                                 <View 
@@ -392,10 +496,22 @@ export default function PortfolioScreen() {
                                           <Text className="text-sm font-bold text-gray-900">
                                             {formatCurrency(rawValue, holding.currency || portfolioCurrency)}
                                           </Text>
+                                          {holding.realtimePrice && (
+                                            <View className="flex-row items-center gap-1 mt-0.5">
+                                              <Ionicons 
+                                                name="pulse" 
+                                                size={10} 
+                                                color={holding.realtimeChangePercent && holding.realtimeChangePercent >= 0 ? "#16a34a" : "#dc2626"} 
+                                              />
+                                              <Text className="text-xs text-gray-500">
+                                                Live
+                                              </Text>
+                                            </View>
+                                          )}
                                           <Text className={`text-xs font-medium ${
-                                            gainLoss >= 0 ? "text-green-600" : "text-red-600"
+                                            displayChangeAmount >= 0 ? "text-green-600" : "text-red-600"
                                           }`}>
-                                            {gainLoss >= 0 ? "+" : ""}{formatCurrency(gainLoss, holding.currency || portfolioCurrency)} ({gainLossPercent >= 0 ? "+" : ""}{gainLossPercent.toFixed(2)}%)
+                                            {displayChangeAmount >= 0 ? "+" : ""}{formatCurrency(Math.abs(displayChangeAmount), holding.currency || portfolioCurrency)} ({displayChangePercent >= 0 ? "+" : ""}{displayChangePercent.toFixed(2)}%)
                                           </Text>
                                         </View>
                                       </View>
@@ -410,10 +526,24 @@ export default function PortfolioScreen() {
                                               </Text>
                                             </View>
                                             <View className="flex-1 min-w-[45%]">
-                                              <Text className="text-xs text-gray-500">Current Price</Text>
-                                              <Text className="text-sm font-medium text-gray-900">
-                                                {formatCurrency(Number(holding.current_price || 0), holding.currency || portfolioCurrency)}
+                                              <Text className="text-xs text-gray-500">
+                                                {holding.realtimePrice ? "Live Price" : "Current Price"}
                                               </Text>
+                                              <View className="flex-row items-center gap-1">
+                                                <Text className="text-sm font-medium text-gray-900">
+                                                  {formatCurrency(currentPrice, holding.currency || portfolioCurrency)}
+                                                </Text>
+                                                {holding.realtimePrice && (
+                                                  <Ionicons name="pulse" size={12} color="#16a34a" />
+                                                )}
+                                              </View>
+                                              {holding.realtimeChangePercent !== undefined && (
+                                                <Text className={`text-xs font-medium ${
+                                                  holding.realtimeChangePercent >= 0 ? "text-green-600" : "text-red-600"
+                                                }`}>
+                                                  {holding.realtimeChangePercent >= 0 ? "+" : ""}{holding.realtimeChangePercent.toFixed(2)}% today
+                                                </Text>
+                                              )}
                                             </View>
                                             <View className="flex-1 min-w-[45%]">
                                               <Text className="text-xs text-gray-500">Purchase Price</Text>

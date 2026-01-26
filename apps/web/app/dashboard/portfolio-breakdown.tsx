@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AnimatedCard } from "@/components/ui/animated";
 import { AnimatedLinkButton } from "@/components/ui/animated/AnimatedLinkButton";
 import { formatCurrency } from "@/lib/utils/format";
-import { ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronRight, ChevronDown, Activity } from "lucide-react";
+import { useRealtimePrices } from "@/hooks/use-realtime-prices";
 
 interface PortfolioBreakdownProps {
   holdings: any[];
@@ -67,12 +68,58 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
   const [showAllHoldings, setShowAllHoldings] = useState<Record<string, boolean>>({});
   const [expandedHoldings, setExpandedHoldings] = useState<Record<string, boolean>>({});
   
-  // Calculate total holdings value for normalization
-  let totalHoldingsValue = 0;
-  for (const holding of holdings) {
-    const value = Number(holding.quantity || 0) * Number(holding.current_price || 0);
-    totalHoldingsValue += value;
-  }
+  // Extract symbols and asset types for real-time price fetching
+  const { symbols, assetTypes } = useMemo(() => {
+    const syms = holdings
+      .map((h) => (h.market_symbol || h.symbol)?.toUpperCase())
+      .filter((s): s is string => !!s && s !== 'PRIVATE');
+    const types = holdings.map((h) => h.asset_type || 'equity');
+    return {
+      symbols: [...new Set(syms)],
+      assetTypes: types,
+    };
+  }, [holdings]);
+
+  // Fetch real-time prices (same as mobile portfolio screen)
+  const {
+    prices: realtimePrices,
+    loading: pricesLoading,
+    error: pricesError,
+    lastUpdated: pricesLastUpdated,
+  } = useRealtimePrices({
+    symbols,
+    assetTypes,
+    refreshInterval: 30000, // 30 seconds
+    enabled: symbols.length > 0,
+  });
+
+  // Merge holdings with real-time prices
+  const holdingsWithRealtime = useMemo(() => {
+    return holdings.map((holding) => {
+      const symbol = (holding.market_symbol || holding.symbol)?.toUpperCase();
+      const realtimeData = symbol ? realtimePrices.get(symbol) : null;
+
+      return {
+        ...holding,
+        // Use real-time price if available, fallback to current_price
+        displayPrice: realtimeData?.realtimePrice ?? Number(holding.current_price || 0),
+        realtimePrice: realtimeData?.realtimePrice,
+        realtimeChangePercent: realtimeData?.realtimeChangePercent,
+        realtimeChangeAmount: realtimeData?.realtimeChangeAmount,
+        priceLastUpdated: realtimeData?.priceLastUpdated,
+        priceSource: realtimeData?.priceSource,
+        hasRealtimePrice: !!realtimeData,
+      };
+    });
+  }, [holdings, realtimePrices]);
+
+  // Calculate total holdings value using real-time prices when available
+  const totalHoldingsValue = useMemo(() => {
+    return holdingsWithRealtime.reduce((sum, holding) => {
+      const value = Number(holding.quantity || 0) * holding.displayPrice;
+      return sum + value;
+    }, 0);
+  }, [holdingsWithRealtime]);
   
   // Calculate normalization factor to map holdings to AUM allocation
   const normalizationFactor = totalHoldingsValue > 0 && totalAUM > 0
@@ -83,10 +130,24 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
   const assetClassTotals: Record<string, number> = {};
   const assetClassPercentages: Record<string, number> = {};
   
-  for (const [groupName, groupHoldings] of Object.entries(groupedHoldings)) {
-    // Calculate normalized group total (allocation of AUM)
+  // Re-group holdings with real-time prices
+  const groupedHoldingsWithRealtime = useMemo(() => {
+    const groups: Record<string, typeof holdingsWithRealtime> = {};
+    for (const holding of holdingsWithRealtime) {
+      const assetType = holding.asset_type || 'equity';
+      const groupName = ASSET_TYPE_LABELS[assetType] || 'Other';
+      if (!groups[groupName]) {
+        groups[groupName] = [];
+      }
+      groups[groupName].push(holding);
+    }
+    return groups;
+  }, [holdingsWithRealtime]);
+
+  for (const [groupName, groupHoldings] of Object.entries(groupedHoldingsWithRealtime)) {
+    // Calculate normalized group total (allocation of AUM) using real-time prices
     const groupTotal = groupHoldings.reduce((sum, h) => {
-      const rawValue = Number(h.quantity || 0) * Number(h.current_price || 0);
+      const rawValue = Number(h.quantity || 0) * h.displayPrice;
       return sum + (rawValue * normalizationFactor);
     }, 0);
     
@@ -95,7 +156,7 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
   }
 
   // Sort asset classes by value (largest first)
-  const sortedGroups = Object.entries(groupedHoldings).sort((a, b) => {
+  const sortedGroups = Object.entries(groupedHoldingsWithRealtime).sort((a, b) => {
     return (assetClassTotals[b[0]] || 0) - (assetClassTotals[a[0]] || 0);
   });
 
@@ -122,7 +183,20 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <h2 className="text-xl md:text-2xl font-bold text-gray-900">Portfolio Breakdown</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900">Portfolio Breakdown</h2>
+        {pricesLoading && (
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="h-4 w-4 border-2 border-gray-300 border-t-primary-600 rounded-full animate-spin" />
+            <span>Updating prices...</span>
+          </div>
+        )}
+        {pricesLastUpdated && !pricesLoading && (
+          <p className="text-xs text-gray-500">
+            Prices updated {new Date(pricesLastUpdated).toLocaleTimeString()}
+          </p>
+        )}
+      </div>
       {sortedGroups.map(([groupName, groupHoldings]) => {
         const total = assetClassTotals[groupName] || 0;
         const percentage = assetClassPercentages[groupName] || 0;
@@ -176,8 +250,9 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
             
             <div className={`space-y-3 md:space-y-4 ${!isExpanded ? 'hidden lg:block' : ''}`}>
               {(showAllHoldings[groupName] ? holdingsList : holdingsList.slice(0, 3)).map((holding: any, index: number) => {
-                // Calculate raw holding value
-                const rawValue = Number(holding.quantity || 0) * Number(holding.current_price || 0);
+                // Use real-time price if available, fallback to current_price
+                const currentPrice = holding.displayPrice ?? Number(holding.current_price || 0);
+                const rawValue = Number(holding.quantity || 0) * currentPrice;
                 
                 // Normalize to show allocation of AUM, not raw holdings value
                 // normalizationFactor is calculated once at component level
@@ -187,6 +262,15 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
                 const holdingId = holding.id || `${holding.symbol}-${index}`;
                 const isExpanded = expandedHoldings[holdingId] || false;
                 const purchaseValue = Number(holding.quantity || 0) * Number(holding.purchase_price || 0);
+                
+                // Use real-time change if available, otherwise calculate from purchase price
+                const displayChangePercent = holding.realtimeChangePercent !== undefined
+                  ? holding.realtimeChangePercent
+                  : purchaseValue > 0 ? ((rawValue - purchaseValue) / purchaseValue) * 100 : 0;
+                const displayChangeAmount = holding.realtimeChangeAmount !== undefined
+                  ? holding.realtimeChangeAmount * Number(holding.quantity || 0)
+                  : rawValue - purchaseValue;
+                
                 const gainLoss = rawValue - purchaseValue;
                 const gainLossPercent = purchaseValue > 0 ? ((gainLoss / purchaseValue) * 100) : 0;
                 
@@ -194,12 +278,27 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
                   <div key={holdingId}>
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between p-3 md:p-4 bg-gray-50 rounded-lg gap-3">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm md:text-base text-gray-900 truncate">{holding.name || holding.symbol}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm md:text-base text-gray-900 truncate">{holding.name || holding.symbol}</p>
+                          {holding.hasRealtimePrice && (
+                            <Activity className="h-3 w-3 text-green-600 animate-pulse" title="Live price" />
+                          )}
+                          {pricesLoading && !holding.hasRealtimePrice && (
+                            <div className="h-3 w-3 border-2 border-gray-300 border-t-primary-600 rounded-full animate-spin" />
+                          )}
+                        </div>
                         <p className="text-xs md:text-sm text-gray-600 mt-0.5">Est. {yieldPercent.toFixed(2)}% Yield</p>
                       </div>
                       <div className="flex items-center justify-between md:justify-end gap-3 md:gap-4">
                         <div className="text-right">
                           <p className="font-semibold text-sm md:text-base text-gray-900">{formatCurrency(normalizedValue, holding.currency || "USD")}</p>
+                          {holding.hasRealtimePrice && holding.realtimeChangePercent !== undefined && (
+                            <p className={`text-xs font-medium mt-0.5 ${
+                              holding.realtimeChangePercent >= 0 ? "text-green-600" : "text-red-600"
+                            }`}>
+                              {holding.realtimeChangePercent >= 0 ? "+" : ""}{holding.realtimeChangePercent.toFixed(2)}% today
+                            </p>
+                          )}
                         </div>
                         <button 
                           onClick={() => toggleHoldingDetails(holdingId)}
@@ -221,8 +320,20 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
                             <p className="font-medium text-gray-900">{Number(holding.quantity || 0).toLocaleString()}</p>
                           </div>
                           <div>
-                            <p className="text-gray-600">Current Price</p>
-                            <p className="font-medium text-gray-900">{formatCurrency(Number(holding.current_price || 0), holding.currency || "USD")}</p>
+                            <p className="text-gray-600">{holding.hasRealtimePrice ? "Live Price" : "Current Price"}</p>
+                            <div className="flex items-center gap-1">
+                              <p className="font-medium text-gray-900">{formatCurrency(currentPrice, holding.currency || "USD")}</p>
+                              {holding.hasRealtimePrice && (
+                                <Activity className="h-3 w-3 text-green-600" title="Live price" />
+                              )}
+                            </div>
+                            {holding.realtimeChangePercent !== undefined && (
+                              <p className={`text-xs font-medium mt-0.5 ${
+                                holding.realtimeChangePercent >= 0 ? "text-green-600" : "text-red-600"
+                              }`}>
+                                {holding.realtimeChangePercent >= 0 ? "+" : ""}{holding.realtimeChangePercent.toFixed(2)}% today
+                              </p>
+                            )}
                           </div>
                           <div>
                             <p className="text-gray-600">Purchase Price</p>
@@ -237,9 +348,9 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
                             <p className="font-medium text-gray-900">{formatCurrency(purchaseValue, holding.currency || "USD")}</p>
                           </div>
                           <div>
-                            <p className="text-gray-600">Gain/Loss</p>
-                            <p className={`font-medium ${gainLoss >= 0 ? "text-green-600" : "text-red-600"}`}>
-                              {gainLoss >= 0 ? "+" : ""}{formatCurrency(gainLoss, holding.currency || "USD")} ({gainLossPercent >= 0 ? "+" : ""}{gainLossPercent.toFixed(2)}%)
+                            <p className="text-gray-600">Gain/Loss {holding.hasRealtimePrice ? "(Live)" : ""}</p>
+                            <p className={`font-medium ${displayChangeAmount >= 0 ? "text-green-600" : "text-red-600"}`}>
+                              {displayChangeAmount >= 0 ? "+" : ""}{formatCurrency(Math.abs(displayChangeAmount), holding.currency || "USD")} ({displayChangePercent >= 0 ? "+" : ""}{displayChangePercent.toFixed(2)}%)
                             </p>
                           </div>
                           <div>

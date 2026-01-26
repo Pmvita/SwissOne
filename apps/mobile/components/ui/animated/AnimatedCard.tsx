@@ -25,19 +25,15 @@ export function AnimatedCard({
   ...props
 }: AnimatedCardProps) {
   const scale = useSharedValue(1);
-  const opacity = useSharedValue(0);
-
-  useEffect(() => {
-    opacity.value = withTiming(1, { duration: 300 }, () => {
-      // Animation complete
-    });
-  }, []);
 
   const animatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-      transform: [{ scale: scale.value }],
-    };
+    // Only apply scale transform for hover, not opacity/transform that conflict with entering
+    if (hover) {
+      return {
+        transform: [{ scale: scale.value }],
+      };
+    }
+    return {};
   });
 
   const handlePressIn = () => {
@@ -56,7 +52,7 @@ export function AnimatedCard({
     <AnimatedView
       entering={FadeInDown.delay(delay).duration(300).springify()}
       className={`bg-white rounded-lg shadow-sm border border-gray-200 ${className}`}
-      style={animatedStyle}
+      style={hover ? animatedStyle : undefined}
       onTouchStart={handlePressIn}
       onTouchEnd={handlePressOut}
       {...props}
