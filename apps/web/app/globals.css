@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    --font-display: "Cormorant Garamond";
-    --font-sans: "Source Sans 3";
+    --font-display: "Cormorant Garamond", Georgia, serif;
+    --font-sans: "Source Sans 3", system-ui, sans-serif;
     --background: #f7fafc;
     --foreground: #0b1220;
     --border: #c5ced6;
