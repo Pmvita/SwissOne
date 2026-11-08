@@ -123,3 +123,9 @@ docs/Credentials.md
 .DS_Store
 **/._*
 
+
+.vercel
+.env*
+
+.tmp-npm/
+
