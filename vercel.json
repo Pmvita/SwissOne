@@ -1,5 +1,6 @@
 {
-  "installCommand": "cd ../.. && npm install --legacy-peer-deps",
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && npm install --legacy-peer-deps && npm install react@18.3.1 react-dom@18.3.1 --workspace=@swissone/web --legacy-peer-deps",
   "buildCommand": "npm run build",
   "framework": "nextjs"
 }
