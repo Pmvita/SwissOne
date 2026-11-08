@@ -3,9 +3,14 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { rejectUnlessDevelopment } from '@/lib/api/dev-only';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+async function assertDev() {
+  return rejectUnlessDevelopment();
+}
 
 interface SeedAccount {
   name: string;
@@ -33,6 +38,9 @@ interface SeedPortfolio {
 }
 
 export async function POST(request: Request) {
+  const blocked = await assertDev();
+  if (blocked) return blocked;
+
   try {
     const supabase = await createClient();
     

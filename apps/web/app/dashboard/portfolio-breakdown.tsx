@@ -39,8 +39,8 @@ function groupHoldingsByAssetClass(holdings: any[]) {
   return groups;
 }
 
-// Calculate estimated yield based on asset type (mock - in real app, this would come from market data)
-function getEstimatedYield(assetType: string): number {
+/** Model yield assumptions by asset class — not live market quotes. */
+function getAssumedYield(assetType: string): number {
   switch (assetType) {
     case "money_market":
     case "cash":
@@ -258,7 +258,7 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
                 // normalizationFactor is calculated once at component level
                 const normalizedValue = rawValue * normalizationFactor;
                 
-                const yieldPercent = getEstimatedYield(holding.asset_type || "equity");
+                const yieldPercent = getAssumedYield(holding.asset_type || "equity");
                 const holdingId = holding.id || `${holding.symbol}-${index}`;
                 const isExpanded = expandedHoldings[holdingId] || false;
                 const purchaseValue = Number(holding.quantity || 0) * Number(holding.purchase_price || 0);
@@ -289,7 +289,7 @@ export function PortfolioBreakdown({ holdings, portfolios, totalAUM }: Portfolio
                             <div className="h-3 w-3 border-2 border-gray-300 border-t-primary-600 rounded-full animate-spin" />
                           )}
                         </div>
-                        <p className="text-xs md:text-sm text-gray-600 mt-0.5">Est. {yieldPercent.toFixed(2)}% Yield</p>
+                        <p className="text-xs md:text-sm text-gray-600 mt-0.5">Assumed {yieldPercent.toFixed(2)}% yield (model)</p>
                       </div>
                       <div className="flex items-center justify-between md:justify-end gap-3 md:gap-4">
                         <div className="text-right">

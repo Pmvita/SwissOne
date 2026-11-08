@@ -32,11 +32,8 @@ export async function POST(request: Request) {
 
     const cookieStore = await cookies();
 
-    // Create response object for setting cookies
-    const response = NextResponse.json({ success: true, redirect: "/dashboard" });
-
-    // Store reference to setAll callback so we can call it manually
-    let setAllCallback: ((cookiesToSet: Array<{ name: string; value: string; options?: any }>) => void) | null = null;
+    // Cookie jar collected during auth; attached to the final NextResponse below.
+    const pendingCookies: Array<{ name: string; value: string; options?: any }> = [];
 
     // Create Supabase client with cookie handling
     const supabase = createServerClient(
@@ -48,11 +45,6 @@ export async function POST(request: Request) {
             return cookieStore.getAll();
           },
           setAll(cookiesToSet: { name: string; value: string; options?: any }[]) {
-            // Store reference for manual calling
-            setAllCallback = (cookies) => {
-              // This will be called manually below
-            };
-            // Set cookies on both cookieStore and the response
             cookiesToSet.forEach(({ name, value, options }) => {
               const cookieOptions = {
                 ...options,
@@ -63,10 +55,8 @@ export async function POST(request: Request) {
                 maxAge: options?.maxAge,
                 expires: options?.expires,
               };
-              // Store in cookieStore
               cookieStore.set(name, value, cookieOptions);
-              // Set on the response
-              response.cookies.set(name, value, cookieOptions);
+              pendingCookies.push({ name, value, options: cookieOptions });
             });
           },
         },
@@ -178,97 +168,9 @@ export async function POST(request: Request) {
         maxAge: options?.maxAge,
         expires: options?.expires,
       };
-      // This is the exact same logic as in setAll callback
       cookieStore.set(name, value, cookieOptions);
-      response.cookies.set(name, value, cookieOptions);
+      pendingCookies.push({ name, value, options: cookieOptions });
     });
-
-    // If setAll still wasn't called, manually trigger it with session data
-    // Supabase SSR doesn't trigger setAll in API routes, so we must manually call it
-    if (response.cookies.getAll().length === 0 && authData.session) {
-      // Extract project ref from Supabase URL
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      const projectRef = supabaseUrl.match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1] || 'default';
-      
-      // Calculate session expiry
-      const expiresAt = authData.session.expires_at 
-        ? new Date(authData.session.expires_at * 1000)
-        : new Date(Date.now() + 3600 * 1000);
-      const maxAge = Math.floor((expiresAt.getTime() - Date.now()) / 1000);
-      
-      // Manually call setAll with the session data in the format Supabase expects
-      // Supabase SSR stores session as: { access_token, refresh_token, expires_at, expires_in, token_type, user }
-      const sessionData = {
-        access_token: authData.session.access_token,
-        refresh_token: authData.session.refresh_token,
-        expires_at: authData.session.expires_at,
-        expires_in: authData.session.expires_in,
-        token_type: authData.session.token_type,
-        user: authData.user,
-      };
-      
-      const sessionJson = JSON.stringify(sessionData);
-      const chunkSize = 4000;
-      
-      // Build cookies array in the format Supabase expects
-      const cookiesToSet: Array<{ name: string; value: string; options?: any }> = [];
-      
-      if (sessionJson.length > chunkSize) {
-        // Split into chunks
-        for (let i = 0; i < sessionJson.length; i += chunkSize) {
-          const chunk = sessionJson.slice(i, i + chunkSize);
-          const chunkIndex = Math.floor(i / chunkSize);
-          const cookieName = chunkIndex === 0 
-            ? `sb-${projectRef}-auth-token`
-            : `sb-${projectRef}-auth-token.${chunkIndex}`;
-          
-          cookiesToSet.push({
-            name: cookieName,
-            value: chunk,
-            options: {
-              path: "/",
-              sameSite: "lax",
-              secure: process.env.NODE_ENV === "production",
-              httpOnly: true,
-              maxAge: maxAge,
-              expires: expiresAt,
-            }
-          });
-        }
-      } else {
-        // Single cookie
-        cookiesToSet.push({
-          name: `sb-${projectRef}-auth-token`,
-          value: sessionJson,
-          options: {
-            path: "/",
-            sameSite: "lax",
-            secure: process.env.NODE_ENV === "production",
-            httpOnly: true,
-            maxAge: maxAge,
-            expires: expiresAt,
-          }
-        });
-      }
-      
-      // Manually call setAll by setting cookies directly (same logic as setAll callback)
-      // This mimics what Supabase's setAll would do
-      cookiesToSet.forEach(({ name, value, options }) => {
-        const cookieOptions = {
-          ...options,
-          path: options?.path ?? "/",
-          sameSite: (options?.sameSite as "lax" | "strict" | "none") ?? "lax",
-          secure: options?.secure ?? (process.env.NODE_ENV === "production"),
-          httpOnly: options?.httpOnly ?? true,
-          maxAge: options?.maxAge,
-          expires: options?.expires,
-        };
-        // Store in cookieStore
-        cookieStore.set(name, value, cookieOptions);
-        // Set on the response
-        response.cookies.set(name, value, cookieOptions);
-      });
-    }
 
     // Auto-create profile if it doesn't exist (like dashboard does)
     let profile = profileData?.[0];
@@ -281,21 +183,18 @@ export async function POST(request: Request) {
           id: authData.user.id,
           email: userEmail,
           username: username,
-          role: 'admin', // Default to admin for first-time users
-          // Note: base_currency column doesn't exist in profiles table - removed
+          role: 'admin',
         })
         .select()
         .single();
       
       if (createError) {
         console.error('[LOGIN API] Failed to auto-create profile:', createError);
-        // Continue anyway - user can still log in
       } else {
         profile = newProfile;
       }
     }
 
-    // Register session in database for tracking
     try {
       const fullName = profile?.full_name || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || userEmail;
       const requestHeaders = request.headers;
@@ -311,11 +210,31 @@ export async function POST(request: Request) {
         userAgent || undefined
       );
     } catch (sessionError) {
-      // Don't fail login if session tracking fails
       console.error('[LOGIN API] Failed to register session:', sessionError);
     }
 
-    // Return JSON response with redirect URL - cookies are already set via setAll
+    const mfaEnabled = process.env.MFA_ENABLED !== "false";
+    const response = NextResponse.json({
+      success: true,
+      redirect: mfaEnabled ? "/mfa" : "/dashboard",
+      mfaRequired: mfaEnabled,
+      email: userEmail,
+      phone: profile?.phone || authData.user.phone || null,
+      userId: authData.user.id,
+    });
+
+    for (const { name, value, options } of pendingCookies) {
+      response.cookies.set(name, value, options);
+    }
+
+    // Clear prior MFA completion so the user must pass the gate again this session.
+    if (mfaEnabled) {
+      response.cookies.set("swissone_mfa_ok", "", {
+        path: "/",
+        maxAge: 0,
+      });
+    }
+
     return response;
   } catch (error) {
     console.error("[LOGIN API] Error:", error);

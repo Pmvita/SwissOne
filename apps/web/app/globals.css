@@ -4,6 +4,8 @@
 
 @layer base {
   :root {
+    --font-display: "Cormorant Garamond";
+    --font-sans: "Source Sans 3";
     --background: #f7fafc;
     --foreground: #0b1220;
     --border: #c5ced6;
@@ -31,12 +33,12 @@
     @apply antialiased;
     background: var(--snow);
     color: var(--ink);
-    font-family: var(--font-sans), "Source Sans 3", sans-serif;
+    font-family: var(--font-sans);
   }
 }
 
 .font-display {
-  font-family: var(--font-display), "Cormorant Garamond", Georgia, serif;
+  font-family: var(--font-display);
   letter-spacing: -0.02em;
 }
 

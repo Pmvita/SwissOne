@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { rejectUnlessDevelopment } from "@/lib/api/dev-only";
 
 /**
  * One-time setup endpoint to create dev user
  * Call: POST /api/setup/create-user
- * 
- * This endpoint can be deleted after user is created
+ *
+ * Development-only — blocked in production.
  */
 export async function POST() {
+  const blocked = rejectUnlessDevelopment();
+  if (blocked) return blocked;
+
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;

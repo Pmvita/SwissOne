@@ -1,12 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { rejectUnlessDevelopment } from '@/lib/api/dev-only';
 
 /**
  * Fix admin profile - sets username and role
  * This uses service role key to bypass RLS
  * POST /api/setup/fix-profile
+ *
+ * Development-only — blocked in production.
  */
 export async function POST() {
+  const blocked = rejectUnlessDevelopment();
+  if (blocked) return blocked;
+
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

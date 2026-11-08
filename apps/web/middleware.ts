@@ -106,9 +106,27 @@ export async function middleware(request: NextRequest) {
     user = fetchedUser;
   }
 
-  // Protect dashboard routes - require authentication
-  if (pathname.startsWith("/dashboard") && !user) {
+  const mfaEnabled = process.env.MFA_ENABLED !== "false";
+  const mfaOk = request.cookies.get("swissone_mfa_ok")?.value === "1";
+  const protectedPrefixes = ["/dashboard", "/accounts", "/transactions", "/documents", "/security"];
+
+  // Protect app routes - require authentication
+  if (protectedPrefixes.some((p) => pathname.startsWith(p)) && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // Minimal MFA gate: authenticated users must complete /mfa before protected pages
+  if (
+    mfaEnabled &&
+    user &&
+    !mfaOk &&
+    protectedPrefixes.some((p) => pathname.startsWith(p))
+  ) {
+    return NextResponse.redirect(new URL("/mfa", request.url));
+  }
+
+  if (mfaEnabled && user && mfaOk && pathname === "/mfa") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Redirect authenticated users away from signup (but allow login for account switching)

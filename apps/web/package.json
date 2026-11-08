@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "seed": "tsx scripts/seed-account.ts"
+    "test": "node --experimental-strip-types --test lib/api/dev-only.test.ts lib/utils/format.test.ts",
+    "seed": "npx --yes tsx scripts/seed-account.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.1.0",
