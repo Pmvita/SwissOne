@@ -20,12 +20,14 @@ export function AnimatedLinkButton({
   size = "md",
   className,
 }: AnimatedLinkButtonProps) {
-  const baseStyles = "inline-flex items-center justify-center font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
-  
+  const baseStyles =
+    "inline-flex items-center justify-center font-semibold rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brass";
+
   const variants = {
-    primary: "bg-primary-700 text-white hover:bg-primary-800 focus:ring-primary-500",
-    secondary: "bg-white text-primary-900 hover:bg-gray-50 focus:ring-white",
-    outline: "border-2 border-primary-700 text-primary-700 hover:bg-primary-50 focus:ring-primary-500 bg-transparent",
+    primary: "bg-alpine text-snow hover:bg-primary-800 focus:ring-alpine",
+    secondary: "bg-snow text-ink hover:bg-glacier focus:ring-line",
+    outline:
+      "border border-line text-ink hover:bg-glacier/60 focus:ring-brass bg-transparent",
   };
 
   const sizes = {
@@ -35,17 +37,10 @@ export function AnimatedLinkButton({
   };
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      <Link
-        href={href}
-        className={cn(baseStyles, variants[variant], sizes[size], className)}
-      >
+    <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }}>
+      <Link href={href} className={cn(baseStyles, variants[variant], sizes[size], className)}>
         {children}
       </Link>
     </motion.div>
   );
 }
-

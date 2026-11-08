@@ -20,18 +20,14 @@ export function AnimatedCard({
 }: AnimatedCardProps) {
   return (
     <motion.div
-      className={cn(
-        "bg-white rounded-lg shadow-sm border border-gray-200",
-        className
-      )}
-      initial={{ opacity: 0, y: 20 }}
+      className={cn("bg-snow rounded-md border border-line", className)}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay }}
-      whileHover={hover ? { y: -4, shadow: "lg" } : {}}
+      transition={{ duration: 0.35, delay }}
+      whileHover={hover ? { y: -2 } : undefined}
       {...props}
     >
       {children}
     </motion.div>
   );
 }
-

@@ -6,23 +6,23 @@ interface LogoProps {
 }
 
 const sizeMap = {
-  sm: { width: 120, height: 120 },
-  md: { width: 180, height: 180 },
-  lg: { width: 240, height: 240 },
-  xl: { width: 320, height: 320 },
-  "2xl": { width: 300, height: 300 },
+  sm: { width: 40, height: 40 },
+  md: { width: 64, height: 64 },
+  lg: { width: 96, height: 96 },
+  xl: { width: 128, height: 128 },
+  "2xl": { width: 160, height: 160 },
 };
 
 export function Logo({ className = "", size = "md" }: LogoProps) {
   const dimensions = sizeMap[size];
   const { width, height } = dimensions;
 
-  // Swiss red color
-  const swissRed = "#FF0000";
-  // Light beige background
-  const lightBeige = "#F5F5DC";
-  // Dark blue for the building
-  const darkBlue = "#1E3A8A";
+  // Alpine Swiss red (design system)
+  const swissRed = "#9B1B2E";
+  // Glacier / snow field
+  const lightBeige = "#E8EEF2";
+  // Ink for the building
+  const darkBlue = "#0B1220";
 
   // Calculate proportions (2/3 for red section, 1/3 for beige section)
   const redSectionHeight = (height * 2) / 3;

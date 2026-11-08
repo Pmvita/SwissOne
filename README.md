@@ -2,6 +2,26 @@
 
 Full-stack Swiss private banking application built with Next.js, React Native/Expo, and Supabase.
 
+**Live:** [https://swissone.vercel.app](https://swissone.vercel.app)
+
+MFA: after password login users are routed to `/mfa`. Set `MFA_ENABLED=false` to skip the gate. Setup APIs under `/api/setup/*` only run when `NODE_ENV=development`.
+
+## Design system (web)
+
+Alpine private-banking visual language for `apps/web` — Cormorant Garamond for brand/display (Morgen Capital–inspired pairing) with Source Sans 3 for UI. Palette deliberately avoids Morgen Capital secondary purple (`#9696e9`) and generic AI looks (Inter, purple gradients, cream+terracotta, card soup).
+
+| Token | Hex | Role |
+|-------|-----|------|
+| `--glacier` | `#E8EEF2` | Mist / cool wash |
+| `--snow` | `#F7FAFC` | Surfaces |
+| `--ink` | `#0B1220` | Primary text / chrome |
+| `--slate` | `#3A4658` | Secondary text |
+| `--alpine` | `#9B1B2E` | Swiss red accent / CTAs |
+| `--brass` | `#A67C52` | Warm metal accent |
+| `--line` | `#C5CED6` | Borders / rules |
+
+Landing hero is brand-first and full-bleed (mist + mountain silhouette), one headline, one supporting sentence, and a CTA group — no floating badges or hero cards. Motion is limited to intentional hero fade, CTA slide, and section reveals via Framer Motion.
+
 ## Project Structure
 
 ```

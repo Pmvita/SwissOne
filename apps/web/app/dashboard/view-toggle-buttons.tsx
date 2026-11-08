@@ -42,17 +42,17 @@ export function ViewToggleButtons({ onRefresh, onViewChange }: ViewToggleButtons
       <button
         onClick={handleRefresh}
         disabled={isRefreshing}
-        className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-3 py-2 border border-line text-slate rounded-md hover:bg-snow hover:border-brass transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         title="Refresh data"
       >
         <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
       </button>
       <button
         onClick={() => handleViewChange("chart")}
-        className={`px-3 py-2 border rounded-lg transition-colors ${
+        className={`px-3 py-2 border rounded-md transition-colors ${
           viewMode === "chart"
-            ? "border-primary-700 bg-primary-50 text-primary-700"
-            : "border-gray-300 text-gray-700 hover:bg-gray-50"
+            ? "border-alpine bg-glacier text-alpine"
+            : "border-line text-slate hover:bg-snow"
         }`}
         title="Chart view"
       >
@@ -60,10 +60,10 @@ export function ViewToggleButtons({ onRefresh, onViewChange }: ViewToggleButtons
       </button>
       <button
         onClick={() => handleViewChange("list")}
-        className={`px-3 py-2 border rounded-lg transition-colors ${
+        className={`px-3 py-2 border rounded-md transition-colors ${
           viewMode === "list"
-            ? "border-primary-700 bg-primary-50 text-primary-700"
-            : "border-gray-300 text-gray-700 hover:bg-gray-50"
+            ? "border-alpine bg-glacier text-alpine"
+            : "border-line text-slate hover:bg-snow"
         }`}
         title="List view"
       >

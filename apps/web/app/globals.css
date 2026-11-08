@@ -4,15 +4,22 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --border: 214.3 31.8% 91.4%;
+    --background: #f7fafc;
+    --foreground: #0b1220;
+    --border: #c5ced6;
+    --snow: #f7fafc;
+    --ink: #0b1220;
+    --glacier: #e8eef2;
+    --slate: #3a4658;
+    --alpine: #9b1b2e;
+    --brass: #a67c52;
+    --line: #c5ced6;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
+    --background: #0b1220;
+    --foreground: #f7fafc;
+    --border: #2a3545;
   }
 }
 
@@ -21,15 +28,48 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply antialiased;
+    background: var(--snow);
+    color: var(--ink);
+    font-family: var(--font-sans), "Source Sans 3", sans-serif;
   }
 }
 
-/* Grid pattern for hero section */
-.bg-grid-pattern {
-  background-image: 
-    linear-gradient(to right, rgba(0, 0, 0, 0.1) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
-  background-size: 40px 40px;
+.font-display {
+  font-family: var(--font-display), "Cormorant Garamond", Georgia, serif;
+  letter-spacing: -0.02em;
 }
 
+.alpine-hero {
+  position: relative;
+  background:
+    radial-gradient(900px 480px at 20% 10%, rgba(232, 238, 242, 0.22), transparent 55%),
+    radial-gradient(700px 420px at 85% 0%, rgba(155, 27, 46, 0.18), transparent 50%),
+    linear-gradient(165deg, #0b1220 0%, #060a12 48%, #152033 100%);
+  color: var(--snow);
+}
+
+.alpine-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/hero-texture.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.35;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+.alpine-mist {
+  background:
+    radial-gradient(800px 360px at 50% 0%, rgba(232, 238, 242, 0.9), transparent 60%),
+    var(--snow);
+}
+
+.bg-grid-pattern {
+  background-image:
+    linear-gradient(to right, rgba(11, 18, 32, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(11, 18, 32, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+}

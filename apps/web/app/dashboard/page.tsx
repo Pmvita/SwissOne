@@ -237,21 +237,22 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header - matches BMO style */}
-      <header className="bg-primary-700 text-white">
+    <div className="min-h-screen bg-glacier">
+      <header className="bg-ink text-snow">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 justify-between items-center">
             <div className="flex items-center gap-3">
-              <Logo size="sm" className="flex-shrink-0 text-white" />
-              <h1 className="text-xl font-bold">SwissOne Private Wealth</h1>
+              <Logo size="sm" className="flex-shrink-0 h-9 w-9" />
+              <h1 className="font-display text-xl tracking-wide">SwissOne Private Wealth</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm hidden sm:inline">Welcome, {profile?.username || user.email?.split('@')[0] || 'User'}</span>
+              <span className="text-sm text-glacier/80 hidden sm:inline">
+                Welcome, {profile?.username || user.email?.split("@")[0] || "User"}
+              </span>
               {isAdminOrStaff && (
                 <Link
                   href="/security"
-                  className="px-3 py-1.5 text-sm font-semibold border-2 border-white/30 text-white rounded-lg hover:bg-white/10 transition-colors"
+                  className="px-3 py-1.5 text-sm font-semibold border border-brass/50 text-snow rounded-md hover:bg-snow/10 transition-colors"
                 >
                   <Shield className="h-4 w-4 inline mr-1" />
                   Security
@@ -260,7 +261,7 @@ export default async function DashboardPage() {
               <form action="/auth/signout" method="post">
                 <button
                   type="submit"
-                  className="px-3 py-1.5 text-sm font-semibold border-2 border-white/30 text-white rounded-lg hover:bg-white/10 transition-colors flex items-center gap-2"
+                  className="px-3 py-1.5 text-sm font-semibold border border-line/40 text-snow rounded-md hover:bg-snow/10 transition-colors flex items-center gap-2"
                 >
                   <User className="h-4 w-4" />
                   Log Out
@@ -271,43 +272,41 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      {/* Navigation Bar - Desktop */}
-      <nav className="hidden md:block bg-primary-100 border-b border-primary-200">
+      <nav className="hidden md:block bg-snow border-b border-line">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8 justify-end">
-            <Link href="/accounts" className="px-3 py-4 text-sm font-medium text-primary-900 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
+            <Link href="/accounts" className="px-3 py-4 text-sm font-medium text-slate hover:text-ink border-b-2 border-transparent hover:border-alpine transition-colors">
               Accounts
             </Link>
-            <Link href="/dashboard" className="px-3 py-4 text-sm font-medium text-primary-900 border-b-2 border-primary-700">
+            <Link href="/dashboard" className="px-3 py-4 text-sm font-medium text-ink border-b-2 border-alpine">
               Investments
             </Link>
-            <Link href="/transactions" className="px-3 py-4 text-sm font-medium text-primary-900 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
+            <Link href="/transactions" className="px-3 py-4 text-sm font-medium text-slate hover:text-ink border-b-2 border-transparent hover:border-alpine transition-colors">
               Transfers
             </Link>
-            <Link href="/documents" className="px-3 py-4 text-sm font-medium text-primary-900 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
+            <Link href="/documents" className="px-3 py-4 text-sm font-medium text-slate hover:text-ink border-b-2 border-transparent hover:border-alpine transition-colors">
               Documents
             </Link>
-            <Link href="/support" className="px-3 py-4 text-sm font-medium text-primary-900 hover:text-primary-700 border-b-2 border-transparent hover:border-primary-700 transition-colors">
+            <Link href="/support" className="px-3 py-4 text-sm font-medium text-slate hover:text-ink border-b-2 border-transparent hover:border-alpine transition-colors">
               Support
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Navigation Bar */}
-      <nav className="md:hidden bg-primary-100 border-b border-primary-200">
+      <nav className="md:hidden bg-snow border-b border-line">
         <div className="mx-auto px-4">
           <div className="flex space-x-4 overflow-x-auto">
-            <Link href="/accounts" className="px-3 py-4 text-sm font-medium text-primary-900 whitespace-nowrap">
+            <Link href="/accounts" className="px-3 py-4 text-sm font-medium text-slate whitespace-nowrap">
               Accounts
             </Link>
-            <Link href="/dashboard" className="px-3 py-4 text-sm font-medium text-primary-900 border-b-2 border-primary-700 whitespace-nowrap">
+            <Link href="/dashboard" className="px-3 py-4 text-sm font-medium text-ink border-b-2 border-alpine whitespace-nowrap">
               Investments
             </Link>
-            <Link href="/transactions" className="px-3 py-4 text-sm font-medium text-primary-900 whitespace-nowrap">
+            <Link href="/transactions" className="px-3 py-4 text-sm font-medium text-slate whitespace-nowrap">
               Transfers
             </Link>
-            <Link href="/more" className="px-3 py-4 text-sm font-medium text-primary-900 whitespace-nowrap">
+            <Link href="/more" className="px-3 py-4 text-sm font-medium text-slate whitespace-nowrap">
               More
             </Link>
           </div>
@@ -320,21 +319,21 @@ export default async function DashboardPage() {
           <aside className="hidden lg:block lg:col-span-1">
             <FadeIn delay={0.1}>
               <AnimatedCard className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Private Wealth Advisor</h3>
+                <h3 className="font-display text-xl text-ink mb-4">Your Private Wealth Advisor</h3>
                 <div className="flex flex-col items-center mb-4">
-                  <div className="h-20 w-20 bg-primary-100 rounded-full flex items-center justify-center mb-3">
-                    <User className="h-10 w-10 text-primary-700" />
+                  <div className="h-20 w-20 bg-glacier rounded-full flex items-center justify-center mb-3 border border-line">
+                    <User className="h-10 w-10 text-slate" />
                   </div>
-                  <p className="font-medium text-gray-900">Advisor Name</p>
-                  <p className="text-sm text-gray-600 mt-1">Senior Wealth Advisor</p>
+                  <p className="font-medium text-ink">Advisor Name</p>
+                  <p className="text-sm text-slate mt-1">Senior Wealth Advisor</p>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Phone className="h-4 w-4" />
+                  <div className="flex items-center gap-2 text-slate">
+                    <Phone className="h-4 w-4 text-brass" />
                     <span>+41 XX XXX XX XX</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Mail className="h-4 w-4" />
+                  <div className="flex items-center gap-2 text-slate">
+                    <Mail className="h-4 w-4 text-brass" />
                     <span>advisor@swissone.ch</span>
                   </div>
                 </div>
@@ -361,19 +360,19 @@ export default async function DashboardPage() {
 
             {/* Advertisement Section */}
             <FadeIn delay={0.3}>
-              <AnimatedCard className="p-5 bg-gradient-to-br from-primary-50 to-primary-100 border-primary-200">
+              <AnimatedCard className="p-5 bg-ink border-ink">
                 <div className="flex flex-col items-center text-center">
-                  <div className="h-12 w-12 bg-primary-700 rounded-full flex items-center justify-center mb-4">
-                    <Sparkles className="h-6 w-6 text-white" />
+                  <div className="h-12 w-12 bg-alpine rounded-full flex items-center justify-center mb-4">
+                    <Sparkles className="h-6 w-6 text-snow" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  <h3 className="font-display text-xl text-snow mb-2">
                     Exclusive Investment Opportunities
                   </h3>
-                  <p className="text-sm text-gray-700 mb-4">
+                  <p className="text-sm text-glacier/80 mb-4">
                     Access curated alternative investments and private market opportunities exclusively available to SwissOne clients.
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-gray-600 mb-4">
-                    <Globe className="h-4 w-4 text-primary-700" />
+                  <div className="flex items-center gap-2 text-xs text-brass mb-4">
+                    <Globe className="h-4 w-4" />
                     <span>Global Diversification</span>
                   </div>
                   <AnimatedLinkButton 
@@ -396,14 +395,14 @@ export default async function DashboardPage() {
               <FadeIn delay={0.1}>
                 <AnimatedCard className="p-4">
                   <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <User className="h-8 w-8 text-primary-700" />
+                    <div className="h-16 w-16 bg-glacier rounded-full flex items-center justify-center flex-shrink-0 border border-line">
+                      <User className="h-8 w-8 text-slate" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-gray-900">Your Private Wealth Advisor</h3>
-                      <p className="text-sm text-gray-600 mt-0.5">Advisor Name</p>
+                      <h3 className="text-sm font-semibold text-ink">Your Private Wealth Advisor</h3>
+                      <p className="text-sm text-slate mt-0.5">Advisor Name</p>
                       <div className="flex items-center gap-3 mt-2">
-                        <a href="tel:+41XXXXXXXXX" className="text-xs text-primary-700 hover:text-primary-900 flex items-center gap-1">
+                        <a href="tel:+41XXXXXXXXX" className="text-xs text-alpine hover:text-primary-800 flex items-center gap-1">
                           <Phone className="h-3 w-3" />
                           +41 XX XXX XX XX
                         </a>
@@ -433,26 +432,26 @@ export default async function DashboardPage() {
             </div>
             <FadeIn delay={0.2}>
               <div className="mb-6">
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Portfolio Overview</h2>
+                <h2 className="font-display text-2xl md:text-3xl text-ink mb-4">Portfolio Overview</h2>
                 
                 {/* Total AUM - Mobile */}
                 <div className="lg:hidden mb-4">
-                  <AnimatedCard className="p-4 bg-primary-50">
-                    <p className="text-sm text-gray-600 mb-1">Total AUM</p>
-                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalAUM, "USD")}</p>
+                  <AnimatedCard className="p-4 bg-snow">
+                    <p className="text-sm text-slate mb-1">Total AUM</p>
+                    <p className="text-2xl font-display text-ink">{formatCurrency(totalAUM, "USD")}</p>
                   </AnimatedCard>
                 </div>
               </div>
 
               {/* Action Buttons - Above Portfolio Overview */}
               <div className="flex flex-wrap gap-2 md:gap-3 mb-6">
-                <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+                <button className="px-4 py-2 bg-snow text-slate border border-line rounded-md hover:border-brass hover:text-ink transition-colors text-sm font-medium">
                   Transfer Funds
                 </button>
-                <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+                <button className="px-4 py-2 bg-snow text-slate border border-line rounded-md hover:border-brass hover:text-ink transition-colors text-sm font-medium">
                   Rebalance Portfolio
                 </button>
-                <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+                <button className="px-4 py-2 bg-snow text-slate border border-line rounded-md hover:border-brass hover:text-ink transition-colors text-sm font-medium">
                   Add Investment
                 </button>
                 <ViewToggleButtons />
@@ -482,21 +481,21 @@ export default async function DashboardPage() {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-snow border-t border-line z-50">
         <div className="grid grid-cols-4 h-16">
-          <Link href="/accounts" className="flex flex-col items-center justify-center text-xs text-gray-600 hover:text-primary-700 transition-colors">
+          <Link href="/accounts" className="flex flex-col items-center justify-center text-xs text-slate hover:text-alpine transition-colors">
             <Wallet className="h-5 w-5 mb-1" />
             <span>Accounts</span>
           </Link>
-          <Link href="/transactions" className="flex flex-col items-center justify-center text-xs text-gray-600 hover:text-primary-700 transition-colors">
+          <Link href="/transactions" className="flex flex-col items-center justify-center text-xs text-slate hover:text-alpine transition-colors">
             <ArrowUpRight className="h-5 w-5 mb-1" />
             <span>Transfers</span>
           </Link>
-          <Link href="/dashboard" className="flex flex-col items-center justify-center text-xs text-primary-700">
+          <Link href="/dashboard" className="flex flex-col items-center justify-center text-xs text-alpine">
             <TrendingUp className="h-5 w-5 mb-1" />
             <span>Investments</span>
           </Link>
-          <Link href="/more" className="flex flex-col items-center justify-center text-xs text-gray-600 hover:text-primary-700 transition-colors">
+          <Link href="/more" className="flex flex-col items-center justify-center text-xs text-slate hover:text-alpine transition-colors">
             <Eye className="h-5 w-5 mb-1" />
             <span>More</span>
           </Link>

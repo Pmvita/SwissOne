@@ -3,241 +3,201 @@
 import { Logo } from "@/components/ui/Logo";
 import { FadeIn, SlideIn } from "@/components/ui/animated";
 import { AnimatedLinkButton } from "@/components/ui/animated/AnimatedLinkButton";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { Briefcase, Building2, TrendingUp } from "lucide-react";
+
+function MountainSilhouette({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 1440 320"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      preserveAspectRatio="none"
+    >
+      <path
+        d="M0 320V180L180 90L340 160L520 40L700 140L880 20L1040 120L1200 60L1440 150V320H0Z"
+        fill="rgba(11,18,32,0.35)"
+      />
+      <path
+        d="M0 320V220L220 140L400 200L580 100L760 180L960 80L1140 160L1320 110L1440 180V320H0Z"
+        fill="rgba(11,18,32,0.22)"
+      />
+      <path
+        d="M0 320V260L300 200L500 250L720 180L920 240L1100 200L1300 250L1440 220V320H0Z"
+        fill="rgba(11,18,32,0.14)"
+      />
+    </svg>
+  );
+}
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="bg-white border-b border-gray-100 sticky top-0 z-40 backdrop-blur-sm bg-white/95">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-snow">
+      <nav className="absolute top-0 inset-x-0 z-40">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-3">
+            <Link href="/landing" className="flex items-center gap-3">
               <Logo size="sm" />
-              <span className="text-xl font-semibold text-primary-900">SwissOne</span>
-            </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="#services" className="text-gray-700 hover:text-primary-700 transition-colors">
+              <span className="font-display text-2xl tracking-wide text-snow">SwissOne</span>
+            </Link>
+            <div className="hidden md:flex items-center gap-8">
+              <Link href="#services" className="text-sm text-glacier/90 hover:text-snow transition-colors">
                 Services
               </Link>
-              <Link href="#about" className="text-gray-700 hover:text-primary-700 transition-colors">
+              <Link href="#about" className="text-sm text-glacier/90 hover:text-snow transition-colors">
                 About
               </Link>
-              <Link href="#contact" className="text-gray-700 hover:text-primary-700 transition-colors">
-                Contact
-              </Link>
-              <AnimatedLinkButton href="/login" variant="outline" size="sm">
+              <AnimatedLinkButton href="/login" variant="outline" size="sm" className="border-snow/40 text-snow hover:bg-snow/10">
                 Client Login
+              </AnimatedLinkButton>
+            </div>
+            <div className="md:hidden">
+              <AnimatedLinkButton href="/login" variant="outline" size="sm" className="border-snow/40 text-snow hover:bg-snow/10">
+                Login
               </AnimatedLinkButton>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-primary-50 pt-20 pb-32">
-        <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <FadeIn delay={0.1}>
-              <div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="inline-block px-4 py-2 bg-primary-100 text-primary-700 rounded-full text-sm font-medium mb-6"
-                >
-                  Swiss Private Banking Excellence
-                </motion.div>
-                <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
-                  Your Wealth,
-                  <br />
-                  <span className="text-primary-700">Managed with Precision</span>
-                </h1>
-                <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                  Experience the highest standards of Swiss private banking. Secure, 
-                  personalized wealth management services tailored to your unique needs.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <SlideIn direction="right" delay={0.3}>
-                    <AnimatedLinkButton href="/signup" variant="primary" size="lg">
-                      Begin Your Journey
-                    </AnimatedLinkButton>
-                  </SlideIn>
-                  <SlideIn direction="left" delay={0.4}>
-                    <AnimatedLinkButton href="/login" variant="outline" size="lg">
-                      Existing Client
-                    </AnimatedLinkButton>
-                  </SlideIn>
-                </div>
-              </div>
-            </FadeIn>
-            <FadeIn delay={0.5}>
-              <div className="relative">
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-primary-200 to-accent-200 rounded-3xl transform rotate-3"
-                  animate={{
-                    rotate: [3, 6, 3],
-                    scale: [1, 1.02, 1],
-                  }}
-                  transition={{
-                    duration: 8,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-                <div className="relative bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
-                  <Logo size="xl" className="mx-auto mb-6" />
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <span className="text-gray-600">Security Level</span>
-                      <span className="text-primary-700 font-semibold">Bank-Grade</span>
-                    </div>
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <span className="text-gray-600">Privacy</span>
-                      <span className="text-primary-700 font-semibold">Swiss Standards</span>
-                    </div>
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <span className="text-gray-600">Compliance</span>
-                      <span className="text-primary-700 font-semibold">FINMA Regulated</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </FadeIn>
-          </div>
+      {/* Full-bleed alpine hero — brand first, one headline, one sentence, CTA */}
+      <section className="relative min-h-[100svh] flex flex-col justify-end overflow-hidden alpine-hero">
+        <MountainSilhouette className="absolute bottom-0 inset-x-0 w-full h-[42%] pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-snow via-transparent to-transparent opacity-90 pointer-events-none" />
+
+        <div className="relative max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-24 pt-32">
+          <FadeIn delay={0.05} duration={0.7}>
+            <p className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-snow tracking-tight mb-6 drop-shadow-sm">
+              SwissOne
+            </p>
+          </FadeIn>
+
+          <FadeIn delay={0.2} duration={0.65}>
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl text-glacier font-medium max-w-xl leading-snug mb-4">
+              Private wealth, held with alpine precision.
+            </h1>
+          </FadeIn>
+
+          <FadeIn delay={0.32} duration={0.6}>
+            <p className="text-base sm:text-lg text-glacier/85 max-w-md mb-10 leading-relaxed font-sans">
+              Discreet banking and portfolio stewardship for clients who expect Swiss standards—without the noise.
+            </p>
+          </FadeIn>
+
+          <SlideIn direction="up" delay={0.42}>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <AnimatedLinkButton href="/signup" variant="primary" size="lg">
+                Begin
+              </AnimatedLinkButton>
+              <AnimatedLinkButton
+                href="/login"
+                variant="outline"
+                size="lg"
+                className="border-ink/20 text-ink bg-snow/80 hover:bg-snow"
+              >
+                Existing Client
+              </AnimatedLinkButton>
+            </div>
+          </SlideIn>
         </div>
       </section>
 
-      {/* Services Section */}
-      <section id="services" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeIn delay={0.1}>
-            <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Comprehensive Private Banking Services
-              </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Tailored solutions for your wealth management needs
-              </p>
-            </div>
+      {/* Services — one job, expressive type, no icon-card soup */}
+      <section id="services" className="py-28 bg-snow border-t border-line">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeIn delay={0.05}>
+            <p className="text-brass text-sm font-medium tracking-[0.2em] uppercase mb-4">Services</p>
+            <h2 className="font-display text-4xl md:text-5xl text-ink max-w-2xl leading-tight mb-16">
+              Three disciplines. One relationship.
+            </h2>
           </FadeIn>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="divide-y divide-line">
             {[
               {
                 title: "Wealth Management",
-                description: "Expert portfolio management and investment advisory services designed to grow and preserve your wealth.",
-                icon: Briefcase,
-                color: "text-primary-600",
+                description:
+                  "Portfolio construction and preservation designed around your horizon, not a product shelf.",
               },
               {
                 title: "Private Banking",
-                description: "Exclusive banking services with dedicated relationship managers and personalized financial solutions.",
-                icon: Building2,
-                color: "text-primary-600",
+                description:
+                  "Dedicated coverage, settled liquidity, and the operational quiet of a Swiss house.",
               },
               {
                 title: "Investment Advisory",
-                description: "Strategic investment guidance backed by comprehensive market analysis and risk assessment.",
-                icon: TrendingUp,
-                color: "text-primary-600",
+                description:
+                  "Clear views on risk, allocation, and opportunity—measured, not marketed.",
               },
-            ].map((service, index) => {
-              const IconComponent = service.icon;
-              return (
-                <FadeIn key={service.title} delay={0.2 + index * 0.1}>
-                  <motion.div
-                    whileHover={{ y: -5 }}
-                    className="bg-white border border-gray-200 rounded-2xl p-8 hover:shadow-xl transition-shadow"
-                  >
-                    <div className="mb-4">
-                      <IconComponent className={`w-10 h-10 ${service.color}`} strokeWidth={1.5} />
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">{service.title}</h3>
-                    <p className="text-gray-600 leading-relaxed">{service.description}</p>
-                  </motion.div>
-                </FadeIn>
-              );
-            })}
+            ].map((service, index) => (
+              <FadeIn key={service.title} delay={0.1 + index * 0.08}>
+                <div className="grid md:grid-cols-12 gap-4 md:gap-8 py-10">
+                  <span className="md:col-span-1 font-display text-brass text-xl">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <h3 className="md:col-span-4 font-display text-2xl md:text-3xl text-ink">
+                    {service.title}
+                  </h3>
+                  <p className="md:col-span-7 text-slate text-lg leading-relaxed max-w-xl">
+                    {service.description}
+                  </p>
+                </div>
+              </FadeIn>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Trust Section */}
-      <section className="py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <FadeIn delay={0.1}>
-              <div>
-                <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                  Built on Swiss Banking Excellence
-                </h2>
-                <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                  For over a century, Swiss banking has been synonymous with security, 
-                  discretion, and financial expertise. We carry forward these traditions 
-                  with modern technology and innovative solutions.
-                </p>
-                <div className="space-y-4">
-                  {[
-                    "FINMA Regulated & Licensed",
-                    "Bank-Grade Security & Encryption",
-                    "Swiss Privacy Standards",
-                    "24/7 Account Monitoring",
-                  ].map((feature, index) => (
-                    <SlideIn key={feature} direction="left" delay={0.2 + index * 0.1}>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
-                          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <span className="text-gray-700 font-medium">{feature}</span>
-                      </div>
-                    </SlideIn>
-                  ))}
-                </div>
-              </div>
-            </FadeIn>
-            <FadeIn delay={0.3}>
-              <div className="bg-primary-900 rounded-3xl p-12 text-white">
-                <div className="space-y-8">
-                  <div>
-                    <div className="text-5xl font-bold mb-2">200+</div>
-                    <div className="text-primary-200">Years of Combined Expertise</div>
-                  </div>
-                  <div>
-                    <div className="text-5xl font-bold mb-2">50+</div>
-                    <div className="text-primary-200">Countries Served</div>
-                  </div>
-                  <div>
-                    <div className="text-5xl font-bold mb-2">99.9%</div>
-                    <div className="text-primary-200">Uptime Guarantee</div>
-                  </div>
-                </div>
-              </div>
-            </FadeIn>
-          </div>
+      <section id="about" className="py-28 alpine-mist border-t border-line">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeIn delay={0.05}>
+            <div className="max-w-2xl">
+              <p className="text-brass text-sm font-medium tracking-[0.2em] uppercase mb-4">About</p>
+              <h2 className="font-display text-4xl md:text-5xl text-ink leading-tight mb-6">
+                Built on Swiss banking standards.
+              </h2>
+              <p className="text-lg text-slate leading-relaxed mb-10">
+                Security, discretion, and long-horizon stewardship—carried forward with modern infrastructure,
+                not gimmicks. FINMA-aligned processes, bank-grade encryption, and continuous monitoring.
+              </p>
+              <ul className="space-y-3 text-ink">
+                {[
+                  "FINMA-aligned & licensed posture",
+                  "Bank-grade security & encryption",
+                  "Swiss privacy standards",
+                  "Continuous account monitoring",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-alpine flex-shrink-0" />
+                    <span className="text-base">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-r from-primary-900 to-primary-800">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <FadeIn delay={0.1}>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Ready to Begin Your Private Banking Journey?
+      <section className="py-24 bg-ink">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <FadeIn delay={0.05}>
+            <h2 className="font-display text-3xl md:text-5xl text-snow mb-5 leading-tight">
+              Ready when you are.
             </h2>
-            <p className="text-xl text-primary-100 mb-10">
-              Join our exclusive community of clients who trust SwissOne with their wealth management.
+            <p className="text-glacier/80 text-lg mb-10 max-w-lg mx-auto">
+              Open a relationship, or return to your existing account.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <AnimatedLinkButton href="/signup" variant="secondary" size="lg">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <AnimatedLinkButton href="/signup" variant="primary" size="lg">
                 Open an Account
               </AnimatedLinkButton>
-              <AnimatedLinkButton href="/login" variant="outline" size="lg" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+              <AnimatedLinkButton
+                href="/login"
+                variant="outline"
+                size="lg"
+                className="border-snow/30 text-snow hover:bg-snow/10"
+              >
                 Access Your Account
               </AnimatedLinkButton>
             </div>
@@ -245,45 +205,61 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
+      <footer className="bg-ink border-t border-slate/40 text-glacier/60 py-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
+              <div className="flex items-center gap-2 mb-3">
                 <Logo size="sm" />
-                <span className="text-white font-semibold">SwissOne</span>
+                <span className="font-display text-xl text-snow">SwissOne</span>
               </div>
-              <p className="text-sm">
-                Swiss private banking excellence for the modern era.
-              </p>
+              <p className="text-sm max-w-xs">Private banking for the modern alpine standard.</p>
             </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Services</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="#services" className="hover:text-white transition-colors">Wealth Management</Link></li>
-                <li><Link href="#services" className="hover:text-white transition-colors">Private Banking</Link></li>
-                <li><Link href="#services" className="hover:text-white transition-colors">Investment Advisory</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="#about" className="hover:text-white transition-colors">About Us</Link></li>
-                <li><Link href="#contact" className="hover:text-white transition-colors">Contact</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Careers</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Terms of Service</Link></li>
-                <li><Link href="#" className="hover:text-white transition-colors">Compliance</Link></li>
-              </ul>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 text-sm">
+              <div>
+                <h4 className="text-snow font-medium mb-3">Services</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <Link href="#services" className="hover:text-snow transition-colors">
+                      Wealth Management
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="#services" className="hover:text-snow transition-colors">
+                      Private Banking
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-snow font-medium mb-3">Company</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <Link href="#about" className="hover:text-snow transition-colors">
+                      About
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/login" className="hover:text-snow transition-colors">
+                      Client Login
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-snow font-medium mb-3">Legal</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <span className="cursor-default">Privacy</span>
+                  </li>
+                  <li>
+                    <span className="cursor-default">Terms</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
+          <div className="border-t border-slate/30 mt-10 pt-6 text-center text-sm">
             <p>&copy; {new Date().getFullYear()} SwissOne. All rights reserved.</p>
           </div>
         </div>
@@ -291,4 +267,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
