@@ -11,12 +11,12 @@ globs: **/*.{tsx,ts,css}
 
 2. **Clean & Minimal**: Avoid clutter. Focus on clarity and readability.
 
-3. **Consistent Color Palette**: Use the Swiss banking inspired color palette:
-   - Primary: Blues (#334e68, #486581, etc.)
-   - Accent: Professional blues (#0ea5e9, #0284c7, etc.)
-   - Neutral: Grays for text and backgrounds
+3. **Consistent Color Palette** (design lock — do not change):
+   - Glacier: `#E8EEF2`
+   - Alpine red: `#9B1B2E`
+   - Supporting: snow `#F7FAFC`, ink `#0B1220`, slate `#3A4658`, brass `#A67C52`, line `#C5CED6`
 
-4. **Typography**: Use clean, readable fonts (Inter is the default). Maintain consistent font sizes and weights.
+4. **Typography** (design lock — do not change): Cormorant Garamond (display) + Source Sans 3 (body).
 
 5. **Spacing**: Use consistent spacing scale (from theme config). Generous whitespace improves readability.
 

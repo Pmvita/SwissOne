@@ -71,15 +71,15 @@ function getAccountTypeLabel(type: string): string {
 function getAccountTypeColor(type: string): string {
   switch (type) {
     case "checking":
-      return "bg-blue-600";
+      return "bg-slate";
     case "savings":
-      return "bg-green-600";
+      return "bg-brass";
     case "investment":
-      return "bg-purple-600";
+      return "bg-alpine";
     case "credit":
-      return "bg-orange-600";
+      return "bg-ink";
     default:
-      return "bg-gray-600";
+      return "bg-slate";
   }
 }
 

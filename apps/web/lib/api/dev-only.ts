@@ -1,6 +1,8 @@
+import { isDevelopmentEnv } from "./env";
+
 /** Block setup/admin helpers outside local development. */
 export function rejectUnlessDevelopment(): Response | null {
-  if (process.env.NODE_ENV !== "development") {
+  if (!isDevelopmentEnv()) {
     return Response.json(
       {
         error: "Setup endpoints are disabled outside development",

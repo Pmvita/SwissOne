@@ -18,6 +18,8 @@
     "vercel-build": "npm run build --workspace=@swissone/web",
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present",
+    "test": "node --test tests/**/*.test.mjs",
+    "test:web": "npm run test --workspace=apps/web",
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules"
   },
   "devDependencies": {

@@ -17,8 +17,6 @@ const nextConfig: NextConfig = {
     maxInactiveAge: 60 * 1000,
     pagesBufferLength: 2,
   },
-  // Next.js 16 uses Turbopack by default - add empty config to use it
-  turbopack: {},
   // Logging configuration
   logging: {
     fetches: {
