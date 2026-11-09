@@ -6,6 +6,8 @@ Full-stack Swiss private banking application built with Next.js, React Native/Ex
 
 MFA: after password login users are routed to `/mfa`. Set `MFA_ENABLED=false` to skip the gate. Setup APIs under `/api/setup/*` only run when `NODE_ENV=development`.
 
+Dashboard note: the "Portfolio Performance (illustrative)" chart is a synthetic trend scaled from current holdings for UI demo — not live market history.
+
 ## Design system (web)
 
 Alpine private-banking visual language for `apps/web` — Cormorant Garamond for brand/display (Morgen Capital–inspired pairing) with Source Sans 3 for UI. Palette deliberately avoids Morgen Capital secondary purple (`#9696e9`) and generic AI looks (Inter, purple gradients, cream+terracotta, card soup).
